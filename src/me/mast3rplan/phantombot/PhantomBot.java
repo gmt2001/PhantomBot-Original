@@ -38,6 +38,7 @@ import java.util.TreeSet;
 import me.mast3rplan.phantombot.cache.BannedCache;
 import me.mast3rplan.phantombot.event.console.ConsoleInputEvent;
 import me.mast3rplan.phantombot.event.irc.message.IrcMessageEvent;
+import me.mast3rplan.phantombot.store.IniStore;
 import org.apache.commons.io.IOUtils;
 
 public class PhantomBot implements Listener {
@@ -102,6 +103,7 @@ public class PhantomBot implements Listener {
         EventBus.instance().register(ScriptEventManager.instance());
 
         Script.global.defineProperty("db", DataStore.instance(), 0);
+        Script.global.defineProperty("inidb", IniStore.instance(), 0);
         Script.global.defineProperty("sinbin", sinbin, 0);
         Script.global.defineProperty("bancache", bancache, 0);
         Script.global.defineProperty("username", UsernameCache.instance(), 0);
