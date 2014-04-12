@@ -91,8 +91,8 @@ $.setInterval(function() {
                 $.db.set("string", nick + "_greeting_suffix", " to the channel!");
             }
         }
-        // Timer needed and resets every 30 days. Don't know how to replace $.db.get('time' with this.
-        /*if ($.db.get('time', nick) >= 2592000 * 1000 && $.hasGroupByName(nick, "DOOD")) {
+    // Timer needed and resets every 30 days. Don't know how to replace $.db.get('time' with this.
+    /*if ($.db.get('time', nick) >= 2592000 * 1000 && $.hasGroupByName(nick, "DOOD")) {
             $.setUserGroupByName(nick, "Prinny"); 
         } */
     });
@@ -101,17 +101,17 @@ $.setInterval(function() {
 
 $.setInterval(function() {
     var nicks = $.channel.getNicks();
-   // if ($.channelStatus.equals("online")) {
-        $.list.forEach(nicks, function(i, nick) {
-            var amount = 1;
-            if ($.hasGroupByName(nick, "Regular")) amount = 2;
-            if ($.hasGroupByName(nick, "Prinny")) amount = 3;
-            if ($.hasGroupByName(nick, "Golden")) amount = 4;
-            if ($.hasGroupByName(nick, "Burning")) amount = 5;
-            $.db.incr('points', nick, amount);
-        });
+    // if ($.channelStatus.equals("online")) {
+    $.list.forEach(nicks, function(i, nick) {
+        var amount = 1;
+        if ($.hasGroupByName(nick, "Regular")) amount = 2;
+        if ($.hasGroupByName(nick, "Prinny")) amount = 3;
+        if ($.hasGroupByName(nick, "Golden")) amount = 4;
+        if ($.hasGroupByName(nick, "Burning")) amount = 5;
+        $.db.incr('points', nick, amount);
+    });
 
-    /* } else {
+/* } else {
         $.list.forEach(nicks, function(i, nick) {
             $.db.incr('points', nick, 2);
         });

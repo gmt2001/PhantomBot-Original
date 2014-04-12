@@ -2,7 +2,9 @@ var Objects = java.util.Objects;
 var System = java.lang.System;
 
 $.tostring = Objects.toString;
-$.println = function(o) { System.out.println(tostring(o)); };
+$.println = function(o) {
+    System.out.println(tostring(o));
+};
 
 var blackList = ["getClass", "equals", "notify", "class", "hashCode", "toString", "wait", "notifyAll"];
 function isJavaProperty(property) {
@@ -36,7 +38,7 @@ for(var name in $api) {
 
 $.on('ircJoinComplete', function(event) {
     $.channel = event.getChannel();
-	println("rebooted");
+    println("rebooted");
 });
 
 // [ ----------------------(Plugins enable/disable)------------------------ ]
@@ -70,29 +72,29 @@ $.pointname = "Player Points";
 // [ ----------------------(interval event messages)------------------------ ]
 $.messages = [
 
-function () {
+    function () {
         return ">> Like to help me out & improve the stream? Donate through here >> http://phantomindex.com/donate";
-},
+    },
 
-function () {
+    function () {
         return ">> Everyone earns +1 " + $.pointname + " for every 10 minutes they're in the channel! Type '!points' to view them.";
-},
+    },
 
-function () {
+    function () {
         return ">> Leveling system has been implemented into chat. Exchange points for exp using '!exp' and see your level and title using '!level' & '!title'. Please give me feedback and suggestions.";
-},
+    },
 
-function () {
+    function () {
         return ">> Follow @PhantomIndex on Twitter for the latest stream updates! >> https://twitter.com/phantomindex";
-},
+    },
 
-function () {
+    function () {
         return ">> Join our Steam group here! -> http://steamcommunity.com/groups/BurningRed and be notified when Phantom starts streaming.";
-},
+    },
 
-function () {
+    function () {
         return ">> Help expand the audience by tweeting this channel >> http://phantomindex.com/tweet";
-}
+    }
     ];
 
 

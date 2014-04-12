@@ -2,8 +2,6 @@ $.on('command', function(event) {
     var sender = event.getSender();
     var username = $.username.resolve(sender);
     var command = event.getCommand();
-    var die1 = "die1";
-    var die2 = "die2";
     var d1 = Math.floor(Math.random() * 6) + 1;
     var d2 = Math.floor(Math.random() * 6) + 1;
     var die1 = d1;
@@ -19,7 +17,7 @@ $.on('command', function(event) {
     lost[6] = "You're making me sad."
     lost[7] = "Don't lose your way!"
     lost[8] = "You just weren't good enough."
-    lost[9] = "Will " + $.username.resolve(sender) + " finally win? Find out on the next episode of DragonBall Z!"
+    lost[9] = "Will " + username + " finally win? Find out on the next episode of DragonBall Z!"
     lost[10] = "Still losing!"
     lost[11] = "You're great at losing."
     
@@ -36,12 +34,11 @@ $.on('command', function(event) {
 
     if(command.equalsIgnoreCase("roll")) {
         if(d1 == d2) {
-        $.say($.username.resolve(sender) + " rolled Doubles >> " + die1 + " & " + die2 + "! " + "You won " + (die1+die2 * 2) + " " + $.pointname + "!" + " " +$.randElement(win));
-	$.db.incr('points', sender, die1+die2 * 2); 
-    } else {
-         $.say($.username.resolve(sender) + " rolled a " + die1 + " & " + die2 + ". " + $.randElement(lost));
-
-         }
+            $.say(username + " rolled Doubles >> " + die1 + " & " + die2 + "! " + "You won " + (die1+die2 * 2) + " " + $.pointname + "!" + " " +$.randElement(win));
+            $.db.incr('points', sender, die1+die2 * 2); 
+        } else {
+            $.say(username + " rolled a " + die1 + " & " + die2 + ". " + $.randElement(lost));
+        }
     }
-    }
+}
 )

@@ -49,7 +49,7 @@ $.on('command', function(event) {
                 $.say("/me The [Raffle] for " + args[2] + " " + $.pointname + " has started, doods! Type '!raffle ticket <amount>' to buy tickets for " + args[1] + " " + $.pointname + " per ticket, doods!");
 
             }
-                        $var.raffle_running = true;
+            $var.raffle_running = true;
         } else if (subCommand.equalsIgnoreCase("ticket")) {
             if (!$var.raffle_running) return;
             if (args.length < 2) return;
@@ -57,12 +57,12 @@ $.on('command', function(event) {
             var times = parseInt(args[1]);
  
             var atimes = $var.raffle_times[username];
-                        println (atimes);
+            println (atimes);
             if(atimes == undefined) {
-                                atimes = 0;
-                        } else {
-                                atimes = int(atimes);
-                        }
+                atimes = 0;
+            } else {
+                atimes = int(atimes);
+            }
  
             if (atimes + times >= 6) {
                 $.say(sender + ", you can only buy up to 5 tickets, dood!");

@@ -38,11 +38,11 @@ $.on('command', function(event) {
             $.say($.username.resolve(exp_user) + " is at level " + int(level) + " with a total of " + int(exp) + " exp." );
         }
 
-        }
+    }
 
-   if (command.equalsIgnoreCase("exp")) {
+    if (command.equalsIgnoreCase("exp")) {
         if (args.length == 3) {
-          if (!$.botaccount == $.username.resolve(sender) || !$.hasGroupByName(sender, "Administrator")) {
+            if (!$.botaccount == $.username.resolve(sender) || !$.hasGroupByName(sender, "Administrator")) {
                 $.say("You must be a Administrator to use this command " + username + ".");
                 return;
             }
@@ -95,7 +95,7 @@ $.on('command', function(event) {
         } 
     }
 
-       if (command.equalsIgnoreCase("title")) {
+    if (command.equalsIgnoreCase("title")) {
 
         if (args.length >= 1) {
             var username = args[0];
@@ -106,72 +106,72 @@ $.on('command', function(event) {
         } else {
             var title = $.getTitle (username);
             $.say($.username.resolve(sender) + "'s title is: " + title);
+        }
     }
-}
 });
 
 $.getTitle = function (username) {
-        var exp = $.db.get('exp', username);
-        var level = (25 + Math.sqrt(625 + 100 * exp)) / 50;
-        var title = "";
+    var exp = $.db.get('exp', username);
+    var level = (25 + Math.sqrt(625 + 100 * exp)) / 50;
+    var title = "";
  
-        if ( level >= 1) {
-                title = "Fresh";
+    if ( level >= 1) {
+        title = "Fresh";
+    }
+    if ( level >= 5 ) {
+        title = "F Tier";
+    }
+    if ( level >= 10 ) {
+        title = "E Tier";
+    }
+    if ( level >= 15 ) {
+        title = "D Tier";
+    }
+    if ( level >= 20 ) {
+        title = "C Tier";
+    }
+    if ( level >= 25 ) {
+        title = "A Tier";
+        if (level == 25) {
+            $.db.set('group', username, "Regular");
+            $.say($.username.resolve(username) + " hit level " + level + "! You earn the title and rank of Regular!");
         }
-        if ( level >= 5 ) {
-                title = "F Tier";
-        }
-        if ( level >= 10 ) {
-                title = "E Tier";
-        }
-        if ( level >= 15 ) {
-                title = "D Tier";
-        }
-        if ( level >= 20 ) {
-                title = "C Tier";
-        }
-        if ( level >= 25 ) {
-                title = "A Tier";
-                if (level == 25) {
-                $.db.set('group', username, "Regular");
-                $.say($.username.resolve(username) + " hit level " + level + "! You earn the title and rank of Regular!");
-                }
-        }
-        if ( level >= 30 ) {
-                title = "S Tier";
-        }
-        if ( level >= 35 ) {
-                title = "SS Tier";
-        }
-        if ( level >= 40 ) {
-                title = "SSS Tier";
-        }
-        if ( level >= 45 ) {
-                title = "Waifu Tier";
-        }
-        if ( level >= 50 ) {
-                title = "God Tier";
-        }
-        if ( level >= 55 ) {
-                title = "Brokanoe Tier";
-        }
-        if ( level >= 60 ) {
-                title = "Wielder of the Azure";
-        }
-        if ( level >= 65 ) {
-                title = "Successor to the Azure";
-        }
-        if ( level >= 70 ) {
-                title = "Gear"
-        }
-        if ( level >= 75 ) {
-                title = "Murakumo Tier";
-        }
-        if ( level >= 80) {
-                title = "Sword of Izanagi";
-        }
-        if ( level >= 100) {
-                title = "Sword of Kusanagi";
-        }
-        return title;
+    }
+    if ( level >= 30 ) {
+        title = "S Tier";
+    }
+    if ( level >= 35 ) {
+        title = "SS Tier";
+    }
+    if ( level >= 40 ) {
+        title = "SSS Tier";
+    }
+    if ( level >= 45 ) {
+        title = "Waifu Tier";
+    }
+    if ( level >= 50 ) {
+        title = "God Tier";
+    }
+    if ( level >= 55 ) {
+        title = "Brokanoe Tier";
+    }
+    if ( level >= 60 ) {
+        title = "Wielder of the Azure";
+    }
+    if ( level >= 65 ) {
+        title = "Successor to the Azure";
+    }
+    if ( level >= 70 ) {
+        title = "Gear"
+    }
+    if ( level >= 75 ) {
+        title = "Murakumo Tier";
+    }
+    if ( level >= 80) {
+        title = "Sword of Izanagi";
+    }
+    if ( level >= 100) {
+        title = "Sword of Kusanagi";
+    }
+    return title;
 };

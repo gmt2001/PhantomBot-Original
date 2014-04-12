@@ -196,12 +196,12 @@ $.on('command', function (event) {
     }
 
    
-        if (command.equalsIgnoreCase("songrequest")) {
-            if (args.length == 0) {
+    if (command.equalsIgnoreCase("songrequest")) {
+        if (args.length == 0) {
             $.say("Type >> '!songrequest <youtubelink>' to add a song to the playlist.")
             return;
         }
-            if (args.length >= 1) {
+        if (args.length >= 1) {
 
             if (!musicPlayerConnected) {
                 $.say("Songrequests is currently disabled!");

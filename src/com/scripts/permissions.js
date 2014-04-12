@@ -30,28 +30,44 @@ $.setUserGroupByName = function(user, name) {
 $.getGroupNameById = function(id) {
     id = parseInt(id);
     switch(id) {
-    case 0: return "Viewer";
-    case 1: return "Regular";
-    case 2: return "Prinny";
-    case 3: return "Golden";
-    case 4: return "Burning";
-    case 5: return "Moderator";
-    case 7: return "Administrator";
-    default: return "Viewer";
+        case 0:
+            return "Viewer";
+        case 1:
+            return "Regular";
+        case 2:
+            return "Prinny";
+        case 3:
+            return "Golden";
+        case 4:
+            return "Burning";
+        case 5:
+            return "Moderator";
+        case 7:
+            return "Administrator";
+        default:
+            return "Viewer";
     }
 }
  
 $.getGroupIdByName = function(name) {
     name = name + "";
     switch(name) {
-    case "Viewer": return 0;
-    case "Regular": return 1;
-    case "Prinny": return 2;
-    case "Golden": return 3;
-    case "Burning": return 4;
-    case "Moderator": return 5;
-    case "Administrator": return 7;
-    default: return 0;
+        case "Viewer":
+            return 0;
+        case "Regular":
+            return 1;
+        case "Prinny":
+            return 2;
+        case "Golden":
+            return 3;
+        case "Burning":
+            return 4;
+        case "Moderator":
+            return 5;
+        case "Administrator":
+            return 7;
+        default:
+            return 0;
     }
 }
 
@@ -82,14 +98,14 @@ $.on('command', function(event) {
             }
         }
     }
-            if (command.equalsIgnoreCase("rank")) {
-             if (args.length >= 1) {
-                var username = args[0];
-                $.say($.username.resolve(username) + " is currently in the " + $.getUserGroupName(username) + " rank.");
-                } else {
-                $.say($.username.resolve(sender) + ", you're in the " + $.getUserGroupName(username) + " rank, dood.");
-                }
-            } 
+    if (command.equalsIgnoreCase("rank")) {
+        if (args.length >= 1) {
+            var username = args[0];
+            $.say($.username.resolve(username) + " is currently in the " + $.getUserGroupName(username) + " rank.");
+        } else {
+            $.say($.username.resolve(sender) + ", you're in the " + $.getUserGroupName(username) + " rank, dood.");
+        }
+    } 
 });
 
 $.on('consoleInput', function(event) {

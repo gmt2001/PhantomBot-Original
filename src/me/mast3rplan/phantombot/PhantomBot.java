@@ -1,45 +1,35 @@
 package me.mast3rplan.phantombot;
 
 import com.google.common.eventbus.Subscribe;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.File;
+import java.io.IOException;
+import java.util.Random;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import me.mast3rplan.phantombot.cache.BannedCache;
 import me.mast3rplan.phantombot.cache.FollowersCache;
 import me.mast3rplan.phantombot.cache.UsernameCache;
 import me.mast3rplan.phantombot.console.ConsoleInputListener;
 import me.mast3rplan.phantombot.event.EventBus;
 import me.mast3rplan.phantombot.event.Listener;
 import me.mast3rplan.phantombot.event.command.CommandEvent;
+import me.mast3rplan.phantombot.event.console.ConsoleInputEvent;
 import me.mast3rplan.phantombot.event.irc.complete.IrcConnectCompleteEvent;
 import me.mast3rplan.phantombot.event.irc.complete.IrcJoinCompleteEvent;
 import me.mast3rplan.phantombot.event.irc.message.IrcChannelMessageEvent;
+import me.mast3rplan.phantombot.event.irc.message.IrcMessageEvent;
 import me.mast3rplan.phantombot.jerklib.Channel;
 import me.mast3rplan.phantombot.jerklib.ConnectionManager;
 import me.mast3rplan.phantombot.jerklib.Profile;
 import me.mast3rplan.phantombot.jerklib.Session;
-import me.mast3rplan.phantombot.musicplayer.MusicHtmlServer;
 import me.mast3rplan.phantombot.musicplayer.MusicWebSocketServer;
 import me.mast3rplan.phantombot.script.Script;
 import me.mast3rplan.phantombot.script.ScriptEventManager;
 import me.mast3rplan.phantombot.script.ScriptManager;
 import me.mast3rplan.phantombot.store.DataStore;
+import me.mast3rplan.phantombot.store.IniStore;
 import me.mast3rplan.phantombot.twitch.TwitchAPI;
 import me.mast3rplan.phantombot.youtube.YoutubeAPI;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.UnknownHostException;
-import java.util.Random;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import me.mast3rplan.phantombot.cache.BannedCache;
-import me.mast3rplan.phantombot.event.console.ConsoleInputEvent;
-import me.mast3rplan.phantombot.event.irc.message.IrcMessageEvent;
-import me.mast3rplan.phantombot.store.IniStore;
-import org.apache.commons.io.IOUtils;
 
 public class PhantomBot implements Listener {
     private final String username;
@@ -120,7 +110,6 @@ public class PhantomBot implements Listener {
         try {
             ScriptManager.loadScript(new File("./scripts/init.js"));
         } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -151,7 +140,9 @@ public class PhantomBot implements Listener {
     public void onConsoleMessage (ConsoleInputEvent msg) {
         String message = msg.getMsg ();
         if (message.equals ("exit"))
+        {
             System.exit (0);
+        }
         //System.out.println (message);
         handleCommand ("Phantombot", message);
     }
@@ -209,7 +200,10 @@ public class PhantomBot implements Listener {
     public static boolean isLink (String message) {
         String [] arr = message.split (" ");
         for (String s : arr) {
-            if (IrcMessageEvent.addressPtn.matcher(s).matches()) return true;
+            if (IrcMessageEvent.addressPtn.matcher(s).matches())
+            {
+                return true;
+            }
         }
         return false;
         /*InetAddress ip;

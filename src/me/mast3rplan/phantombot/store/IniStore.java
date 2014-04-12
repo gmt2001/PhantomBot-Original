@@ -137,7 +137,7 @@ public class IniStore
             return "";
         }
 
-        if (key.startsWith(";"))
+        if (key.startsWith(";") || key.startsWith("["))
         {
             key = "_" + key;
         }
@@ -149,7 +149,7 @@ public class IniStore
     {
         LoadFile(fName, false);
 
-        if (key.startsWith(";"))
+        if (key.startsWith(";") || key.startsWith("["))
         {
             key = "_" + key;
         }
