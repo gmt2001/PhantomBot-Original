@@ -77,8 +77,9 @@ public class PhantomBot implements Listener {
             Thread.sleep (1000);
         } catch (InterruptedException ex) {
         }
-        //this.session = connectionManager.requestConnection("tmi6.justin.tv", 443, password);
-        //this.session.addIRCEventListener(new IrcEventHandler());
+        this.session = connectionManager.requestConnection("tmi6.justin.tv", 443, password);
+        //this.session = connectionManager.requestConnection("irc.twitch.tv", 6667, password);
+        this.session.addIRCEventListener(new IrcEventHandler());
     }
 
     public final void init() {
@@ -141,6 +142,8 @@ public class PhantomBot implements Listener {
         String message = msg.getMsg ();
         if (message.equals ("exit"))
         {
+            IniStore.instance().SaveAll(true);
+            
             System.exit (0);
         }
         //System.out.println (message);

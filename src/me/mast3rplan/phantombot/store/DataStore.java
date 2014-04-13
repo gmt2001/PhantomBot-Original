@@ -1,5 +1,7 @@
 package me.mast3rplan.phantombot.store;
 
+import java.util.Iterator;
+import java.util.Set;
 import redis.clients.jedis.Jedis;
 
 public class DataStore
@@ -16,12 +18,36 @@ public class DataStore
     
     public String[] getKeys(String type, String pattern)
     {
-        return (String[]) jedis.keys(PREFIX + "_" + type + "_" + pattern).toArray();
+        Set<String> o = jedis.keys(PREFIX + "_" + type + "_" + pattern);
+        
+        String[] s = new String[o.size()];
+        
+        Iterator it = o.iterator();
+        int i = 0;
+        
+        while (it.hasNext())
+        {
+            s[i++] = (String)it.next();
+        }
+        
+        return s;
     }
     
     public String[] getKeys(String pattern)
     {
-        return (String[]) jedis.keys(PREFIX + "_" + pattern).toArray();
+        Set<String> o = jedis.keys(PREFIX + "_" + pattern);
+        
+        String[] s = new String[o.size()];
+        
+        Iterator it = o.iterator();
+        int i = 0;
+        
+        while (it.hasNext())
+        {
+            s[i++] = (String)it.next();
+        }
+        
+        return s;
     }
     
     public boolean exists(String type, String key)

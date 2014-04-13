@@ -22,7 +22,7 @@ $.on('command', function(event) {
     if(args.length >= 2) {
         if(command.equalsIgnoreCase("addcom")) {
             if (!$.hasGroupByName(sender, "Regular")) {
-                var points = $.db.get('points', sender);
+                var points = $.inidb.get('points', sender);
                 if(points == null) points = 0;
                 else points = int(points);
             
@@ -31,16 +31,16 @@ $.on('command', function(event) {
                     return;
                 }
 
-                $.db.decr('points', sender, 8000);
+                $.inidb.decr('points', sender, 8000);
 
                 $.say(username + ", paid 8,000 " + $.pointname + " to add a new command, doods!");
             } 
             var commandString = args[0].toLowerCase();
             var message = argsString.substring(argsString.indexOf(commandString) + commandString.length() + 1);
-            $.db.set('command', commandString, message);
-            var cmd = $.db.get('command', "commands");
+            $.inidb.set('command', commandString, message);
+            var cmd = $.inidb.get('command', "commands");
             if (!cmd.contains(commandString)) {
-                $.db.set('command', "commands", cmd + " - !" + commandString);
+                $.inidb.set('command', "commands", cmd + " - !" + commandString);
             }
             $.say($.username.resolve(sender) + ", the command !" + commandString + " was successfully created, dood!");
             return;
@@ -50,13 +50,13 @@ $.on('command', function(event) {
     if(args.length >= 1) {
         if(command.equalsIgnoreCase("delcom")) {
             if (!$.hasGroupByName(sender, "Administrator")) {
-                var points = $.db.get('points', sender);
+                var points = $.inidb.get('points', sender);
                 if(points == null) points = 0;
                 else points = int(points);
             } 
             var commandString = args[0].toLowerCase();
-            $.db.del('command', commandString);
-            var cmd = $.db.del('command', commandString);
+            $.inidb.del('command', commandString);
+            var cmd = $.inidb.del('command', commandString);
             $.say($.username.resolve(sender) + ", the command !" + commandString + " was successfully removed, dood!");
             return;
         }

@@ -41,7 +41,7 @@ function timeoutUser (user) {
     $.say ("/timeout " + user + " 2");
 }
 
-//var linkson = $.db.exists("bool", "linkson");
+//var linkson = $.inidb.exists("bool", "linkson");
 $.bancache.loadFromFile ("bannedUsers.bin");
 
 $.on('command', function(event) {
@@ -71,7 +71,7 @@ $.on('command', function(event) {
 			
 			if (args [0].equalsIgnoreCase("on")) {
 				if (!linkson) {
-					$.db.set("bool", "linkson", "true");
+					$.inidb.set("bool", "linkson", "true");
 					linkson = true;
 					$.say("Links enabled");
 				} else {
@@ -79,7 +79,7 @@ $.on('command', function(event) {
 				}
 			} else {
 				if (linkson) {
-					$.db.del("bool", "linkson");
+					$.inidb.del("bool", "linkson");
 					linkson = false;
 					$.say("Links disabled");
 				} else {

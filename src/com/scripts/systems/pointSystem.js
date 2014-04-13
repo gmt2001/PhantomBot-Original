@@ -22,15 +22,15 @@ $.on('command', function(event) {
             var points = int(args[2]);
 
             if (action.equalsIgnoreCase("give") || action.equalsIgnoreCase("add")) {
-                $.db.incr('points', username, points);
+                $.inidb.incr('points', username, points);
                 $.say(points + " " + $.pointname + " was sent to " + $.username.resolve(username) + ".");
             }
             if (action.equalsIgnoreCase("withdraw")) {
-                $.db.decr('points', username, points);
+                $.inidb.decr('points', username, points);
                 $.say(points + " " + $.pointname + " was withdrawn from " + $.username.resolve(username) + ".");
             }
             if (action.equalsIgnoreCase("set")) {
-                $.db.set('points', username, points);
+                $.inidb.set('points', username, points);
                 $.say($.username.resolve(username) + "'s " + $.pointname + " was set to " + points + " " + $.pointname + ".");
             }
 
@@ -40,8 +40,8 @@ $.on('command', function(event) {
                 points_user = args[0].toLowerCase();
             }
 
-            var points = $.db.get('points', points_user);
-            var time = $.db.get('time', points_user);
+            var points = $.inidb.get('points', points_user);
+            var time = $.inidb.get('time', points_user);
 
             if (points == null) points = 0;
             if (time == null) time = 0;
@@ -63,7 +63,7 @@ $.on('command', function(event) {
         $.say($.channel.getNicks());
     }
 
-    var messageCommand = $.db.get('command', command.toLowerCase());
+    var messageCommand = $.inidb.get('command', command.toLowerCase());
     if (messageCommand) {
         for (var i = 0; i < args.length; i++) {
             while (messageCommand.contains('<' + (i + 1) + '>')) {
@@ -81,18 +81,18 @@ $.setInterval(function() {
     var nicks = $.channel.getNicks();
     $.list.forEach(nicks, function(i, nick) {
         nick = nick.toLowerCase();
-        $.db.incr('time', nick, 60);
-        if ($.hasGroupByName(nick, "Viewer") && $.db.get('time', nick) == 12600 * 10) {
+        $.inidb.incr('time', nick, 60);
+        if ($.hasGroupByName(nick, "Viewer") && $.inidb.get('time', nick) == 12600 * 10) {
             $.setUserGroupByName(nick, "Regular");
             $.say($.username.resolve(nick) + " leveled up to a Regular! Congratulations and thanks for staying with us!");
-            $.db.set("bool", nick + "_greeting_enabled", "true");
-            if (!$.db.exists("string", nick + "_greeting_prefix")) {
-                $.db.set("string", nick + "_greeting_prefix", "I welcome ");
-                $.db.set("string", nick + "_greeting_suffix", " to the channel!");
+            $.inidb.set("bool", nick + "_greeting_enabled", "true");
+            if (!$.inidb.exists("string", nick + "_greeting_prefix")) {
+                $.inidb.set("string", nick + "_greeting_prefix", "I welcome ");
+                $.inidb.set("string", nick + "_greeting_suffix", " to the channel!");
             }
         }
-    // Timer needed and resets every 30 days. Don't know how to replace $.db.get('time' with this.
-    /*if ($.db.get('time', nick) >= 2592000 * 1000 && $.hasGroupByName(nick, "DOOD")) {
+    // Timer needed and resets every 30 days. Don't know how to replace $.inidb.get('time' with this.
+    /*if ($.inidb.get('time', nick) >= 2592000 * 1000 && $.hasGroupByName(nick, "DOOD")) {
             $.setUserGroupByName(nick, "Prinny"); 
         } */
     });
@@ -108,12 +108,12 @@ $.setInterval(function() {
         if ($.hasGroupByName(nick, "Prinny")) amount = 3;
         if ($.hasGroupByName(nick, "Golden")) amount = 4;
         if ($.hasGroupByName(nick, "Burning")) amount = 5;
-        $.db.incr('points', nick, amount);
+        $.inidb.incr('points', nick, amount);
     });
 
 /* } else {
         $.list.forEach(nicks, function(i, nick) {
-            $.db.incr('points', nick, 2);
+            $.inidb.incr('points', nick, 2);
         });
     }  */
 }, 600000);

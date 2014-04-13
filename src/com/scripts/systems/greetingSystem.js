@@ -11,9 +11,9 @@ $.on('ircChannelJoin', function(event) {
     var suf = null;
  
     
-    if ($.db.exists("bool", username + "_greeting_enabled")) {
-        pre = $.db.get ("string", username + "_greeting_prefix");
-        suf = $.db.get ("string", username + "_greeting_suffix");
+    if ($.inidb.exists("bool", username + "_greeting_enabled")) {
+        pre = $.inidb.get ("string", username + "_greeting_prefix");
+        suf = $.inidb.get ("string", username + "_greeting_suffix");
     }
 
  
@@ -23,8 +23,8 @@ $.on('ircChannelJoin', function(event) {
 
 	
     if (pre === null || suf === null) {
-        $.db.set("string", u + "_greeting_prefix", "Welcoming ");
-        $.db.set("string", u + "_greeting_suffix", " to the channel.");
+        $.inidb.set("string", u + "_greeting_prefix", "Welcoming ");
+        $.inidb.set("string", u + "_greeting_suffix", " to the channel.");
     }
 	
 });
@@ -44,14 +44,14 @@ $.on('command', function(event) {
     if(command.equalsIgnoreCase("greeting")) {
         var subCommand = args[0];
         if (subCommand.equalsIgnoreCase("enable")) {
-            $.db.set ("bool", username + "_greeting_enabled", "true");
-            if (!$.db.exists("string", username + "_greeting_prefix")) {
-                $.db.set("string", username + "_greeting_prefix", "Welcoming ");
-                $.db.set("string", username + "_greeting_suffix", " to the channel.");
+            $.inidb.set ("bool", username + "_greeting_enabled", "true");
+            if (!$.inidb.exists("string", username + "_greeting_prefix")) {
+                $.inidb.set("string", username + "_greeting_prefix", "Welcoming ");
+                $.inidb.set("string", username + "_greeting_suffix", " to the channel.");
             }
             $.say ("Greeting enabled! " + $.botaccount + " will greet you from now on " + $.username.resolve(username) + ".");
         } else if (subCommand.equalsIgnoreCase("disable")) {
-            $.db.del ("bool", username + "_greeting_enabled");
+            $.inidb.del ("bool", username + "_greeting_enabled");
             $.say ("Greeting disabled for " + $.username.resolve(username));
         } else if (subCommand.equalsIgnoreCase("set")) {
             if (!$.hasGroupByName(sender, "Regular")) {
@@ -61,12 +61,12 @@ $.on('command', function(event) {
             var rawMsg = args[1];
             var msg = rawMsg.split("<name>");
             println(msg[0]);
-            $.db.set("string", username + "_greeting_prefix", msg[0]);
+            $.inidb.set("string", username + "_greeting_prefix", msg[0]);
             if (msg.length > 1) {
                 println(msg[1]);
-                $.db.set("string", username + "_greeting_suffix", msg[1]);
+                $.inidb.set("string", username + "_greeting_suffix", msg[1]);
             } else {
-                $.db.set("string", username + "_greeting_suffix", "");
+                $.inidb.set("string", username + "_greeting_suffix", "");
             }
             $.say("Greeting changed");
         } else {
@@ -77,8 +77,8 @@ $.on('command', function(event) {
     if (command.equalsIgnoreCase("greet")) {
         if (args.length >= 1) {
             var username = args[0];
-            pre = $.db.get ("string", username + "_greeting_prefix");
-            suf = $.db.get ("string", username + "_greeting_suffix");
+            pre = $.inidb.get ("string", username + "_greeting_prefix");
+            suf = $.inidb.get ("string", username + "_greeting_suffix");
             if (pre == null) {
                 $.say($.username.resolve(username) + " has no greeting set.");
             } else {

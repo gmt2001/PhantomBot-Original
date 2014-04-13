@@ -71,7 +71,7 @@ $.on('command', function(event) {
  
             var price = parseInt($var.raffle_price) * times;
            
-            var points = $.db.get('points', sender);
+            var points = $.inidb.get('points', sender);
             if(points == null) points = 0;
             else points = int(points);
            
@@ -85,7 +85,7 @@ $.on('command', function(event) {
                 return;  
             }
  
-            $.db.decr('points', sender, price);
+            $.inidb.decr('points', sender, price);
  
             for (var i = 0; i < parseInt(args[1]); i++) {
                 $var.raffle_tickets.push(username);
@@ -114,7 +114,7 @@ $.on('command', function(event) {
 
             if ($var.raffle_mode == 0) {
                 $.say("/me [Winner] -> " + winner + "! Congratulations! " + $var.raffle_win + " " + $.pointname + " have been credited to your account!");
-                $.db.incr('points', winner.toLowerCase(), $var.raffle_win);
+                $.inidb.incr('points', winner.toLowerCase(), $var.raffle_win);
             } else {
                 $.say("/me [Winner] for [" + $var.raffle_win + "] is " + winner + "! Congratulations!");
             }

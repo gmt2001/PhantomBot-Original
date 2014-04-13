@@ -8,7 +8,7 @@ $.hasGroupByName = function(user, name) {
  
 $.getUserGroupId = function(user) {
     user = $.username.resolve(user);
-    var group = $.db.get('group', user.toLowerCase());
+    var group = $.inidb.get('group', user.toLowerCase());
     if(group == null) group = 0;
     else group = int(group);
     return group;
@@ -20,7 +20,7 @@ $.getUserGroupName = function(user) {
  
 $.setUserGroupById = function(user, id) {
     user = $.username.resolve(user);
-    $.db.set('group', user.toLowerCase(), id);
+    $.inidb.set('group', user.toLowerCase(), id);
 }
  
 $.setUserGroupByName = function(user, name) {

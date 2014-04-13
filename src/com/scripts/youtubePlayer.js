@@ -337,7 +337,7 @@ $.on('command', function (event) {
     }
     if (command.equalsIgnoreCase("vetosong")) {
         if (!$.hasGroupByName(sender, "Moderator")) {
-            var points = $.db.get('points', sender);
+            var points = $.inidb.get('points', sender);
             if (points == null) points = 0;
             else points = int(points);
 
@@ -346,7 +346,7 @@ $.on('command', function (event) {
                 return;
             }
 
-            $.db.decr('points', sender, 50);
+            $.inidb.decr('points', sender, 50);
 
             $.say(username + ", paid 50 " + $.pointname + " to skip the current song!");
         }

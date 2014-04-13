@@ -22,15 +22,15 @@ $.on('command', function(event) {
 			var time = int(args[2]);
 
 			if(action.equalsIgnoreCase("give") || action.equalsIgnoreCase("add") ) {
-				$.db.incr('time', username, time);
+				$.inidb.incr('time', username, time);
 				$.say(time + " seconds was added towards " + $.username.resolve(username) + ".");
 			}
 			if(action.equalsIgnoreCase("withdraw")) {
-				$.db.decr('time', username, time);
+				$.inidb.decr('time', username, time);
 				$.say($.username.resolve(username) + "'s time was deducted by " + time + " seconds.");
 			}
 			if(action.equalsIgnoreCase("set")) {
-				$.db.set('time', username, time);
+				$.inidb.set('time', username, time);
 				$.say($.username.resolve(username) + "'s time was set to " + time + " seconds.");
 			}
 			
@@ -40,8 +40,8 @@ $.on('command', function(event) {
 				points_user = args[0].toLowerCase();
 			}
 			
-			var points = $.db.get('points', points_user);
-			var time = $.db.get('time', points_user);
+			var points = $.inidb.get('points', points_user);
+			var time = $.inidb.get('time', points_user);
 			
 			if(points == null) points = 0;
 			if(time == null) time = 0;

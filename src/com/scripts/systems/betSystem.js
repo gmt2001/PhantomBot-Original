@@ -93,7 +93,7 @@ $.on('command', function(event) {
                     var bet = $var.bet_table[user];
                     if(bet.option.equalsIgnoreCase(winning)) {
                         var moneyWon = int((bet.amount / totalwin) * pot);
-                        $.db.incr('points', user, moneyWon);
+                        $.inidb.incr('points', user, moneyWon);
                         if (moneyWon == 0) {
                             $.say("Sorry " + $.username.resolve(user) + "! You didn't win any points because everyone placed thier bets on the same option.");
                             a = true;
@@ -127,7 +127,7 @@ $.on('command', function(event) {
                     return;
                 }
 				
-                var points = $.db.get('points', sender);
+                var points = $.inidb.get('points', sender);
                 if(points == null) points = 0;
                 else points = int(points);
 				
@@ -136,7 +136,7 @@ $.on('command', function(event) {
                     return;
                 }
 				
-                $.db.decr('points', sender, amount);
+                $.inidb.decr('points', sender, amount);
 				
                 if(sender in $var.bet_table) {
                     amount += $var.bet_table[sender].amount;

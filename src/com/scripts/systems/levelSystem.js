@@ -27,7 +27,7 @@ $.on('command', function(event) {
                 exp_user = args[0].toLowerCase();
             }
 
-            var exp = $.db.get('exp', exp_user);
+            var exp = $.inidb.get('exp', exp_user);
             var level = (25 + Math.sqrt(625 + 100 * exp)) / 50;
 
 
@@ -51,15 +51,15 @@ $.on('command', function(event) {
             var exp = int(args[2]);
 
             if (action.equalsIgnoreCase("give") || action.equalsIgnoreCase("add")) {
-                $.db.incr('exp', username, exp);
+                $.inidb.incr('exp', username, exp);
                 $.say(exp + " exp was sent to " + $.username.resolve(username) + ".");
             }
             if (action.equalsIgnoreCase("withdraw")) {
-                $.db.decr('exp', username, exp);
+                $.inidb.decr('exp', username, exp);
                 $.say(exp + " exp was taken from " + $.username.resolve(username) + ".");
             }
             if (action.equalsIgnoreCase("set")) {
-                $.db.set('exp', username, exp);
+                $.inidb.set('exp', username, exp);
                 $.say($.username.resolve(username) + "'s exp was set to " + exp + ".");
             }
         }
@@ -74,7 +74,7 @@ $.on('command', function(event) {
             var action = args[0];
             var exp = int(args[1]);
             var amount = int(args[1]);
-            var points = $.db.get('points', sender);
+            var points = $.inidb.get('points', sender);
 
             if (action.equalsIgnoreCase("buy")) {
 
@@ -86,8 +86,8 @@ $.on('command', function(event) {
                     return;
                 }
                 var exp2 = amount * 2;
-                $.db.decr('points', sender, amount);
-                $.db.incr('exp', sender, exp2);
+                $.inidb.decr('points', sender, amount);
+                $.inidb.incr('exp', sender, exp2);
 
                 $.say($.username.resolve(username) + " exchanged " + amount + " " + $.pointname + " for " + exp2 + " EXP.");
             }
@@ -111,7 +111,7 @@ $.on('command', function(event) {
 });
 
 $.getTitle = function (username) {
-    var exp = $.db.get('exp', username);
+    var exp = $.inidb.get('exp', username);
     var level = (25 + Math.sqrt(625 + 100 * exp)) / 50;
     var title = "";
  
@@ -133,7 +133,7 @@ $.getTitle = function (username) {
     if ( level >= 25 ) {
         title = "A Tier";
         if (level == 25) {
-            $.db.set('group', username, "Regular");
+            $.inidb.set('group', username, "Regular");
             $.say($.username.resolve(username) + " hit level " + level + "! You earn the title and rank of Regular!");
         }
     }

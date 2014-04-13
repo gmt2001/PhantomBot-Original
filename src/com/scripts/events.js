@@ -1,6 +1,6 @@
 var messageCount = 0;
 var messageTime = 0;
-var points = $.db.get('points', 'phantombot');
+var points = $.inidb.get('points', 'phantombot');
 if(points == null) points = 0;
 
 var messageIndex = 0;

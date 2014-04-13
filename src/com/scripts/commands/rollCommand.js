@@ -35,7 +35,7 @@ $.on('command', function(event) {
     if(command.equalsIgnoreCase("roll")) {
         if(d1 == d2) {
             $.say(username + " rolled Doubles >> " + die1 + " & " + die2 + "! " + "You won " + (die1+die2 * 2) + " " + $.pointname + "!" + " " +$.randElement(win));
-            $.db.incr('points', sender, die1+die2 * 2); 
+            $.inidb.incr('points', sender, die1+die2 * 2); 
         } else {
             $.say(username + " rolled a " + die1 + " & " + die2 + ". " + $.randElement(lost));
         }
