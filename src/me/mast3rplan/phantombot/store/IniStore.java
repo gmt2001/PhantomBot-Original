@@ -134,7 +134,7 @@ public class IniStore
     {
         if (!LoadFile(fName, false))
         {
-            return "";
+            return null;
         }
 
         if (key.startsWith(";") || key.startsWith("["))
@@ -236,5 +236,76 @@ public class IniStore
         }
 
         SetInteger(fName, section, key, ival);
+    }
+    
+    public void RemoveKey(String fName, String section, String key)
+    {
+        LoadFile(fName, false);
+
+        if (key.startsWith(";") || key.startsWith("["))
+        {
+            key = "_" + key;
+        }
+
+        files.get(fName).data.get(section).remove(key);
+
+        SaveFile(fName, files.get(fName));
+    }
+    
+    public void RemoveSection(String fName, String section)
+    {
+        LoadFile(fName, false);
+
+        files.get(fName).data.remove(section);
+
+        SaveFile(fName, files.get(fName));
+    }
+    
+    public boolean HasKey(String fName, String section, String key)
+    {
+        if (GetString(fName, section, key) == null)
+        {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    public boolean exists(String type, String key)
+    {
+        return HasKey(type, "", key);
+    }
+    
+    public String get(String type, String key)
+    {
+        return GetString(type, "", key);
+    }
+    
+    public void set(String type, String key, String value)
+    {
+        SetString(type, "", key, value);
+    }
+    
+    public void del(String type, String key)
+    {
+        RemoveKey(type, "", key);
+    }
+    
+    public void incr(String type, String key, int amount)
+    {
+        int ival = GetInteger(type, "", key);
+        
+        ival += amount;
+        
+        SetInteger(type, "", key, ival);
+    }
+    
+    public void decr(String type, String key, int amount)
+    {
+        int ival = GetInteger(type, "", key);
+        
+        ival -= amount;
+        
+        SetInteger(type, "", key, ival);
     }
 }

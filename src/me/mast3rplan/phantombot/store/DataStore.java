@@ -13,7 +13,17 @@ public class DataStore
     {
         return instance;
     }
-
+    
+    public String[] getKeys(String type, String pattern)
+    {
+        return (String[]) jedis.keys(PREFIX + "_" + type + "_" + pattern).toArray();
+    }
+    
+    public String[] getKeys(String pattern)
+    {
+        return (String[]) jedis.keys(PREFIX + "_" + pattern).toArray();
+    }
+    
     public boolean exists(String type, String key)
     {
         return jedis.exists(PREFIX + "_" + type + "_" + key);
