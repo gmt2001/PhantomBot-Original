@@ -9,7 +9,9 @@ The winning bet is "option" reward points have been distributed!
 */
 
 
-
+var betstart = 0;
+var betlength = 1 * 60 * 1000;
+var minbets = 2;
 
 $.on('command', function(event) {
     var sender = event.getSender();
@@ -27,15 +29,12 @@ $.on('command', function(event) {
         if(args.length >= 2) {
             var action = args[0];	
 			
-            if(action.equalsIgnoreCase("open")) {
+            if(action.equalsIgnoreCase("open") && !$var.bet_running) {
                 if (!$.hasGroupByName(sender, "Viewer")) {
                     $.say("You must be a Viewer to use this command " + username + ".");
                     return;
                 }
-                if($var.bet_running) {
-                    $.say("There's still a bet session open!");
-                    return;
-                }
+               
                 $var.bet_options = [];
                 var optionString = '';
                 for (var i = 1; i < args.length; i++) {
@@ -43,24 +42,46 @@ $.on('command', function(event) {
                 }
                 optionString.trim();
                 var boptions = optionString.split(' & ');
-                for (var i = 0; i < boptions.length; i++) {
+                for (i = 0; i < boptions.length; i++) {
                     $var.bet_options.push(boptions[i].trim().toLowerCase());
                 }
                 while (optionString.indexOf('&') != -1) {
-                    optionString = optionString.replace('&', 'vs')
+                    optionString = optionString.replace(" & ", "' vs '")
                 }
 
                 $var.bet_table = { };
                 $var.bet_running = true;
-                $.say(" Bets are open for " + optionString + ">> Awaiting players to wager thier points with :'!bet <option> <#>'");
+                $.say(" Bets are open for '" + optionString + "' >> Awaiting players to wager their points with :'!bet <option> <#>'");
                 $var.bet_optionsString = optionString;
 
                 $var.bet_id = System.currentTimeMillis();
 
+                betstart = System.currentTimeMillis();
+                
+                var betid = $var.bet_id
+                
                 setTimeout(function() {
-                    beginTime($var.bet_id)
-                    }, 5)
-            } else if(action.equalsIgnoreCase("close" || "end")) {
+                    if(!$var.bet_running) return;
+                    if($var.bet_id != betid) return;
+                    
+                    $.say("[BET CLOSED] >> Time is up!")
+                }, betlength)
+            } else if(action.equalsIgnoreCase("time") && !$var.bet_running) {
+                if (!$.hasGroupByName(sender, "Viewer")) {
+                    $.say("You must be a Regular to use this command " + username + ".");
+                    return;
+                }
+                
+                if (parseInt(args[1]) >= 60) {
+                    betlength = parseInt(args[1]) * 1000;
+                    
+                    $.say("The betting time is now set to " + args[1] + " seconds!")
+                } else if (args[1] == "0") {
+                    $.say("The betting time is set to " + betlength + " seconds!")
+                } else {
+                    $.say("The minimum time is 60 seconds!")
+                }
+            } else if(action.equalsIgnoreCase("close")) {
                 if (!$.hasGroupByName(sender, "Viewer")) {
                     $.say("You must be a Regular to use this command " + username + ".");
                     return;
@@ -87,35 +108,55 @@ $.on('command', function(event) {
 				
                 $.say("Winnings >> " + totalwin + " " + $.pointname);
 				
-                var a = false;
+                var a = 0;
+                var winners = ""
+                var moneyWon = 0
 
-                for(var user in $var.bet_table) {
-                    var bet = $var.bet_table[user];
+                for(user in $var.bet_table) {
+                    a++;
+                    bet = $var.bet_table[user];
                     if(bet.option.equalsIgnoreCase(winning)) {
-                        var moneyWon = int((bet.amount / totalwin) * pot);
-                        $.inidb.incr('points', user, moneyWon);
-                        if (moneyWon == 0) {
-                            $.say("Sorry " + $.username.resolve(user) + "! You didn't win any points because everyone placed thier bets on the same option.");
-                            a = true;
-                        } else {
-                            $.say("Congratulations to >> "+ $.username.resolve(user) + " for winning " + moneyWon + " " + $.pointname + "!");
-                            a = true;
-                        } 
-                        if(moneyWon < 0) {
-                            $.say($.username.resolve(user) + " lost " + bet.amount + " " + $.pointname + "! Maybe next time.");
-                            a = true;
+                        moneyWon = int((bet.amount / totalwin) * pot);
+                        
+                        if (moneyWon > 0) {
+                            if (winners.length > 0) {
+                                winners = winners + ", "
+                            }
+                            
+                            winners = winners + $.username.resolve(user)
                         }
                     }
                 }
-                if (!a) {
+                
+                if (a < minbets) {
                     $.say("[BET CLOSED] >> Not enough bets were placed.");
-
+                    
+                    for(user in $var.bet_table) {
+                        bet = $var.bet_table[user];
+                        $.inidb.incr('points', user, bet.amount);
+                    }
+                } else {
+                    for(user in $var.bet_table) {
+                        bet = $var.bet_table[user];
+                        if(bet.option.equalsIgnoreCase(winning)) {
+                            moneyWon = int((bet.amount / totalwin) * pot);
+                            $.inidb.incr('points', user, moneyWon);
+                            $.inidb.incr('points', user, bet.amount);
+                        }
+                    }
+                    
+                    $.say("Congratulations to the following viewers for each winning their fair share of the winnings! " + winners)
                 }
                 $var.bet_running = false;
             } else {
                 if(!$var.bet_running) return;
                 var option = args[0].toLowerCase();
                 var amount = int(args[1]);
+                
+                if (betstart + betlength < System.currentTimeMillis()) {
+                    $.say("Sorry, betting is closed, " + $.username.resolve(sender) + "!")
+                    return;
+                }
 				
                 if(!$.array.contains($var.bet_options, option)) {
                     $.say(option + " is not a valid option, " + $.username.resolve(sender) + "!");
@@ -142,7 +183,7 @@ $.on('command', function(event) {
                     amount += $var.bet_table[sender].amount;
                 }
 				 
-                $.say($.username.resolve(sender) + " wagers " + args[1] + " " + $.pointname + " as on " + option);
+                $.say($.username.resolve(sender) + " wagers " + args[1] + " " + $.pointname + " on " + option);
                 $var.bet_table[sender] = {
                     amount: amount, 
                     option: option
@@ -150,9 +191,9 @@ $.on('command', function(event) {
             }
         } else {
             if ($var.bet_running) {
-                $.say("[BET IN PROGRESS] >> Type '!bet <option> <#>' to participate, Options are: " + $var.bet_optionsString);
+                $.say("[BET IN PROGRESS] >> Type '!bet <option> <#>' to participate, Options are: '" + $var.bet_optionsString + "'");
             } else {
-                $.say("Bet Commands >> '!bet open <option1> & <option2>'' -- '!bet close <option>'' -- '!bet <option> <#>'");
+                $.say("Bet Commands >> '!bet open <option1> & <option2>' -- '!bet time <time in seconds>' -- '!bet close <option>' -- '!bet <option> <#>'");
             }
         }
     }

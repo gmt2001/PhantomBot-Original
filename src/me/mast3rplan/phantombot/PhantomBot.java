@@ -140,6 +140,12 @@ public class PhantomBot implements Listener {
     @Subscribe
     public void onConsoleMessage (ConsoleInputEvent msg) {
         String message = msg.getMsg ();
+        
+        if (message.equals ("save"))
+        {
+            IniStore.instance().SaveAll(true);
+        }
+        
         if (message.equals ("exit"))
         {
             IniStore.instance().SaveAll(true);
