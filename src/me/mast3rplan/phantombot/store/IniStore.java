@@ -58,7 +58,7 @@ public class IniStore implements ActionListener
                     {
                         if (lines[i].trim().startsWith("[") && lines[i].trim().endsWith("]"))
                         {
-                            section = lines[i].trim().substring(1, lines[i].trim().length() - 2);
+                            section = lines[i].trim().substring(1, lines[i].trim().length() - 1);
                             f.data.put(section, new HashMap<String, String>());
                         } else if (!lines[i].trim().isEmpty())
                         {
@@ -162,17 +162,17 @@ public class IniStore implements ActionListener
                     {
                     };
         }
-        
+
         Set<String> o = files.get(fName).data.keySet();
-        
+
         String[] s = new String[o.size()];
-        
+
         Iterator it = o.iterator();
         int i = 0;
-        
+
         while (it.hasNext())
         {
-            s[i++] = (String)it.next();
+            s[i++] = (String) it.next();
         }
 
         return s;
@@ -188,15 +188,15 @@ public class IniStore implements ActionListener
         }
 
         Set<String> o = files.get(fName).data.get(section).keySet();
-        
+
         String[] s = new String[o.size()];
-        
+
         Iterator it = o.iterator();
         int i = 0;
-        
+
         while (it.hasNext())
         {
-            s[i++] = (String)it.next();
+            s[i++] = (String) it.next();
         }
 
         return s;
@@ -214,6 +214,12 @@ public class IniStore implements ActionListener
             key = "_" + key;
         }
 
+        if (!files.containsKey(fName) || !files.get(fName).data.containsKey(section)
+                || !files.get(fName).data.get(section).containsKey(key))
+        {
+            return null;
+        }
+
         return (String) files.get(fName).data.get(section).get(key);
     }
 
@@ -226,10 +232,12 @@ public class IniStore implements ActionListener
             key = "_" + key;
         }
 
-        IniFile f = files.get(fName);
-        HashMap<String, HashMap<String, String>> d = f.data;
-        HashMap<String, String> s = d.get(section);
-        s.put(key, value);
+        if (!files.get(fName).data.containsKey(section))
+        {
+            files.get(fName).data.put(section, new HashMap<String, String>());
+        }
+
+        files.get(fName).data.get(section).put(key, value);
 
         changed.put(fName, Boolean.TRUE);
 
@@ -243,7 +251,7 @@ public class IniStore implements ActionListener
         try
         {
             return Integer.parseInt(sval);
-        } catch (NumberFormatException ex)
+        } catch (Exception ex)
         {
             return 0;
         }
@@ -263,7 +271,7 @@ public class IniStore implements ActionListener
         try
         {
             return Float.parseFloat(sval);
-        } catch (NumberFormatException ex)
+        } catch (Exception ex)
         {
             return 0.0f;
         }
@@ -283,7 +291,7 @@ public class IniStore implements ActionListener
         try
         {
             return Double.parseDouble(sval);
-        } catch (NumberFormatException ex)
+        } catch (Exception ex)
         {
             return 0.0;
         }
@@ -296,14 +304,14 @@ public class IniStore implements ActionListener
         SetString(fName, section, key, sval);
     }
 
-    public boolean GetBoolean(String fName, String section, String key)
+    public Boolean GetBoolean(String fName, String section, String key)
     {
         int ival = GetInteger(fName, section, key);
 
         return ival == 1;
     }
 
-    public void SetBoolean(String fName, String section, String key, boolean value)
+    public void SetBoolean(String fName, String section, String key, Boolean value)
     {
         int ival = 0;
 

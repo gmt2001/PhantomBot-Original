@@ -1,10 +1,9 @@
 package me.mast3rplan.phantombot.cache;
 
 import com.google.common.collect.Maps;
+import java.util.Map;
 import me.mast3rplan.phantombot.twitch.TwitchAPI;
 import org.json.JSONObject;
-
-import java.util.Map;
 
 public class UsernameCache {
     private static final UsernameCache instance = new UsernameCache();
