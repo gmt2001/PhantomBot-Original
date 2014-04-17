@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -152,6 +153,23 @@ public class IniStore implements ActionListener
     public void ReloadFile(String fName)
     {
         LoadFile(fName, true);
+    }
+    
+    public String[] GetFileList()
+    {
+        Collection<File> f = FileUtils.listFiles(new File("./inistore/"), null, false);
+
+        String[] s = new String[f.size()];
+
+        Iterator it = f.iterator();
+        int i = 0;
+
+        while (it.hasNext())
+        {
+            s[i++] = ((File) it.next()).getName();
+        }
+
+        return s;
     }
 
     public String[] GetCategoryList(String fName)

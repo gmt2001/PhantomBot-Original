@@ -18,3 +18,7 @@ $.on('command', function(event) {
         $.say(list);
     }
 });
+
+$.registerChatCommand("topd");
+$.registerChatCommand("recentd");
+$.registerChatCommand("dlist");

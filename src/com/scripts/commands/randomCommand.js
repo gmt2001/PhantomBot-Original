@@ -3,6 +3,7 @@ $.on('command', function(event) {
     var username = $.username.resolve(sender);
     var command = event.getCommand();
     var ar = new Array(0);
+    
     ar[0] =  username + " was welcomed to the JAM so now it's time for " + username + " to get SLAMMED!"
     ar[1] = username + " was thrown into a large pit of PJSalt."
     ar[2] = "oh my " + username + " you make me just want to *SLURP SLURP SLURP*"
@@ -35,12 +36,6 @@ $.on('command', function(event) {
     if(command.equalsIgnoreCase("random")) {
         $.say($.randElement(ar));
     }
-
-        
 });
 
-
-
-
-
-
+$.registerChatCommand("random");

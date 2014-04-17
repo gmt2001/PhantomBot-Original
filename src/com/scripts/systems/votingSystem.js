@@ -81,7 +81,6 @@ $.on('command', function(event) {
     var args = event.getArgs ();
         
     if (command.equalsIgnoreCase ("vote")) {
-                
         if (!$var.vote_running) {
             $.say ("No vote is running");
             return;
@@ -98,18 +97,17 @@ $.on('command', function(event) {
                 
     } else if (command.equalsIgnoreCase ("poll")) {
         var subCmd = args [0];
-        if (!$.hasGroupByName(sender, "Regular")) {
-            $.say ("You must be at least a regular to use that command");
+        if (!$.isMod(sender)) {
+            $.say ("You must be a Moderator to use that command");
             return;
         }
-                
-        if (subCmd.equalsIgnoreCase ("start")) {
-                        
+        
+        if (subCmd.equalsIgnoreCase ("start")) {      
             var length = 0;
             var options = []
                         
             if (args.length < 2) {
-                $.say ("Usage 'poll start [-t time] options...'\nexamples:\n - 'poll yes no'\n - 'poll -t 60 yes no maybe'");
+                $.say ("Usage 'poll start [-t time] options...'\nexamples:\n - 'poll start yes no'\n - 'poll start -t 60 yes no maybe'");
                 return;
             }
                         
@@ -132,7 +130,6 @@ $.on('command', function(event) {
             }
                         
             if ($.runPoll (function (result) {
-                                
                 if (result.length == 1) {
                     $.say ("The winner is '" + result + "' with " + $.pollResults.get (result [0]) + " votes.")
                 } else {
@@ -145,26 +142,30 @@ $.on('command', function(event) {
                 for (var i=0; i<l; ++i) {
                     optionsStr += options [i] + ", ";
                 }
+                
                 $.say ("Starting a vote, options are: " + optionsStr + options [l] + " and " + options [l+1]);
             }
                         
                         
         } else if (subCmd.equalsIgnoreCase ("end")) {
-                        
             if ($var.pollMaster == null) {
                 $.say ("There is no poll running");
             }
                         
-            if (!$.hasGroupByName(sender, "Moderator")) {
+            if (!$.isMod(sender)) {
                 if ($var.pollMaster != sender) {
-                    $.say ("Only a moderator can end somebody else's poll");
+                    $.say ("Only a Moderator can end somebody else's poll");
                 }
             }
                         
             if (!$.endPoll ()) {
                 $.say ("There is no poll running");
             }
-                        
+        } else {
+            $.say("Usage: !poll start [-t time] <option 1>...<option n>, !poll end");
         }
     }
 });
+
+$.registerChatCommand("vote");
+$.registerChatCommand("poll");

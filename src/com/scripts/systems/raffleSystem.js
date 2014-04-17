@@ -13,9 +13,9 @@ $.on('command', function(event) {
     if(command.equalsIgnoreCase("raffle")) {
         if (args.length == 0) {
             if ($var.raffle_running) {
-                $.say("/me Time for a Raffle! Type '!raffle ticket <amount>' to buy tickets." + " Each ticket costs " + $var.raffle_price + " " + $.pointname + " per ticket, doods!");
+                $.say("/me Time for a Raffle! Type '!raffle ticket <amount>' to buy tickets." + " Each ticket costs " + $var.raffle_price + " " + $.pointname + " per ticket, doods! Type '!raffle end' to choose a winner");
             } else {
-                $.say("Doesn't seem to be any raffles going on at the moment, dood.");
+                $.say("Usage: !raffle start <price> <points reward>, !raffle start <price> <custom reward (for game keys etc)>, !raffle end, !raffle ticket <amount>");
             }
             return;
         }
@@ -23,8 +23,8 @@ $.on('command', function(event) {
         var subCommand = args[0];
  
         if (subCommand.equalsIgnoreCase("start")) {
-            if (!$.hasGroupByName(sender, "Prinny")) {
-                $.say("/me " + $.username.resolve(sender) + ", " + $.getUserGroupName(username) + "s aren't allowed to start raffles! Moderators only.");
+            if (!$.isMod(sender)) {
+                $.say($.username.resolve(sender) + ", " + $.getUserGroupName(sender) + "s aren't allowed to start raffles! Moderators only.");
                 return;
             }
  
@@ -32,7 +32,7 @@ $.on('command', function(event) {
             if (args.length < 3) return;
  
             if (isNaN(args[1])) {
-                $.say("/me You typed the command arguments the wrong way it's 'raffle start < points > <reward>' " + username + "!");
+                $.say("You typed the command arguments the wrong way it's 'raffle start <price> <reward>' " + username + "!");
                 return;
             }
  
@@ -43,7 +43,7 @@ $.on('command', function(event) {
             if (isNaN(args[2])) {
                 $var.raffle_mode = 1;
                 $var.raffle_win = args[2];
-                $.say("/me [Raffle] for -> [" + args[2] + "] <- closing in ONE minute, get your entries in by typing !enter if you have not already entered.");
+                $.say("/me [Raffle] for -> [" + args[2] + "] <- get your entries in by typing '!raffle ticket <amount>'");
             } else {
                 $var.raffle_win = parseInt(args[2]);
                 $.say("/me The [Raffle] for " + args[2] + " " + $.pointname + " has started, doods! Type '!raffle ticket <amount>' to buy tickets for " + args[1] + " " + $.pointname + " per ticket, doods!");
@@ -95,7 +95,7 @@ $.on('command', function(event) {
  
             $.say($.username.resolve(sender) + " bought " + args[1] + " tickets!");
         } else if (subCommand.equalsIgnoreCase("end")) {
-            if (!$.hasGroupByName(sender, "Prinny")) {
+            if (!$.isMod(sender)) {
                 $.say("/me " +  $.username.resolve(sender) + ", " + $.getUserGroupName(username) + "s aren't allowed to end raffles! Moderators only.");
                 return;
             }
@@ -108,7 +108,7 @@ $.on('command', function(event) {
  
             var winner = $.randElement($var.raffle_tickets);
             if (winner == null) {
-                var winner = "None";
+                winner = "None";
             }
 
 
@@ -122,3 +122,5 @@ $.on('command', function(event) {
         }
     }
 });
+
+$.registerChatCommand("raffle");

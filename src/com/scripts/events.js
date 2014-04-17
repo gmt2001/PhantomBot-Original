@@ -5,6 +5,7 @@ $.on('command', function(event) {
     var num_messages = $.inidb.get('events', 'num_messages')
     var argsString = event.getArguments().trim()
     var args
+    
     if(argsString.isEmpty()) {
         args = []
     } else {
@@ -13,8 +14,8 @@ $.on('command', function(event) {
 
     if (command.equalsIgnoreCase("event")) {
         if(args.length >= 1) {
-            if (!$.hasGroupById(sender, 7)) {
-                $.say("You must be a " + $.getGroupNameById(7) + " to use this command " + $.username.resolve(sender) + ".")
+            if (!$.isAdmin(sender)) {
+                $.say("You must be an Adminstrator to use this command " + username + ".")
                 return
             }
             var action = args[0]
@@ -75,9 +76,16 @@ $.on('command', function(event) {
                 if (args.length < 2) {
                     $.say("Delete the event at the specified slot. !event del <id>")
                 } else {
-                    for (i = 0; i < num_messages; i++) {
-                        if (i > parseInt(message)) {
-                            $.inidb.set('events', 'message_' + (i - 1), $.inidb.get('events', 'message_' + i))
+                    if (isNaN(num_messages) || num_messages == 0) {
+                        $.say("There are no events at this time");
+                        return;
+                    }
+                    
+                    if (num_messages > 1) {
+                        for (i = 0; i < num_messages; i++) {
+                            if (i > parseInt(message)) {
+                                $.inidb.set('events', 'message_' + (i - 1), $.inidb.get('events', 'message_' + i))
+                            }
                         }
                     }
 
@@ -96,13 +104,19 @@ $.on('command', function(event) {
     }
 })
 
+$.registerChatCommand("event");
+
 var messageCount = 0
 var messageTime = 0
 var messageIndex = 0
 
 function sendMessage() {
-
     var num_messages = $.inidb.get('events', 'num_messages')
+    
+    if (isNaN(parseInt(num_messages)) || parseInt(num_messages) == 0) {
+        return
+    }
+    
     var message = $.inidb.get('events', 'message_' + messageIndex)
  
     messageIndex++
@@ -118,13 +132,45 @@ $.on('ircChannelMessage', function(event) {
 })
 
 function runMessage() {
-
     if (messageCount >= 25 && messageTime + 550 * 1000 < System.currentTimeMillis()){
         messageCount = 0
         sendMessage()
         messageTime = System.currentTimeMillis()
     }
+    
     setTimeout(runMessage, 1000)
 }
 
 runMessage()
+
+$.on('command', function(event) {
+    var sender = event.getSender();
+    var username = $.username.resolve(sender);
+    var command = event.getCommand();
+    var argsString = event.getArguments().trim();
+    var args;
+    
+    if(argsString.isEmpty()) {
+        args = [];
+    } else {
+        args = argsString.split(" ");
+    }
+
+    if (command.equalsIgnoreCase("pointsname")) {
+        if(args.length >= 2) {
+            if (!$.isAdmin(sender)) {
+                $.say("You must be an Administrator to use this command " + username + ".");
+                return;
+            }
+            
+            var name = argsString;
+
+            $.inidb.set('settings', 'pointname', name);
+            $.say("done! points renamed to '" + name + "'");
+
+            $.pointname = name;
+        }
+    }
+});
+
+$.registerChatCommand("pointsname");

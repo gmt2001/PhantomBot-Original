@@ -30,8 +30,8 @@ $.on('command', function(event) {
             var action = args[0];	
 			
             if(action.equalsIgnoreCase("open") && !$var.bet_running) {
-                if (!$.hasGroupByName(sender, "Viewer")) {
-                    $.say("You must be a Viewer to use this command " + username + ".");
+                if (!$.isMod(sender)) {
+                    $.say("You must be a Moderator to use this command " + username + ".");
                     return;
                 }
                
@@ -67,8 +67,8 @@ $.on('command', function(event) {
                     $.say("[BET CLOSED] >> Time is up!")
                 }, betlength)
             } else if(action.equalsIgnoreCase("time") && !$var.bet_running) {
-                if (!$.hasGroupByName(sender, "Viewer")) {
-                    $.say("You must be a Regular to use this command " + username + ".");
+                if (!$.isMod(sender)) {
+                    $.say("You must be a Moderator to use this command " + username + ".");
                     return;
                 }
                 
@@ -82,8 +82,8 @@ $.on('command', function(event) {
                     $.say("The minimum time is 60 seconds!")
                 }
             } else if(action.equalsIgnoreCase("close")) {
-                if (!$.hasGroupByName(sender, "Viewer")) {
-                    $.say("You must be a Regular to use this command " + username + ".");
+                if (!$.isMod(sender)) {
+                    $.say("You must be a Moderator to use this command " + username + ".");
                     return;
                 }
 				
@@ -191,10 +191,16 @@ $.on('command', function(event) {
             }
         } else {
             if ($var.bet_running) {
-                $.say("[BET IN PROGRESS] >> Type '!bet <option> <#>' to participate, Options are: '" + $var.bet_optionsString + "'");
+                if (betstart + betlength < System.currentTimeMillis()) {
+                    $.say("[BET CLOSED] >> Type '!bet close <option>' to declare a winner! Options are: '" + $var.bet_optionsString + "'");
+                } else {
+                    $.say("[BET IN PROGRESS] >> Type '!bet <option> <#>' to participate, Options are: '" + $var.bet_optionsString + "'");
+                }
             } else {
                 $.say("Bet Commands >> '!bet open <option1> & <option2>' -- '!bet time <time in seconds>' -- '!bet close <option>' -- '!bet <option> <#>'");
             }
         }
     }
 });
+
+$.registerChatCommand("bet");

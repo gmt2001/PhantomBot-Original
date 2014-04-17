@@ -9,7 +9,7 @@ $.on('ircChannelMessage', function(event) {
         $.say(emote);
     }
 
-    var emote = "DTR";
+    emote = "DTR";
 
     if (message.indexOf(emote) != -1) {
         $.say(emote);
@@ -27,11 +27,9 @@ $.on('ircChannelMessage', function(event) {
         $.say($.randElement(messages));
     }
 
-    var emote = "potato";
+    emote = "potato";
 
     if (message.indexOf(emote) != -1) {
         $.say("I'll take a potato ship and.. EAT IT!");
     }
-
-
 });

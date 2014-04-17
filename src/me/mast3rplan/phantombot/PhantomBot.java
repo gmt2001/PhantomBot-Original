@@ -3,6 +3,7 @@ package me.mast3rplan.phantombot;
 import com.google.common.eventbus.Subscribe;
 import java.io.File;
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -30,61 +31,65 @@ import me.mast3rplan.phantombot.store.DataStore;
 import me.mast3rplan.phantombot.store.IniStore;
 import me.mast3rplan.phantombot.twitch.TwitchAPI;
 import me.mast3rplan.phantombot.youtube.YoutubeAPI;
+import org.apache.commons.io.FileUtils;
 
-public class PhantomBot implements Listener {
+public class PhantomBot implements Listener
+{
+
     private final String username;
-    private final String password;
+    private final String oath;
     private final String channelName;
+    private final String ownerName;
     private String channelStatus;
-    private Random rng;
+    private SecureRandom rng;
     private BannedCache bancache;
-    private TreeMap <String, Integer> sinbin;
-    private TreeMap <String, Integer> pollResults;
-    private TreeSet <String> voters;
-
+    private TreeMap<String, Integer> sinbin;
+    private TreeMap<String, Integer> pollResults;
+    private TreeSet<String> voters;
     private Profile profile;
     private ConnectionManager connectionManager;
     private Session session;
     private Channel channel;
-
     private FollowersCache followersCache;
-
     private MusicWebSocketServer mws;
     //private MusicHtmlServer mhs;
     private HTTPServer mhs;
-
     ConsoleInputListener cil;
 
-    public PhantomBot(String username, String password, String channel) {
+    public PhantomBot(String username, String oath, String channel, String owner)
+    {
         this.username = username;
-        this.password = password;
+        this.oath = oath;
         this.channelName = channel;
+        this.ownerName = owner;
 
         this.profile = new Profile(username.toLowerCase());
         this.connectionManager = new ConnectionManager(profile);
 
         this.followersCache = FollowersCache.instance(channel.toLowerCase());
-        
-        rng = new Random ();
-        rng.setSeed (System.currentTimeMillis ());
-        bancache = new BannedCache ();
-        sinbin = new TreeMap ();
-        pollResults = new TreeMap ();
-        voters = new TreeSet ();
+
+        rng = new SecureRandom();
+        bancache = new BannedCache();
+        sinbin = new TreeMap();
+        pollResults = new TreeMap();
+        voters = new TreeSet();
 
         this.init();
-        try {
-            Thread.sleep (1000);
-        } catch (InterruptedException ex) {
+        try
+        {
+            Thread.sleep(1000);
+        } catch (InterruptedException ex)
+        {
         }
-        this.session = connectionManager.requestConnection("tmi6.justin.tv", 443, password);
+        this.session = connectionManager.requestConnection("tmi6.justin.tv", 443, oath);
         //this.session = connectionManager.requestConnection("irc.twitch.tv", 6667, password);
         this.session.addIRCEventListener(new IrcEventHandler());
     }
 
-    public final void init() {
+    public final void init()
+    {
         mhs = new HTTPServer(25565);
-        mhs.start ();
+        mhs.start();
         mws = new MusicWebSocketServer(25566);
 
         cil = new ConsoleInputListener();
@@ -100,7 +105,9 @@ public class PhantomBot implements Listener {
         Script.global.defineProperty("username", UsernameCache.instance(), 0);
         Script.global.defineProperty("twitch", TwitchAPI.instance(), 0);
         Script.global.defineProperty("followers", followersCache, 0);
+        Script.global.defineProperty("botName", username, 0);
         Script.global.defineProperty("channelName", channelName, 0);
+        Script.global.defineProperty("ownerName", ownerName, 0);
         Script.global.defineProperty("channelStatus", channelStatus, 0);
         Script.global.defineProperty("musicplayer", mws, 0);
         Script.global.defineProperty("random", rng, 0);
@@ -108,61 +115,71 @@ public class PhantomBot implements Listener {
         Script.global.defineProperty("pollResults", pollResults, 0);
         Script.global.defineProperty("pollVoters", voters, 0);
 
-        try {
+        try
+        {
             ScriptManager.loadScript(new File("./scripts/init.js"));
-        } catch (IOException e) {
+        } catch (IOException e)
+        {
         }
     }
 
     @Subscribe
-    public void onIRCConnectComplete(IrcConnectCompleteEvent event) {
+    public void onIRCConnectComplete(IrcConnectCompleteEvent event)
+    {
         session.join("#" + channelName.toLowerCase());
-        System.out.println ("Connected to server\nJoining channel #" + channelName.toLowerCase());
+        System.out.println("Connected to server\nJoining channel #" + channelName.toLowerCase());
     }
 
     @Subscribe
-    public void onIRCJoinComplete(IrcJoinCompleteEvent event) {
-        this.channel = event.getChannel ();
-        System.out.println ("Joined channel: " + event.getChannel ().getName ());
+    public void onIRCJoinComplete(IrcJoinCompleteEvent event)
+    {
+        this.channel = event.getChannel();
+        System.out.println("Joined channel: " + event.getChannel().getName());
     }
 
     @Subscribe
-    public void onIRCChannelMessage(IrcChannelMessageEvent event) {
+    public void onIRCChannelMessage(IrcChannelMessageEvent event)
+    {
         String message = event.getMessage();
         String sender = event.getSender();
-        if(message.startsWith("!")) {
+        if (message.startsWith("!"))
+        {
             String commandString = message.substring(1);
-            handleCommand (sender, commandString);
+            handleCommand(sender, commandString);
         }
         //System.out.println (event.getMessage ());
     }
-    
+
     @Subscribe
-    public void onConsoleMessage (ConsoleInputEvent msg) {
-        String message = msg.getMsg ();
-        
-        if (message.equals ("save"))
+    public void onConsoleMessage(ConsoleInputEvent msg)
+    {
+        String message = msg.getMsg();
+
+        if (message.equals("save"))
         {
             IniStore.instance().SaveAll(true);
         }
-        
-        if (message.equals ("exit"))
+
+        if (message.equals("exit"))
         {
             IniStore.instance().SaveAll(true);
-            
-            System.exit (0);
+
+            System.exit(0);
         }
         //System.out.println (message);
-        handleCommand ("Phantombot", message);
+        handleCommand(username, message);
     }
-    
-    public void handleCommand (String sender, String commandString) {
+
+    public void handleCommand(String sender, String commandString)
+    {
         String command, arguments;
         int split = commandString.indexOf(' ');
-        if(split == -1) {
+        if (split == -1)
+        {
             command = commandString;
             arguments = "";
-        } else {
+        } else
+        {
             command = commandString.substring(0, split);
             arguments = commandString.substring(split + 1);
         }
@@ -170,45 +187,96 @@ public class PhantomBot implements Listener {
         EventBus.instance().post(new CommandEvent(sender, command, arguments));
     }
 
-    public static void main(String[] args) throws IOException {
-        if(args.length != 3) {
-            System.out.println("Usage: java -jar PhantomBot.jar <username> <password> <channel>");
-            return;
+    public static void main(String[] args) throws IOException
+    {
+        String user = "";
+        String oauth = "";
+        String channel = "";
+        String owner = "";
+        
+        boolean changed = false;
+
+        try
+        {
+            String data = FileUtils.readFileToString(new File("./botlogin"));
+            String[] lines = data.replaceAll("\\r", "").split("\\n");
+
+            for (int i = 0; i < lines.length; i++)
+            {
+                if (lines[i].startsWith("user=") && lines[i].length() > 8)
+                {
+                    user = lines[i].substring(5);
+                }
+
+                if (lines[i].startsWith("oauth=") && lines[i].length() > 9)
+                {
+                    oauth = lines[i].substring(6);
+                }
+
+                if (lines[i].startsWith("channel=") && lines[i].length() > 11)
+                {
+                    channel = lines[i].substring(8);
+                }
+
+                if (lines[i].startsWith("owner=") && lines[i].length() > 9)
+                {
+                    owner = lines[i].substring(6);
+                }
+            }
+        } catch (IOException ex)
+        {
         }
-        PhantomBot phantomBot = new PhantomBot(args[0], args[1], args[2]);
-        //HTTPClient.getResource ("http://en.wikipedia.org/index.html");
-        //HTTPClient.getResource ("http://en.wikipedia.org/wiki/Main_Page");
-        //System.out.println (HTTPClient.getResource ("https://api.twitch.tv/kraken").getBody ());
-        /*URLConnection connection = new URL("https://api.twitch.tv/kraken/oauth2/token").openConnection();
-        connection.setUseCaches(false);
-        connection.setDefaultUseCaches(false);
-        connection.addRequestProperty ("client_id", "tgl3z25burd57mkv3ov5gb6io40i7f9");
-        connection.addRequestProperty ("username", "jesmaz");
-        System.out.println (IOUtils.toString(connection.getInputStream(), connection.getContentEncoding()));*/
-        /*String [] test = {
-          "message 192.45.45.1",
-          "2001:0db8:0000:0000:0000:ff00:0042:8329",
-          "text before 2001:0db8:0000:0000:0000:ff10:0042:8329 text after",
-          "2001:db8:0:0:0:ff00:42:8329",
-          "2001:db8::ff00:42:8329",
-          "example.com",
-          "probably.not.a.website",
-          "this.is.not.a.valid.link()",
-          "the comment has no link",
-          "www.google.com",
-          "http://www.kernal.org/",
-          "google.com",
-          "www.facebook.com/subpage",
-          "www.facebook.com/subpage?v=O932GF"
-        };
-        for (String s : test) {
-            System.out.println ("'" + s + "' : " + isLink (s));
-        }*/
+        
+        if (user.isEmpty() || oauth.isEmpty() || channel.isEmpty())
+        {
+            if (args.length == 3)
+            {
+                user = args[0];
+                oauth = args[1];
+                channel = args[2];
+            } else {
+                System.out.println("Login details for bot not found");
+                
+                System.out.print("Please enter the bot's username: ");
+                user = System.console().readLine().trim();
+                
+                System.out.print("Please enter the bot's tmi oauth string: ");
+                oauth = System.console().readLine().trim();
+                
+                System.out.print("Please enter the channel the bot should join: ");
+                channel = System.console().readLine().trim();
+            }
+            
+            changed = true;
+        }
+        
+        if (owner.isEmpty())
+        {
+            System.out.print("Please enter the bot owner's username: ");
+            owner = System.console().readLine().trim();
+            
+            changed = false;
+        }
+        
+        if (changed)
+        {
+            String data = "";
+            data += "user=" + user + "\r\n";
+            data += "oauth=" + oauth + "\r\n";
+            data += "channel=" + channel + "\r\n";
+            data += "owner=" + owner;
+            
+            FileUtils.writeStringToFile(new File("./botlogin"), data);
+        }
+
+        PhantomBot phantomBot = new PhantomBot(user, oauth, channel, owner);
     }
-    
-    public static boolean isLink (String message) {
-        String [] arr = message.split (" ");
-        for (String s : arr) {
+
+    public static boolean isLink(String message)
+    {
+        String[] arr = message.split(" ");
+        for (String s : arr)
+        {
             if (IrcMessageEvent.addressPtn.matcher(s).matches())
             {
                 return true;
@@ -216,17 +284,17 @@ public class PhantomBot implements Listener {
         }
         return false;
         /*InetAddress ip;
-        URI uri;
+         URI uri;
         
-        String [] arr = message.split (" ");
-        for (String s : arr) {
-            try {
-                uri = URI.create (s);
-                //ip = InetAddress.getByName (s);
-                return true;
-            } catch (IllegalArgumentException ex) {
-            }
-        }
-        return false;*/
+         String [] arr = message.split (" ");
+         for (String s : arr) {
+         try {
+         uri = URI.create (s);
+         //ip = InetAddress.getByName (s);
+         return true;
+         } catch (IllegalArgumentException ex) {
+         }
+         }
+         return false;*/
     }
 }

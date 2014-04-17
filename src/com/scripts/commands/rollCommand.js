@@ -2,8 +2,8 @@ $.on('command', function(event) {
     var sender = event.getSender();
     var username = $.username.resolve(sender);
     var command = event.getCommand();
-    var d1 = Math.floor(Math.random() * 6) + 1;
-    var d2 = Math.floor(Math.random() * 6) + 1;
+    var d1 = $.rand(1, 6);
+    var d2 = $.rand(1, 6);
     var die1 = d1;
     var die2 = d2;
 
@@ -21,6 +21,18 @@ $.on('command', function(event) {
     lost[10] = "Still losing!"
     lost[11] = "You're great at losing."
     
+    if (username.equalsIgnoreCase("gmt2001")) {
+        lost[12] = "You re-programmed me and you still failed!"
+        lost[13] = "You re-programmed me and you still failed!"
+        lost[14] = "You re-programmed me and you still failed!"
+    }
+    
+    if (username.equalsIgnoreCase("brutalmind1984")) {
+        lost[12] = "That was a brutal beating you took!"
+        lost[13] = "That was a brutal beating you took!"
+        lost[14] = "That was a brutal beating you took!"
+    }
+    
     var win = new Array (0)
     win[0] = "Congratulations!"
     win[1] = "Damn you won.."
@@ -31,6 +43,12 @@ $.on('command', function(event) {
     win[6] = "Oh my you did it! HNNG!"
     win[7] = "Your balls finally dropped!"
     win[8] = "X GON GIVE IT TO YA!"
+    
+    if (username.equalsIgnoreCase("theradicalninja")) {
+        win[9] = "The ninja strikes!"
+        win[10] = "The ninja strikes!"
+        win[11] = "The ninja strikes!"
+    }
 
     if(command.equalsIgnoreCase("roll")) {
         if(d1 == d2) {

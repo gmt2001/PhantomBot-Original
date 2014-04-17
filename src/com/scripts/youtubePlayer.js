@@ -75,38 +75,15 @@ function RequestedSong(song, user) {
 
     this.canRequest = function () {
         if ($var.requestusers[user] == null) return true;
+        
         var requestlimit = 2;
-
-        if ($.hasGroupByName(user, "Regular")) {
-            var requestlimit = 3;
-        } else {
-            var requestlimit = 2;
-        }
-
-        if ($.hasGroupByName(user, "Prinny")) {
-            var requestlimit = 4;
-        } else {
-            var requestlimit = 2;
-        }
-
-        if ($.hasGroupByName(user, "Golden")) {
-            var requestlimit = 6;
-        } else {
-            var requestlimit = 2;
-        }
-
-        if ($.hasGroupByName(user, "Burning")) {
-            var requestlimit = 10;
-        } else {
-            var requestlimit = 2;
-        }
-
-
+        
         return $var.requestusers[user] < requestlimit;
     }
 
     this.canRequest2 = function () {
         if ($var.requestusers[user] == null) return true;
+        
         for (var i in $var.songqueue) {
             if (this.song.id + "" === $var.songqueue[i].song.id + "") return false;
         }
@@ -122,7 +99,7 @@ function RequestedSong(song, user) {
 function next() {
     initPools();
     var name = "";
-    var user = "DJ PhantomBot"
+    var user = "DJ " + $.botname
     var s = new Song(null);
     if ($var.songqueue.length > 0) {
         s = $var.songqueue.shift();
@@ -147,9 +124,12 @@ function next() {
     $var.prevSong = $.currSong;
     $var.currSong = s;
     $.say("Coming up >> ♫~" + name + "~♫ requested by " + user);
+    
     var nextMsg = "If no one chooses the next song, PhantomBot will choose for you!";
-    if ($var.songqueue.length > 0)
+    if ($var.songqueue.length > 0) {
         nextMsg = "Next song >> ♫~" + $var.songqueue[0].song.getName() + "~♫ requested by " + $var.songqueue[0].user;
+    }
+    
     printNameToFile(" Now Playing >> ♫~" + name + "~♫ requested by " + user);
 }
 
@@ -159,9 +139,11 @@ $.on('musicPlayerState', function (event) {
         initPools();
         next();
     }
+    
     if (event.getStateId() == 0) {
         next();
     }
+    
     if (event.getStateId() == 5) {
         $.musicplayer.play();
         $.musicplayer.currentId();
@@ -188,6 +170,10 @@ $.on('command', function (event) {
     var command = event.getCommand();
     var argsString = event.getArguments().trim();
     var args;
+    var videoL;
+    var song;
+    var id;
+    var i;
 
     if (argsString.isEmpty()) {
         args = [];
@@ -207,31 +193,35 @@ $.on('command', function (event) {
                 $.say("Songrequests is currently disabled!");
                 return;
             }
+            
             var video = new Song(argsString);
 
             if (video.id == null) {
                 $.say("Song doesn't exist or you typed something wrong.");
                 return;
             }
+            
             if (video.length < 10) {
-                var videoL = video.length.toString().substr(0, 1);
+                videoL = video.length.toString().substr(0, 1);
 
             } else if (video.length < 100) {
-                var videoL = video.length.toString().substr(0, 3);
+                videoL = video.length.toString().substr(0, 3);
             } else {
-                var videoL = video.length.toString().substr(0, 2);
+                videoL = video.length.toString().substr(0, 2);
             }
+            
             if (video.length > 8.0) {
                 $.say("Song >> " + video.name + " is " + videoL + " minutes long, maximum length is 7 minutes.");
                 return;
             }
 
-            var song = new RequestedSong(video, username);
+            song = new RequestedSong(video, username);
 
             if (!song.canRequest()) {
                 $.say("You've hit your song request limit, " + username + "!");
                 return;
             }
+            
             if (!song.canRequest2()) {
                 $.say("That song is already in the queue or the default playlist, " + username + "!");
                 return;
@@ -240,25 +230,27 @@ $.on('command', function (event) {
             $.say("Song >> " + video.name + " was added to the queue by " + username + ".");
             song.request();
         }
+        
         if (command.equalsIgnoreCase("songremove")) {
             if (!musicPlayerConnected) {
                 $.say("Songrequests is currently disabled!");
                 return;
             }
-            var id = $.youtube.searchVideo(argsString, "none");
+            
+            id = $.youtube.searchVideo(argsString, "none");
             if (id == null) {
                 $.say("Song doesn't exist or you typed something wrong.");
                 return;
             }
 
-            for (var i in $var.songqueue) {
+            for (i in $var.songqueue) {
                 if (id + "" === $var.songqueue[i].song.id + "") {
-                    if ($var.songqueue[i].user === username || $.hasGroupByName(sender, "Moderator")) {
+                    if ($var.songqueue[i].user === username || $.isMod(sender)) {
                         $.say("Song >> " + $var.songqueue[i].song.getName() + " has been removed from the queue!");
                         $var.songqueue.splice(i, 1);
                         return;
                     } else {
-                        $.say($.username.resolve(sender) + ", " + $.getUserGroupName(username) + "s aren't allowed to remove songs! Moderators only.");
+                        $.say(username + ", only Moderators or the user who requested a song can remove it.");
                         return;
                     }
                 }
@@ -267,11 +259,13 @@ $.on('command', function (event) {
             $.say(sender + ", that song isn't in the list.");
         }
     }
+    
     if (command.equalsIgnoreCase("volume")) {
-        if (!$.hasGroupByName(sender, "Moderator")) {
+        if (!$.isMod(sender)) {
             $.say($.username.resolve(sender) + ", " + $.getUserGroupName(username) + "s aren't allowed to use this command! Moderators only.");
             return;
         }
+        
         if (args.length > 0) {
             $.musicplayer.setVolume(parseInt(args[0]));
             $.say("Music volume set to: " + args[0] + "%");
@@ -279,9 +273,9 @@ $.on('command', function (event) {
             $.musicplayer.currentVolume();
         }
     }
+    
     if (command.equalsIgnoreCase("skipsong")) {
-
-        var song = $.musicplayer.currentId();
+        song = $.musicplayer.currentId();
 
         if ($var.skipSong) {
             if ($.pollVoters.contains(sender)) {
@@ -308,6 +302,7 @@ $.on('command', function (event) {
 
         }, ['yes', 'nope'], 35 * 3000, "phantombot")) {
             $.say("2 more votes are required to skip this song, to vote use '!vote yes'");
+            
             if (makeVote('yes')) {
                 $.pollVoters.add(sender);
             }
@@ -316,14 +311,15 @@ $.on('command', function (event) {
             $.say("A poll to skip a song is already open and running! " + username);
         }
     }
+    
     if (command.equalsIgnoreCase("stealsong")) {
-        if ($.hasGroupByName(sender, "Moderator")) {
+        if ($.isMod(sender)) {
             if (!musicPlayerConnected) {
                 $.say("Songrequests is currently disabled!");
                 return;
             }
-            var id = $var.currSong.id;
-            for (var i = 0; i < init.length; ++i) {
+            id = $var.currSong.id;
+            for (i = 0; i < init.length; ++i) {
                 if (init[i] == id) {
                     $.say("'" + $var.currSong.name + "' is already in the queue.");
                     return;
@@ -335,9 +331,11 @@ $.on('command', function (event) {
             $.say($.username.resolve(sender) + ", " + $.getUserGroupName(username) + "s aren't allowed to use this command! Moderators only.");
         }
     }
+    
     if (command.equalsIgnoreCase("vetosong")) {
-        if (!$.hasGroupByName(sender, "Moderator")) {
+        if (!$.isMod(sender)) {
             var points = $.inidb.get('points', sender);
+            
             if (points == null) points = 0;
             else points = int(points);
 
@@ -350,11 +348,14 @@ $.on('command', function (event) {
 
             $.say(username + ", paid 50 " + $.pointname + " to skip the current song!");
         }
+        
         next();
     }
+    
     if (command.equalsIgnoreCase("currentsong")) {
         $.say("Currently playing >> ♫~" + $var.currSong.name + "~♫");
     }
+    
     if (command.equalsIgnoreCase("nextsong")) {
         if ($var.songqueue.length > 0) {
             $.say("Next song >> ♫~" + $var.songqueue[0].song.getName() + "~♫ requested by " + $var.songqueue[0].user);
@@ -363,6 +364,15 @@ $.on('command', function (event) {
         }
     }
 });
+
+$.registerChatCommand("songrequest");
+$.registerChatCommand("songremove");
+$.registerChatCommand("volume");
+$.registerChatCommand("skipsong");
+$.registerChatCommand("stealsong");
+$.registerChatCommand("vetosong");
+$.registerChatCommand("currentsong");
+$.registerChatCommand("nextsong");
 
 $.on('musicPlayerCurrentVolume', function (event) {
     $.say("Music volume is currently: " + parseInt(event.getVolume()) + "%, dood!");

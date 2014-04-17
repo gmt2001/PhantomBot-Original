@@ -45,29 +45,27 @@ function timeoutUser (user) {
 $.bancache.loadFromFile ("bannedUsers.bin");
 
 $.on('command', function(event) {
-	
     var sender = event.getSender();
     var username = $.username.resolve(sender);
     var command = event.getCommand();
     var args = event.getArgs ();
 	
-    if (command.equalsIgnoreCase("chat") && username.equalsIgnoreCase("phantombot")) {
+    if (command.equalsIgnoreCase("chat") && username.equalsIgnoreCase($.botname)) {
         $.say (args [0]);
     } else if (command.equalsIgnoreCase("purge")) {
-		
-        if ($.getUserGroupId (sender) >= $.getGroupIdByName ("Moderator") || username.equalsIgnoreCase("phantombot")) {
+        if ($.isMod(sender) || username.equalsIgnoreCase($.botname)) {
             if (args.length == 1) {
                 timeoutUser (args [0]);
             } else {
                 $.say ("You must specify a user to purge")
             }
         } else {
-            $.say ("Only a Moderator can use this command! " + $.username.resolve(sender));
+            $.say ("Only a Moderator can use this command! " + username);
         }
 		
     } else if (command.equalsIgnoreCase("links")) {
 		
-        /*if ($.getUserGroupId (sender) >= $.getGroupIdByName ("mod") || username.equalsIgnoreCase("phantombot")) {
+        /*if ($.isMod(sender) || username.equalsIgnoreCase($.botname)) {
 			
 			if (args [0].equalsIgnoreCase("on")) {
 				if (!linkson) {
@@ -94,7 +92,7 @@ $.on('command', function(event) {
 		
     } else if (command.equalsIgnoreCase("ban")) {
 		
-        if ($.getUserGroupId (sender) >= $.getGroupIdByName ("Moderator") || username.equalsIgnoreCase("phantombot")) {
+        if ($.isMod(sender) || username.equalsIgnoreCase($.botname)) {
 			
             if (args.length == 2) {
                 var time = parseInt (args [1]);
@@ -113,18 +111,18 @@ $.on('command', function(event) {
             }
 			
         } else {
-            $.say ("Only a Moderator can use this command! " + $.username.resolve(sender));
+            $.say ("Only a Moderator can use this command! " + username);
         }
 		
     } else if (command.equalsIgnoreCase("unban")) {
 		
-        if ($.getUserGroupId (sender) >= $.getGroupIdByName ("Moderator") || username.equalsIgnoreCase("phantombot")) {
+        if ($.isMod(sender) || username.equalsIgnoreCase($.botname)) {
 			
             unbanUser (args [0]);
             $.say (args [0] + " is no longer banned");
 			
         } else {
-            $.say ("Only a Moderator can use this command! " + $.username.resolve(sender));
+            $.say ("Only a Moderator can use this command! " + username);
         }
 		
     }
@@ -132,7 +130,6 @@ $.on('command', function(event) {
 });
 
 $.on('ircChannelMessage', function(event) {
-	
     var sender = event.getSender().toLowerCase();
     var chatName = $.username.resolve(sender);
     var username = chatName.toLowerCase();
@@ -153,13 +150,18 @@ $.on('ircChannelMessage', function(event) {
 
 });
 
+$.registerChatCommand("purge");
+$.registerChatCommand("links");
+$.registerChatCommand("ban");
+$.registerChatCommand("unban");
+
 $.setInterval(function() {
-	
     var reformed = $.bancache.getReformedUsers ();
     var l = reformed.length;
-    for (var i=0; i<l; ++i) {
+    
+    for (var i = 0; i < l; ++i) {
         unbanUser (reformed[i]);
     }
+    
     $.bancache.syncToFile ("bannedUsers.bin");
-	
 }, 60);

@@ -1,3 +1,11 @@
+$.isAdmin = function (user) {
+    return $.hasGroupByName(user, "Administrator");
+}
+
+$.isMod = function (user) {
+    return $.hasGroupByName(user, "Moderator") || $.isAdmin(user);
+}
+
 $.hasGroupById = function(user, id) {
     return $.getUserGroupId(user) >= id;
 }
@@ -26,49 +34,66 @@ $.setUserGroupById = function(user, id) {
 $.setUserGroupByName = function(user, name) {
     $.setUserGroupById(user, $.getGroupIdByName(name));
 }
+
+var groups = new Array();
+var keys = $.inidb.GetKeyList("groups", "");
+
+for (var i = 0 ; i < keys.length; i++) {
+    groups[parseInt(keys[i])] = $.inidb.get("groups", keys[i]);
+}
+
+if (groups[0] == undefined || groups[0] == null) {
+    groups[0] = "Viewer";
+}
+
+if (groups[1] == undefined || groups[1] == null) {
+    groups[1] = "Regular";
+}
+
+if (groups[2] == undefined || groups[2] == null) {
+    groups[2] = "Prinny";
+}
+
+if (groups[3] == undefined || groups[3] == null) {
+    groups[3] = "Golden";
+}
+
+if (groups[4] == undefined || groups[4] == null) {
+    groups[4] = "Burning";
+}
+
+if (groups[5] == undefined || groups[5] == null) {
+    groups[5] = "Awesome";
+}
+
+if (groups[6] == undefined || groups[6] == null) {
+    groups[6] = "Moderator";
+}
+
+if (groups[7] == undefined || groups[7] == null) {
+    groups[7] = "Administrator";
+}
  
 $.getGroupNameById = function(id) {
     id = parseInt(id);
-    switch(id) {
-        case 0:
-            return "Viewer";
-        case 1:
-            return "Regular";
-        case 2:
-            return "Prinny";
-        case 3:
-            return "Golden";
-        case 4:
-            return "Burning";
-        case 5:
-            return "Moderator";
-        case 7:
-            return "Administrator";
-        default:
-            return "Viewer";
+    
+    if (id < groups.length) {
+        return groups[id];
     }
+    
+    return groups[0];
 }
  
 $.getGroupIdByName = function(name) {
     name = name + "";
-    switch(name) {
-        case "Viewer":
-            return 0;
-        case "Regular":
-            return 1;
-        case "Prinny":
-            return 2;
-        case "Golden":
-            return 3;
-        case "Burning":
-            return 4;
-        case "Moderator":
-            return 5;
-        case "Administrator":
-            return 7;
-        default:
-            return 0;
+    
+    for (var i = 0; i < groups.length; i++){
+        if (groups[i].equalsIgnoreCase(name)) {
+            return i;
+        }
     }
+    
+    return 0;
 }
 
 $.on('command', function(event) {
@@ -77,6 +102,10 @@ $.on('command', function(event) {
     var command = event.getCommand();
     var argsString = event.getArguments().trim();
     var args;
+    var name;
+    var i;
+    var allowed = true;
+    
     if(argsString.isEmpty()) {
         args = [];
     } else {
@@ -85,33 +114,110 @@ $.on('command', function(event) {
 
     if(args.length >= 3) {
         if(command.equalsIgnoreCase("perm")) {
-            if (!sender == "phantomindex" || !$.hasGroupByName(sender, "Administrator")) {
-                $.say($.username.resolve(sender) + ", " + $.getUserGroupName(username) + "s aren't allowed access to this command! Administrators only.");
+            if (sender != $.botowner.toLowerCase() || !$.hasGroupByName(sender, "Administrator")) {
+                $.say(username + ", " + $.getUserGroupName(username) + "s aren't allowed access to this command! Administrators only.");
                 return;
                 
             }
+            
             var subCommand = args[0];
  
             if (subCommand.equalsIgnoreCase("set")) {
-                $.setUserGroupByName(args[1], args[2]);
-                $.say("Rank for " + $.username.resolve(args[1]) + " changed to " + args[2] + "!");
+                name = argsString.substring(argsString.indexOf(args[0]) + args[0].length() + 1 + argsString.indexOf(args[1]) + args[1].length() + 1);
+                
+                $.setUserGroupByName(args[1], name);
+                $.say("Rank for " + $.username.resolve(args[1]) + " changed to " + name + "!");
             }
         }
     }
     if (command.equalsIgnoreCase("rank")) {
         if (args.length >= 1) {
-            var username = args[0];
+            username = args[0];
             $.say($.username.resolve(username) + " is currently in the " + $.getUserGroupName(username) + " rank.");
         } else {
             $.say($.username.resolve(sender) + ", you're in the " + $.getUserGroupName(username) + " rank, dood.");
         }
-    } 
+    }
+    
+    if (command.equalsIgnoreCase("rankname")) {
+        if (sender != $.botowner.toLowerCase() || !$.hasGroupByName(sender, "Administrator")) {
+            $.say(username + ", " + $.getUserGroupName(username) + "s aren't allowed access to this command! Administrators only.");
+            return;
+                
+        }
+        
+        if (args.length < 2) {
+            if (args.length == 1 && args[0].equalsIgnoreCase("list")) {
+                var ranks = "";
+                
+                for (i = 0; i < groups.length; i++) {
+                    if (ranks.length > 0) {
+                        ranks = ranks + " - ";
+                    }
+                    
+                    ranks = ranks + i + " = " + groups[i];
+                }
+                
+                $.say("Ranks: " + ranks);
+            } else {
+                $.say("Usage: !rankname <id> <new name>, !rankname list")
+            }
+        } else {
+            if (parseInt(args[0]) >= groups.length || parseInt(args[0]) < 0) {
+                args[0] = 0;
+            }
+            
+            if ($.getGroupNameById(parseInt(args[0])).equals("Administrator")) {
+                allowed = false;
+                
+                for (i = 0; i < groups.length; i++) {
+                    if (groups[i].equals("Administrator") && i != parseInt(args[0])) {
+                        allowed = true;
+                    }
+                }
+                
+                if (!allowed) {
+                    $.say("You cant change the name of the 'Administrator' rank without first changing another rank to 'Administrator'!");
+                }
+            }
+            
+            if ($.getGroupNameById(parseInt(args[0])).equals("Moderator")) {
+                allowed = false;
+                
+                for (i = 0; i < groups.length; i++) {
+                    if (groups[i].equals("Moderator") && i != parseInt(args[0])) {
+                        allowed = true;
+                    }
+                }
+                
+                if (!allowed) {
+                    $.say("You cant change the name of the 'Moderator' rank without first changing another rank to 'Moderator'!");
+                }
+            }
+            
+            name = argsString.substring(argsString.indexOf(args[0]) + args[0].length() + 1);
+            
+            if (name.length > 0 && allowed) {
+                $.inidb.set("groups", args[0], name);
+                
+                var oldname = groups[parseInt(args[0])];
+                groups[parseInt(args[0])] = name;
+                
+                $.say("Changed rank '" + oldname + "' to '" + name + "'!")
+            }
+        }
+    }
 });
+
+$.registerChatCommand("perm set");
+$.registerChatCommand("rank");
+$.registerChatCommand("rankname");
 
 $.on('consoleInput', function(event) {
     var command = event.getMsg().split(" ")[0];
     var argsString = event.getMsg().replace(command, "").trim();
     var args;
+    
     if(argsString.isEmpty()) {
         args = [];
     } else {
@@ -121,12 +227,11 @@ $.on('consoleInput', function(event) {
     if(args.length >= 3) {
         if(command.equalsIgnoreCase("perm")) {
             var subCommand = args[0];
+            var name = argsString.substring(argsString.indexOf(args[0]) + args[0].length() + 1 + argsString.indexOf(args[1]) + args[1].length() + 1);
  
             if (subCommand.equalsIgnoreCase("set")) {
-                $.setUserGroupByName(args[1], args[2]);
-
+                $.setUserGroupByName(args[1], name);
             } 
-
         }
     }
 });

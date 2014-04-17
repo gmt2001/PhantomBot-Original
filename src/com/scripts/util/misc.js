@@ -18,10 +18,17 @@ $.list.forEach = function(list, callback) {
     }
 }
 
-//$.rand = java.lang.Math.random;
 $.randElement = function(arr) {
     if (arr == null) return null;
-    return arr[Math.abs($.random.nextInt()) % arr.length];
+    return arr[$.rand(arr.length)];
+}
+
+$.rand = function (max) {
+    return Math.abs($.random.nextInt()) % max;
+}
+
+$.rand = function (min, max) {
+    return $.rand(max) + min;
 }
 
 $.array = { };

@@ -13,10 +13,8 @@ $.on('command', function(event) {
     }
 
     if(command.equalsIgnoreCase("kill")) {
-
         if(args.length == 1) {
-
-            var username = args[0].toLowerCase();
+            username = args[0].toLowerCase();
 
             var killuser = new Array(0)
 
@@ -28,9 +26,7 @@ $.on('command', function(event) {
             killuser[5] = $.username.resolve(sender) + " attacked " + $.username.resolve(username) + " with a rusty spoon as the weapon...and managed to kill him."
          
             $.say($.randElement(killuser));
-
         } else {
-
             var killself = new Array(0)
 
             killself[0] = $.username.resolve(sender) + " has somehow managed to kill himself."  
@@ -38,11 +34,8 @@ $.on('command', function(event) {
             killself[2] = $.username.resolve(sender) + " imploded."
 
             $.say($.randElement(killself));
-            
         }
     }
-
 });
 
-
-
+$.registerChatCommand("kill");

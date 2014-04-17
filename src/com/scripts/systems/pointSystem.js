@@ -4,6 +4,9 @@ $.on('command', function(event) {
     var command = event.getCommand();
     var argsString = event.getArguments().trim();
     var args;
+    var action;
+    var points;
+    
     if (argsString.isEmpty()) {
         args = [];
     } else {
@@ -12,35 +15,39 @@ $.on('command', function(event) {
 
     if (command.equalsIgnoreCase("points")) {
         if (args.length == 3) {
-            if (!$.botaccount == $.username.resolve(sender) || !$.hasGroupByName(sender, "Administrator")) {
+            if (!$.botaccount == $.username.resolve(sender) || !$.isAdmin(sender)) {
                 $.say("You must be a Administrator to use this command " + username + ".");
                 return;
             }
 
-            var action = args[0];
-            var username = args[1].toLowerCase();
-            var points = int(args[2]);
+            action = args[0];
+            username = args[1].toLowerCase();
+            points = int(args[2]);
 
-            if (action.equalsIgnoreCase("give") || action.equalsIgnoreCase("add")) {
+            if (action.equalsIgnoreCase("give")) {
                 $.inidb.incr('points', username, points);
                 $.say(points + " " + $.pointname + " was sent to " + $.username.resolve(username) + ".");
-            }
-            if (action.equalsIgnoreCase("withdraw")) {
+            } else if (action.equalsIgnoreCase("take")) {
                 $.inidb.decr('points', username, points);
                 $.say(points + " " + $.pointname + " was withdrawn from " + $.username.resolve(username) + ".");
-            }
-            if (action.equalsIgnoreCase("set")) {
+            } else if (action.equalsIgnoreCase("set")) {
                 $.inidb.set('points', username, points);
                 $.say($.username.resolve(username) + "'s " + $.pointname + " was set to " + points + " " + $.pointname + ".");
+            } else {
+                $.say("Usage: !points give <username> <amount>, !points take <username> <amount>, !points set <username> <amount>");
             }
-
         } else {
+            if (args[0].equalsIgnoreCase("help")) {
+                $.say("Usage: !points give <username> <amount>, !points take <username> <amount>, !points set <username> <amount>");
+                return;
+            }
+            
             var points_user = sender;
             if (args.length == 1) {
                 points_user = args[0].toLowerCase();
             }
 
-            var points = $.inidb.get('points', points_user);
+            points = $.inidb.get('points', points_user);
             var time = $.inidb.get('time', points_user);
 
             if (points == null) points = 0;
@@ -62,20 +69,11 @@ $.on('command', function(event) {
     if (command.equalsIgnoreCase("users")) {
         $.say($.channel.getNicks());
     }
-
-    var messageCommand = $.inidb.get('command', command.toLowerCase());
-    if (messageCommand) {
-        for (var i = 0; i < args.length; i++) {
-            while (messageCommand.contains('<' + (i + 1) + '>')) {
-                messageCommand = messageCommand.replace('<' + (i + 1) + '>', args[i]);
-            }
-        }
-        while (messageCommand.contains('<sender>')) {
-            messageCommand = messageCommand.replace('<sender>', sender);
-        }
-        $.say(messageCommand);
-    }
 });
+
+$.registerChatCommand("points");
+$.registerChatCommand("points help");
+$.registerChatCommand("users");
 
 $.setInterval(function() {
     var nicks = $.channel.getNicks();

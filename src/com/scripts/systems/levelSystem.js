@@ -4,6 +4,10 @@ $.on('command', function(event) {
     var command = event.getCommand();
     var argsString = event.getArguments().trim();
     var args;
+    var exp;
+    var action;
+    var exp_user;
+    
     if (argsString.isEmpty()) {
         args = [];
     } else {
@@ -12,22 +16,22 @@ $.on('command', function(event) {
 
     if (command.equalsIgnoreCase("level")) {
         if (args.length == 3) {
-            if (!$.botaccount == $.username.resolve(sender) || !$.hasGroupByName(sender, "Administrator")) {
+            if (!$.botname == $.username.resolve(sender) || !$.isAdmin(sender)) {
                 $.say("You must be a Administrator to use this command " + username + ".");
                 return;
             }
 
-            var action = args[0];
-            var username = args[1].toLowerCase();
-            var exp = int(args[2]);
+            action = args[0];
+            username = args[1].toLowerCase();
+            exp = int(args[2]);
 
         } else {
-            var exp_user = sender;
+            exp_user = sender;
             if (args.length == 1) {
                 exp_user = args[0].toLowerCase();
             }
 
-            var exp = $.inidb.get('exp', exp_user);
+            exp = $.inidb.get('exp', exp_user);
             var level = (25 + Math.sqrt(625 + 100 * exp)) / 50;
 
 
@@ -42,37 +46,44 @@ $.on('command', function(event) {
 
     if (command.equalsIgnoreCase("exp")) {
         if (args.length == 3) {
-            if (!$.botaccount == $.username.resolve(sender) || !$.hasGroupByName(sender, "Administrator")) {
+            if (!$.botname == $.username.resolve(sender) || !$.isAdmin(sender)) {
                 $.say("You must be a Administrator to use this command " + username + ".");
                 return;
             }
-            var action = args[0];
-            var username = args[1].toLowerCase();
-            var exp = int(args[2]);
+            
+            action = args[0];
+            username = args[1].toLowerCase();
+            exp = int(args[2]);
 
-            if (action.equalsIgnoreCase("give") || action.equalsIgnoreCase("add")) {
+            if (action.equalsIgnoreCase("give")) {
                 $.inidb.incr('exp', username, exp);
                 $.say(exp + " exp was sent to " + $.username.resolve(username) + ".");
-            }
-            if (action.equalsIgnoreCase("withdraw")) {
+            } else if (action.equalsIgnoreCase("take")) {
                 $.inidb.decr('exp', username, exp);
                 $.say(exp + " exp was taken from " + $.username.resolve(username) + ".");
-            }
-            if (action.equalsIgnoreCase("set")) {
+            } else if (action.equalsIgnoreCase("set")) {
                 $.inidb.set('exp', username, exp);
                 $.say($.username.resolve(username) + "'s exp was set to " + exp + ".");
+            } else {
+                $.say("Usage: !exp give <username> <amount>, !exp take <username> <amount>, !exp set <username> <amount>")
             }
         }
 
+        if (args[0].equalsIgnoreCasue("help")) {
+            $.say("Usage: !exp give <username> <amount>, !exp take <username> <amount>, !exp set <username> <amount>");
+            return;
+        }
+
         if (args.length == 0) {
+            $.say("You have " + $.inidb.get('exp', username) + " EXP.");
             $.say("Type >> '!exp buy <amount>' to exchange your " + $.pointname + " for EXP.")
             return;
         }
 
         if (args.length == 2) {
 
-            var action = args[0];
-            var exp = int(args[1]);
+            action = args[0];
+            exp = int(args[1]);
             var amount = int(args[1]);
             var points = $.inidb.get('points', sender);
 
@@ -96,19 +107,22 @@ $.on('command', function(event) {
     }
 
     if (command.equalsIgnoreCase("title")) {
-
         if (args.length >= 1) {
-            var username = args[0];
-            var title = $.getTitle (username);
+            username = args[0];
+            title = $.getTitle (username);
 
             $.say($.username.resolve(username) + "'s title is: " + title);
 
         } else {
-            var title = $.getTitle (username);
+            title = $.getTitle (username);
             $.say($.username.resolve(sender) + "'s title is: " + title);
         }
     }
 });
+
+$.registerChatCommand("exp");
+$.registerChatCommand("exp help");
+$.registerChatCommand("title");
 
 $.getTitle = function (username) {
     var exp = $.inidb.get('exp', username);
