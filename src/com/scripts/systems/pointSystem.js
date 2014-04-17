@@ -15,7 +15,7 @@ $.on('command', function(event) {
 
     if (command.equalsIgnoreCase("points")) {
         if (args.length == 3) {
-            if (!$.botaccount == $.username.resolve(sender) || !$.isAdmin(sender)) {
+            if (!$.isAdmin(sender)) {
                 $.say("You must be a Administrator to use this command " + username + ".");
                 return;
             }
@@ -37,7 +37,7 @@ $.on('command', function(event) {
                 $.say("Usage: !points give <username> <amount>, !points take <username> <amount>, !points set <username> <amount>");
             }
         } else {
-            if (args[0].equalsIgnoreCase("help")) {
+            if (!argsString.isEmpty() && args[0].equalsIgnoreCase("help")) {
                 $.say("Usage: !points give <username> <amount>, !points take <username> <amount>, !points set <username> <amount>");
                 return;
             }

@@ -10,7 +10,7 @@ var s = $.inidb.get("settings", "nonmodcommands");
 
 $.allowNonModCommands = false;
 
-if (s.equals("1")) {
+if (s != null && s.equals("1")) {
     $.allowNonModCommands = true;
 }
 

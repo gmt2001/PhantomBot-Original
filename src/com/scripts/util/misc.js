@@ -23,12 +23,12 @@ $.randElement = function(arr) {
     return arr[$.rand(arr.length)];
 }
 
-$.rand = function (max) {
-    return Math.abs($.random.nextInt()) % max;
+$.randRange = function (min, max) {
+    return $.rand(max) + min;
 }
 
-$.rand = function (min, max) {
-    return $.rand(max) + min;
+$.rand = function (max) {
+    return Math.abs($.random.nextInt()) % max;
 }
 
 $.array = { };

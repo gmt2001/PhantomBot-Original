@@ -41,9 +41,15 @@ $.on('command', function(event) {
     var command = event.getCommand();
     var argsString = event.getArguments().trim();
     var args = event.getArgs();
+    var subCommand;
     
     if(command.equalsIgnoreCase("greeting")) {
-        var subCommand = args[0];
+        if (argsString.isEmpty()){
+            subCommand = "";
+        } else {
+            subCommand = args[0];
+        }
+    
         if (subCommand.equalsIgnoreCase("enable")) {
             $.inidb.set ("bool", username + "_greeting_enabled", "true");
             
@@ -76,9 +82,8 @@ $.on('command', function(event) {
             
             $.say("Greeting changed");
         } else {
-            println($.say('Usage: !greeting enable, !greeting disable, !greeting set <"prefix"> <"suffix">'));
+            $.say('Usage: !greeting enable, !greeting disable, !greeting set <"prefix"> <"suffix">');
         }
-		
     }
     
     if (command.equalsIgnoreCase("greet")) {
@@ -87,13 +92,25 @@ $.on('command', function(event) {
             pre = $.inidb.get ("string", username + "_greeting_prefix");
             suf = $.inidb.get ("string", username + "_greeting_suffix");
             
+            if (suf == null) {
+                suf = "";
+            }
+            
             if (pre == null) {
                 $.say($.username.resolve(username) + " has no greeting set.");
             } else {
                 $.say(pre + $.username.resolve(username) + suf);
             }
         } else {
-            $.say(pre + $.username.resolve(sender) + suf);
+            if (suf == null) {
+                suf = "";
+            }
+            
+            if (pre == null) {
+                $.say($.username.resolve(sender) + " has no greeting set.");
+            } else {
+                $.say(pre + $.username.resolve(sender) + suf);
+            }
         }
     } 
 });

@@ -16,7 +16,7 @@ $.on('command', function(event) {
 
     if (command.equalsIgnoreCase("level")) {
         if (args.length == 3) {
-            if (!$.botname == $.username.resolve(sender) || !$.isAdmin(sender)) {
+            if (!$.isAdmin(sender)) {
                 $.say("You must be a Administrator to use this command " + username + ".");
                 return;
             }
@@ -46,7 +46,7 @@ $.on('command', function(event) {
 
     if (command.equalsIgnoreCase("exp")) {
         if (args.length == 3) {
-            if (!$.botname == $.username.resolve(sender) || !$.isAdmin(sender)) {
+            if (!$.isAdmin(sender)) {
                 $.say("You must be a Administrator to use this command " + username + ".");
                 return;
             }
@@ -75,7 +75,6 @@ $.on('command', function(event) {
         }
 
         if (args.length == 0) {
-            $.say("You have " + $.inidb.get('exp', username) + " EXP.");
             $.say("Type >> '!exp buy <amount>' to exchange your " + $.pointname + " for EXP.")
             return;
         }
@@ -120,6 +119,7 @@ $.on('command', function(event) {
     }
 });
 
+$.registerChatCommand("level");
 $.registerChatCommand("exp");
 $.registerChatCommand("exp help");
 $.registerChatCommand("title");

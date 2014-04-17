@@ -53,7 +53,7 @@ $.on('command', function(event) {
     if (command.equalsIgnoreCase("chat") && username.equalsIgnoreCase($.botname)) {
         $.say (args [0]);
     } else if (command.equalsIgnoreCase("purge")) {
-        if ($.isMod(sender) || username.equalsIgnoreCase($.botname)) {
+        if ($.isMod(sender)) {
             if (args.length == 1) {
                 timeoutUser (args [0]);
             } else {

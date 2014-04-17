@@ -37,7 +37,7 @@ $.on('command', function(event) {
                 $.say("Usage: !time give <username> <amount in seconds>, !time take <username> <amount in seconds>, !time set <username> <amount in seconds>");
             }	
         } else {
-            if (args[0].equalsIgnoreCase("help")) {
+            if (!argsString.isEmpty() && args[0].equalsIgnoreCase("help")) {
                 $.say("Usage: !time give <username> <amount in seconds>, !time take <username> <amount in seconds>, !time set <username> <amount in seconds>");
                 return;
             }

@@ -2,8 +2,8 @@ $.on('command', function(event) {
     var sender = event.getSender();
     var username = $.username.resolve(sender);
     var command = event.getCommand();
-    var d1 = $.rand(1, 6);
-    var d2 = $.rand(1, 6);
+    var d1 = $.randRange(1, 6);
+    var d2 = $.randRange(1, 6);
     var die1 = d1;
     var die2 = d2;
 

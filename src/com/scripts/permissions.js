@@ -1,5 +1,13 @@
+$.isBot = function (user) {
+    return user.equalsIgnoreCase($.botname);
+}
+
+$.isOwner = function (user) {
+    return user.equalsIgnoreCase($.botowner);
+}
+
 $.isAdmin = function (user) {
-    return $.hasGroupByName(user, "Administrator");
+    return $.hasGroupByName(user, "Administrator") || $.isOwner(user) || $.isBot(user);
 }
 
 $.isMod = function (user) {
@@ -114,7 +122,7 @@ $.on('command', function(event) {
 
     if(args.length >= 3) {
         if(command.equalsIgnoreCase("perm")) {
-            if (sender != $.botowner.toLowerCase() || !$.hasGroupByName(sender, "Administrator")) {
+            if (!$.isAdmin(sender)) {
                 $.say(username + ", " + $.getUserGroupName(username) + "s aren't allowed access to this command! Administrators only.");
                 return;
                 
@@ -140,7 +148,7 @@ $.on('command', function(event) {
     }
     
     if (command.equalsIgnoreCase("rankname")) {
-        if (sender != $.botowner.toLowerCase() || !$.hasGroupByName(sender, "Administrator")) {
+        if (!$.isAdmin(sender)) {
             $.say(username + ", " + $.getUserGroupName(username) + "s aren't allowed access to this command! Administrators only.");
             return;
                 
@@ -212,26 +220,3 @@ $.on('command', function(event) {
 $.registerChatCommand("perm set");
 $.registerChatCommand("rank");
 $.registerChatCommand("rankname");
-
-$.on('consoleInput', function(event) {
-    var command = event.getMsg().split(" ")[0];
-    var argsString = event.getMsg().replace(command, "").trim();
-    var args;
-    
-    if(argsString.isEmpty()) {
-        args = [];
-    } else {
-        args = argsString.split(" ");
-    }
-
-    if(args.length >= 3) {
-        if(command.equalsIgnoreCase("perm")) {
-            var subCommand = args[0];
-            var name = argsString.substring(argsString.indexOf(args[0]) + args[0].length() + 1 + argsString.indexOf(args[1]) + args[1].length() + 1);
- 
-            if (subCommand.equalsIgnoreCase("set")) {
-                $.setUserGroupByName(args[1], name);
-            } 
-        }
-    }
-});

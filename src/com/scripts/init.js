@@ -52,16 +52,16 @@ if ($.pointname == undefined || $.pointname == null) {
 }
 
 // [ ----------------------(Plugins enable/disable)------------------------ ]
-$.loadScript('./util/commandList.js');
 $.loadScript('./util/misc.js');
+$.loadScript('./util/commandList.js');
 
 $.loadScript('./events.js');
 $.loadScript('./permissions.js');
 
 $.loadScript('./chatModerator.js');
 $.loadScript('./followHandler.js');
-$.loadScript('./youtubePlayer.js');
 $.loadScript('./kappaTrigger.js'); 
+//$.loadScript('./youtubePlayer.js');
 
 $.loadScript('./systems/fileSystem.js');
 $.loadScript('./systems/pointSystem.js');

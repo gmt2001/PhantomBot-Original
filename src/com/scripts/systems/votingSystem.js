@@ -5,6 +5,7 @@ function makeVote (option) {
     if (current != null) {
         var n = current.intValue() + 1;
         $.pollResults.put (option, n);
+        $var.pollTotalVotes++;
         return true;
     }
     return false;
@@ -49,6 +50,7 @@ $.runPoll = function (callback, options, time, pollMaster) {
     }
     $var.pollOptions = options;
     $var.pollMaster = pollMaster;
+    $var.pollTotalVotes = 0;
         
     if (time > 0) {
         pollCallback = callback;
@@ -79,6 +81,7 @@ $.on('command', function(event) {
     var command = event.getCommand();
     var argsString = event.getArguments().trim();
     var args = event.getArgs ();
+    var subCmd = "";
         
     if (command.equalsIgnoreCase ("vote")) {
         if (!$var.vote_running) {
@@ -96,7 +99,9 @@ $.on('command', function(event) {
         }
                 
     } else if (command.equalsIgnoreCase ("poll")) {
-        var subCmd = args [0];
+        if (!argsString.isEmpty()) {
+            subCmd = args [0];
+        }
         if (!$.isMod(sender)) {
             $.say ("You must be a Moderator to use that command");
             return;
@@ -131,19 +136,25 @@ $.on('command', function(event) {
                         
             if ($.runPoll (function (result) {
                 if (result.length == 1) {
-                    $.say ("The winner is '" + result + "' with " + $.pollResults.get (result [0]) + " votes.")
+                    $.say ("Polls are closed! The winner is '" + result + "' with " + $.pollResults.get (result [0]).intValue() + " out of " + $var.pollTotalVotes + " votes.")
                 } else {
-                    $.say ("The poll resulted in a " + result.length + " way tie '" + result + "' all received " + $.pollResults.get (result [0]) + " votes.")
+                    var optionsStr = "";
+                var l = result.length-2;
+                for (var i=0; i < l; ++i) {
+                    optionsStr += result [i] + ", ";
+                }
+                
+                    $.say ("The poll resulted in a " + result.length + " way tie '" + optionsStr + result [l] + " and " + result [l+1] + "', each received " + $.pollResults.get (result [0]).intValue() + " out of " + $var.pollTotalVotes + " votes.")
                 }
                                 
             }, options, length * 1000, sender)) {
                 var optionsStr = "";
                 var l = options.length-2;
-                for (var i=0; i<l; ++i) {
+                for (var i=0; i < l; ++i) {
                     optionsStr += options [i] + ", ";
                 }
                 
-                $.say ("Starting a vote, options are: " + optionsStr + options [l] + " and " + options [l+1]);
+                $.say ("Polls are open! Vote with '!vote <option>'. The options are: " + optionsStr + options [l] + " and " + options [l+1]);
             }
                         
                         

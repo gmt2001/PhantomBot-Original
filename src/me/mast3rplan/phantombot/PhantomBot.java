@@ -37,7 +37,7 @@ public class PhantomBot implements Listener
 {
 
     private final String username;
-    private final String oath;
+    private final String oauth;
     private final String channelName;
     private final String ownerName;
     private String channelStatus;
@@ -56,10 +56,10 @@ public class PhantomBot implements Listener
     private HTTPServer mhs;
     ConsoleInputListener cil;
 
-    public PhantomBot(String username, String oath, String channel, String owner)
+    public PhantomBot(String username, String oauth, String channel, String owner, boolean useTwitch)
     {
         this.username = username;
-        this.oath = oath;
+        this.oauth = oauth;
         this.channelName = channel;
         this.ownerName = owner;
 
@@ -81,8 +81,15 @@ public class PhantomBot implements Listener
         } catch (InterruptedException ex)
         {
         }
-        this.session = connectionManager.requestConnection("tmi6.justin.tv", 443, oath);
-        //this.session = connectionManager.requestConnection("irc.twitch.tv", 6667, password);
+
+        if (!useTwitch)
+        {
+            this.session = connectionManager.requestConnection("tmi6.justin.tv", 443, oauth);
+        } else
+        {
+            this.session = connectionManager.requestConnection("irc.twitch.tv", 6667, oauth);
+        }
+
         this.session.addIRCEventListener(new IrcEventHandler());
     }
 
@@ -193,7 +200,8 @@ public class PhantomBot implements Listener
         String oauth = "";
         String channel = "";
         String owner = "";
-        
+        boolean useTwitch = false;
+
         boolean changed = false;
 
         try
@@ -226,7 +234,7 @@ public class PhantomBot implements Listener
         } catch (IOException ex)
         {
         }
-        
+
         if (user.isEmpty() || oauth.isEmpty() || channel.isEmpty())
         {
             if (args.length == 3)
@@ -234,30 +242,31 @@ public class PhantomBot implements Listener
                 user = args[0];
                 oauth = args[1];
                 channel = args[2];
-            } else {
+            } else
+            {
                 System.out.println("Login details for bot not found");
-                
+
                 System.out.print("Please enter the bot's username: ");
                 user = System.console().readLine().trim();
-                
+
                 System.out.print("Please enter the bot's tmi oauth string: ");
                 oauth = System.console().readLine().trim();
-                
+
                 System.out.print("Please enter the channel the bot should join: ");
                 channel = System.console().readLine().trim();
             }
-            
+
             changed = true;
         }
-        
+
         if (owner.isEmpty())
         {
             System.out.print("Please enter the bot owner's username: ");
             owner = System.console().readLine().trim();
-            
-            changed = false;
+
+            changed = true;
         }
-        
+
         if (changed)
         {
             String data = "";
@@ -265,11 +274,24 @@ public class PhantomBot implements Listener
             data += "oauth=" + oauth + "\r\n";
             data += "channel=" + channel + "\r\n";
             data += "owner=" + owner;
-            
+
             FileUtils.writeStringToFile(new File("./botlogin"), data);
         }
 
-        PhantomBot phantomBot = new PhantomBot(user, oauth, channel, owner);
+        if (args.length > 0 && args[0].equals("printlogin"))
+        {
+            System.out.println("user='" + user + "'");
+            System.out.println("oauth='" + oauth + "'");
+            System.out.println("channel='" + channel + "'");
+            System.out.println("owner='" + owner + "'");
+        }
+
+        if (args.length > 0 && (args[0].equals("usetwitch") || args[1].equals("usetwitch")))
+        {
+            useTwitch = true;
+        }
+
+        PhantomBot phantomBot = new PhantomBot(user, oauth, channel, owner, useTwitch);
     }
 
     public static boolean isLink(String message)

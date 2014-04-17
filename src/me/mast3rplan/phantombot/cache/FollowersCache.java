@@ -10,6 +10,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
 import java.util.List;
 import java.util.Map;
 
@@ -61,6 +63,12 @@ public class FollowersCache implements Runnable {
                 }
 
                 Thread.sleep(5000);
+            } catch (ConnectException e) {
+                System.out.println(">>Failed to update followers: " + e.getMessage());
+            } catch (SocketTimeoutException e) {
+                System.out.println(">>Failed to update followers: " + e.getMessage());
+            } catch (IOException e) {
+                System.out.println(">>Failed to update followers: " + e.getMessage());
             } catch (Exception e) {
                 e.printStackTrace();
             }
