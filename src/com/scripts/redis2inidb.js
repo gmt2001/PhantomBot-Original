@@ -15,7 +15,7 @@ if ($.inidb.GetFileList().length > 0){
         java.lang.System.out.print("\r   " + i + "/" + tostring(keys.length));
     }
 
-    println();
+    println("\r   " + tostring(keys.length) + "/" + tostring(keys.length));
 }
 
 println("   Saving...");

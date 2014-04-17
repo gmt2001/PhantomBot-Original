@@ -157,7 +157,7 @@ $.on('command', function(event) {
     }
 
     if (command.equalsIgnoreCase("pointsname")) {
-        if(args.length >= 2) {
+        if(args.length >= 1) {
             if (!$.isAdmin(sender)) {
                 $.say("You must be an Administrator to use this command " + username + ".");
                 return;
@@ -169,7 +169,9 @@ $.on('command', function(event) {
             $.say("done! points renamed to '" + name + "'");
 
             $.pointname = name;
-        }
+        } else {
+            $.say("The current name for points is '" + $.pointname + "'!");
+        } 
     }
 });
 

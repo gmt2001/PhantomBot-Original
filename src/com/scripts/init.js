@@ -55,6 +55,12 @@ if ($.pointname == undefined || $.pointname == null) {
 $.loadScript('./util/misc.js');
 $.loadScript('./util/commandList.js');
 
+$.loadScript('./systems/fileSystem.js');
+
+if ($.inidb.GetBoolean("init", "initialsettings", "loaded") == false) {
+    $.loadScript('./initialsettings.js');
+}
+
 $.loadScript('./events.js');
 $.loadScript('./permissions.js');
 
@@ -63,7 +69,6 @@ $.loadScript('./followHandler.js');
 $.loadScript('./kappaTrigger.js'); 
 //$.loadScript('./youtubePlayer.js');
 
-$.loadScript('./systems/fileSystem.js');
 $.loadScript('./systems/pointSystem.js');
 $.loadScript('./systems/timeSystem.js');
 $.loadScript('./systems/betSystem.js');
@@ -79,6 +84,6 @@ $.loadScript('./commands/rollCommand.js');
 $.loadScript('./commands/donationCommand.js');
 $.loadScript('./commands/killCommand.js');
 
-if (enableRedis2IniConversion && !$.inidb.GetBoolean("init", "redis2ini", "converted")) {
+if (enableRedis2IniConversion && $.inidb.GetBoolean("init", "redis2ini", "converted") == false) {
     $.loadScript('./redis2inidb.js'); 
 }

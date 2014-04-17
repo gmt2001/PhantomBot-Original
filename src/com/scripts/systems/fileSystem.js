@@ -52,6 +52,15 @@ $.writeToFile = function (string, path, append) {
     }
 }
 
+$.touchFile = function (path) {
+    try {
+        var fos = new java.io.FileOutputStream (path, true);
+        fos.close ();
+    } catch (e) {
+        println ("Failed to touch '" + path + "'");
+    }
+}
+
 
 // Deprecated
 $.printToFile = function (string, file) {
