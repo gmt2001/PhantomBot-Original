@@ -69,7 +69,7 @@ $.on('command', function(event) {
             }
         }
 
-        if (args[0].equalsIgnoreCasue("help")) {
+        if (args.length > 0 && args[0].equalsIgnoreCase("help")) {
             $.say("Usage: !exp give <username> <amount>, !exp take <username> <amount>, !exp set <username> <amount>");
             return;
         }
@@ -80,7 +80,6 @@ $.on('command', function(event) {
         }
 
         if (args.length == 2) {
-
             action = args[0];
             exp = int(args[1]);
             var amount = int(args[1]);
@@ -101,7 +100,6 @@ $.on('command', function(event) {
 
                 $.say($.username.resolve(username) + " exchanged " + amount + " " + $.pointname + " for " + exp2 + " EXP.");
             }
-
         } 
     }
 
