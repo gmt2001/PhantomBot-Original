@@ -38,7 +38,7 @@ $.on('command', function(event) {
                 for (i = 0; i < boptions.length; i++) {
                     $var.bet_options.push(boptions[i].trim().toLowerCase());
                     
-                    if (optionString.length() > 0) {
+                    if (!optionString.equals("")) {
                         optionString = optionString + " vs ";
                     }
                     
@@ -47,7 +47,7 @@ $.on('command', function(event) {
 
                 $var.bet_table = { };
                 $var.bet_running = true;
-                $.say(" Bets are open for '" + optionString + "' >> Awaiting players to wager their points with :'!bet <amount> <option>'");
+                $.say(" Bets are open for " + optionString + " >> Awaiting players to wager their points with :'!bet <amount> <option>'");
                 $var.bet_optionsString = optionString;
 
                 $var.bet_id = System.currentTimeMillis();

@@ -205,7 +205,7 @@ $.on('command', function(event) {
             
             name = argsString.substring(argsString.indexOf(args[0]) + args[0].length() + 1);
             
-            if (name.length > 0 && allowed) {
+            if (name.length() > 0 && allowed) {
                 $.inidb.set("groups", args[0], name);
                 
                 var oldname = groups[parseInt(args[0])];

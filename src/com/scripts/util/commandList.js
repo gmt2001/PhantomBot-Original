@@ -50,11 +50,15 @@ $.on('command', function(event) {
         var more = ""
         var commandsPerPage = $.commandsPerPage;
         
+        if (commandsPerPage == null) {
+            commandsPerPage = 20;
+        }
+        
         if (length > commandsPerPage) {
-            numPages = Math.ceil(length / commandsPerPage)
+            numPages = Math.ceil(length / commandsPerPage);
             
             if (args.length > 0 && !isNaN(parseInt(args[0]))) {
-                start = commandsPerPage * parseInt(args[0]);
+                start = commandsPerPage * (parseInt(args[0]) - 1);
                 
                 page = " page " + args[0] + " of " + numPages + " ";
             } else {
@@ -63,7 +67,7 @@ $.on('command', function(event) {
             
             end = Math.min(start + commandsPerPage, length);
             
-            more = " >> Type '!commands <page #>' for more"
+            more = " >> Type '!commands < page #>' for more"
         }
         
         for (var i = start; i < end; i++) {
@@ -81,7 +85,7 @@ $.on('command', function(event) {
         $.say("Commands" + page + ": " + cmdList + more);
     }
     
-    if (command.equalsIgnoreCae("commandsperpage")) {
+    if (command.equalsIgnoreCase("commandsperpage")) {
         if (args.length > 0 && !isNaN(parseInt(args[0])) && parseInt(args[0]) >= 10) {
             $.commandsPerPage = parseInt(args[0]);
             $.inidb.set("commands", "_commandsPerPage", args[0]);
@@ -96,7 +100,7 @@ $.on('command', function(event) {
 var commands = $.inidb.GetKeyList("command", "");
 var commandsPerPage = $.inidb.get("command", "_commandsPerPage");
 
-if (!isNaN(parseInt(commandsPerPage)) && parseInt(commandsPerPage) >= 10) {
+if (commandsPerPage != null && !isNaN(parseInt(commandsPerPage)) && parseInt(commandsPerPage) >= 10) {
     $.commandsPerPage = commandsPerPage;
 }
 

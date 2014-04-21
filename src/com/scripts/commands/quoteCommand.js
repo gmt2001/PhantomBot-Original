@@ -1,11 +1,12 @@
 $.on('command', function(event) {
+    var sender = event.getSender();
     var command = event.getCommand();
     var argsString = event.getArguments().trim();
     var num_quotes = parseInt($.inidb.get("quotes", "num_quotes"));
     var quote;
     
     if(command.equalsIgnoreCase("quote")) {
-        if (isNaN(num_quotes) || num_quotes == 0) {
+        if (num_quotes == null || isNaN(num_quotes) || num_quotes == 0) {
             $.say("There are no quotes at this time");
             return;
         }
@@ -21,6 +22,10 @@ $.on('command', function(event) {
             return;
         }
         
+        if (num_quotes == null || isNaN(num_quotes)) {
+            num_quotes = 0;
+        }
+        
         $.inidb.incr("quotes", "num_quotes", 1);
         $.inidb.set("quotes", "quote_" + num_quotes, argsString);
         
@@ -33,7 +38,7 @@ $.on('command', function(event) {
             return;
         }
         
-        if (isNaN(num_quotes) || num_quotes == 0) {
+        if (num_quotes == null || isNaN(num_quotes) || num_quotes == 0) {
             $.say("There are no quotes at this time");
             return;
         }
