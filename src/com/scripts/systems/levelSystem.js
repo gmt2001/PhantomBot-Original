@@ -145,8 +145,10 @@ $.getTitle = function (username) {
     if ( level >= 25 ) {
         title = "A Tier";
         if (level == 25) {
-            $.inidb.set('group', username, "Regular");
-            $.say($.username.resolve(username) + " hit level " + level + "! You earn the title and rank of Regular!");
+            if ($.hasGroupById(username, 0)) {
+                $.setUserGroupByName(username, "Regular");
+                $.say($.username.resolve(username) + " hit level " + level + "! You earn the title and rank of Regular!");
+            }
         }
     }
     if ( level >= 30 ) {

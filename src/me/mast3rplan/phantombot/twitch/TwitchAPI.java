@@ -1,11 +1,10 @@
 package me.mast3rplan.phantombot.twitch;
 
-import org.apache.commons.io.IOUtils;
-import org.json.JSONObject;
-
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
+import org.apache.commons.io.IOUtils;
+import org.json.JSONObject;
 
 public class TwitchAPI {
     public static final String URL = "https://api.twitch.tv/kraken";
@@ -48,7 +47,6 @@ public class TwitchAPI {
         connection.setUseCaches(false);
         connection.setDefaultUseCaches(false);
         connection.addRequestProperty (url, url);
-        //jsonObj.
         String content = IOUtils.toString(connection.getInputStream(), connection.getContentEncoding());
         return new JSONObject(content);
     }

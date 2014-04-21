@@ -1,5 +1,6 @@
 package me.mast3rplan.phantombot.jerklib;
 
+import java.util.*;
 import me.mast3rplan.phantombot.jerklib.ModeAdjustment.Action;
 import me.mast3rplan.phantombot.jerklib.events.ConnectionLostEvent;
 import me.mast3rplan.phantombot.jerklib.events.IRCEvent.Type;
@@ -7,17 +8,18 @@ import me.mast3rplan.phantombot.jerklib.listeners.IRCEventListener;
 import me.mast3rplan.phantombot.jerklib.parsers.InternalEventParser;
 import me.mast3rplan.phantombot.jerklib.tasks.Task;
 
-import java.util.*;
-
 /**
- * Session contains methods to manage an IRC connection.
- * Like {@link me.mast3rplan.phantombot.jerklib.Session#changeNick(String)} , {@link me.mast3rplan.phantombot.jerklib.Session#setRejoinOnKick(boolean)} , {@link me.mast3rplan.phantombot.jerklib.Session#getUserModes()} etc.
+ * Session contains methods to manage an IRC connection. Like
+ * {@link me.mast3rplan.phantombot.jerklib.Session#changeNick(String)} , {@link me.mast3rplan.phantombot.jerklib.Session#setRejoinOnKick(boolean)} , {@link me.mast3rplan.phantombot.jerklib.Session#getUserModes()}
+ * etc.
  * <p/>
- * Session is where Tasks and Listeners should be added
- * to be notified of IRCEvents coming from the connected server.
+ * Session is where Tasks and Listeners should be added to be notified of
+ * IRCEvents coming from the connected server.
  * <p/>
- * You can override the default parsing and internal event handling
- * of a Session with {@link me.mast3rplan.phantombot.jerklib.Session#setInternalEventHandler(me.mast3rplan.phantombot.jerklib.listeners.IRCEventListener)} and
+ * You can override the default parsing and internal event handling of a Session
+ * with
+ * {@link me.mast3rplan.phantombot.jerklib.Session#setInternalEventHandler(me.mast3rplan.phantombot.jerklib.listeners.IRCEventListener)}
+ * and
  * {@link me.mast3rplan.phantombot.jerklib.Session#setInternalParser(me.mast3rplan.phantombot.jerklib.parsers.InternalEventParser)}.
  * <p/>
  * New Session instances are obtained by requesting a connection with the
@@ -26,9 +28,11 @@ import java.util.*;
  * @author mohadib
  * @see ConnectionManager#requestConnection(String)
  * @see ConnectionManager#requestConnection(String, int)
- * @see ConnectionManager#requestConnection(String, int, me.mast3rplan.phantombot.jerklib.Profile)
+ * @see ConnectionManager#requestConnection(String, int,
+ * me.mast3rplan.phantombot.jerklib.Profile)
  */
-public class Session extends RequestGenerator {
+public class Session extends RequestGenerator
+{
 
     private final List<IRCEventListener> listenerList = new ArrayList<IRCEventListener>();
     private final Map<Type, List<Task>> taskMap = new HashMap<Type, List<Task>>();
@@ -45,7 +49,9 @@ public class Session extends RequestGenerator {
     private final Map<String, Channel> channelMap = new HashMap<String, Channel>();
     private int retries = 0;
 
-    public enum State {
+    public enum State
+    {
+
         CONNECTED,
         CONNECTING,
         HALF_CONNECTED,
@@ -56,12 +62,12 @@ public class Session extends RequestGenerator {
         NEED_TO_RECONNECT
     }
 
-
     /**
      * @param rCon
      * @param conman
      */
-    Session(RequestedConnection rCon, ConnectionManager conman) {
+    Session(RequestedConnection rCon, ConnectionManager conman)
+    {
         this.rCon = rCon;
         this.conman = conman;
         setSession(this);
@@ -75,20 +81,21 @@ public class Session extends RequestGenerator {
      * @see me.mast3rplan.phantombot.jerklib.parsers.DefaultInternalEventParser
      * @see me.mast3rplan.phantombot.jerklib.parsers.CommandParser
      */
-    public InternalEventParser getInternalEventParser() {
+    public InternalEventParser getInternalEventParser()
+    {
         return parser;
     }
 
     /**
-     * Sets the InternalEventParser this Session should use for
-     * event parsing
+     * Sets the InternalEventParser this Session should use for event parsing
      *
      * @param parser
      * @see me.mast3rplan.phantombot.jerklib.parsers.InternalEventParser
      * @see me.mast3rplan.phantombot.jerklib.parsers.DefaultInternalEventParser
      * @see me.mast3rplan.phantombot.jerklib.parsers.CommandParser
      */
-    public void setInternalParser(InternalEventParser parser) {
+    public void setInternalParser(InternalEventParser parser)
+    {
         this.parser = parser;
     }
 
@@ -99,7 +106,8 @@ public class Session extends RequestGenerator {
      * @see me.mast3rplan.phantombot.jerklib.listeners.IRCEventListener
      * @see DefaultInternalEventHandler
      */
-    public void setInternalEventHandler(IRCEventListener handler) {
+    public void setInternalEventHandler(IRCEventListener handler)
+    {
         internalEventHandler = handler;
     }
 
@@ -110,7 +118,8 @@ public class Session extends RequestGenerator {
      * @see me.mast3rplan.phantombot.jerklib.listeners.IRCEventListener
      * @see DefaultInternalEventHandler
      */
-    public IRCEventListener getInternalEventHandler() {
+    public IRCEventListener getInternalEventHandler()
+    {
         return internalEventHandler;
     }
 
@@ -119,8 +128,10 @@ public class Session extends RequestGenerator {
      *
      * @param modes
      */
-    void updateUserModes(List<ModeAdjustment> modes) {
-        for (ModeAdjustment ma : modes) {
+    void updateUserModes(List<ModeAdjustment> modes)
+    {
+        for (ModeAdjustment ma : modes)
+        {
             updateUserMode(ma);
         }
     }
@@ -129,29 +140,40 @@ public class Session extends RequestGenerator {
      * If Action is MINUS and the same mode exists with a PLUS Action then just
      * remove the PLUS mode ModeAdjustment from the collection.
      * <p/>
-     * If Action is MINUS and the same mode with PLUS does not exist then add the
-     * MINUS mode to the ModeAdjustment collection
+     * If Action is MINUS and the same mode with PLUS does not exist then add
+     * the MINUS mode to the ModeAdjustment collection
      * <p/>
-     * if Action is PLUS and the same mode exists with a MINUS Action then remove
-     * MINUS mode and add PLUS mode
+     * if Action is PLUS and the same mode exists with a MINUS Action then
+     * remove MINUS mode and add PLUS mode
      * <p/>
-     * If Action is PLUS and the same mode with MINUS does not exist then just add
-     * PLUS mode to collection
+     * If Action is PLUS and the same mode with MINUS does not exist then just
+     * add PLUS mode to collection
      *
      * @param mode
      */
-    private void updateUserMode(ModeAdjustment mode) {
+    private void updateUserMode(ModeAdjustment mode)
+    {
         int index = indexOfMode(mode.getMode(), userModes);
 
-        if (mode.getAction() == Action.MINUS) {
-            if (index != -1) {
+        if (mode.getAction() == Action.MINUS)
+        {
+            if (index != -1)
+            {
                 ModeAdjustment ma = userModes.remove(index);
-                if (ma.getAction() == Action.MINUS) userModes.add(ma);
-            } else {
+                if (ma.getAction() == Action.MINUS)
+                {
+                    userModes.add(ma);
+                }
+            } else
+            {
                 userModes.add(mode);
             }
-        } else {
-            if (index != -1) userModes.remove(index);
+        } else
+        {
+            if (index != -1)
+            {
+                userModes.remove(index);
+            }
             userModes.add(mode);
         }
     }
@@ -163,10 +185,15 @@ public class Session extends RequestGenerator {
      * @param modes
      * @return index of mode or -1 if mode if not found
      */
-    private int indexOfMode(char mode, List<ModeAdjustment> modes) {
-        for (int i = 0; i < modes.size(); i++) {
+    private int indexOfMode(char mode, List<ModeAdjustment> modes)
+    {
+        for (int i = 0; i < modes.size(); i++)
+        {
             ModeAdjustment ma = modes.get(i);
-            if (ma.getMode() == mode) return i;
+            if (ma.getMode() == mode)
+            {
+                return i;
+            }
         }
         return -1;
     }
@@ -176,7 +203,8 @@ public class Session extends RequestGenerator {
      *
      * @return UserModes
      */
-    public List<ModeAdjustment> getUserModes() {
+    public List<ModeAdjustment> getUserModes()
+    {
         return new ArrayList<ModeAdjustment>(userModes);
     }
 
@@ -187,96 +215,96 @@ public class Session extends RequestGenerator {
      * @param msg
      * @see me.mast3rplan.phantombot.jerklib.Channel#say(String)
      */
-    public void sayChannel(Channel channel, String msg) {
+    public void sayChannel(Channel channel, String msg)
+    {
         super.sayChannel(msg, channel);
     }
 
 
-	/* general methods */
-
+    /* general methods */
     /**
      * Is this Session currently connected to an IRC server?
      *
      * @return true if connected else false
      */
-    public boolean isConnected() {
+    public boolean isConnected()
+    {
         return state == State.CONNECTED;
     }
 
-
     /**
-     * Should this Session rejoin channels it is Kicked from?
-     * Default is true.
+     * Should this Session rejoin channels it is Kicked from? Default is true.
      *
      * @return true if channels should be rejoined else false
      */
-    public boolean isRejoinOnKick() {
+    public boolean isRejoinOnKick()
+    {
         return rejoinOnKick;
     }
 
-
     /**
-     * Sets that this Sessions should or should not rejoin Channels
-     * kiced from
+     * Sets that this Sessions should or should not rejoin Channels kiced from
      *
      * @param rejoin
      */
-    public void setRejoinOnKick(boolean rejoin) {
+    public void setRejoinOnKick(boolean rejoin)
+    {
         rejoinOnKick = rejoin;
     }
-
 
     /**
      * Called to alert the Session that login was a success
      */
-    void loginSuccess() {
+    void loginSuccess()
+    {
         isLoggedIn = true;
     }
 
-
     /**
-     * Returns true if the Session has an active Connection and
-     * has successfully logged on to the Connection.
+     * Returns true if the Session has an active Connection and has successfully
+     * logged on to the Connection.
      *
      * @return if logged in
      */
-    public boolean isLoggedIn() {
+    public boolean isLoggedIn()
+    {
         return isLoggedIn;
     }
 
     /**
-     * Set Session to try alternate nicks
-     * on connection if a nick inuse event is received , or not.
-     * True by default.
+     * Set Session to try alternate nicks on connection if a nick inuse event is
+     * received , or not. True by default.
      *
      * @param use
      */
-    public void setShouldUseAltNicks(boolean use) {
+    public void setShouldUseAltNicks(boolean use)
+    {
         useAltNicks = use;
     }
 
-
     /**
-     * Returns if Session should try alternate nicks
-     * on connection if a nick in use event is received.
-     * True by default.
+     * Returns if Session should try alternate nicks on connection if a nick in
+     * use event is received. True by default.
      *
      * @return should use alt nicks
      */
-    public boolean getShouldUseAltNicks() {
+    public boolean getShouldUseAltNicks()
+    {
         return useAltNicks;
     }
-
 
     /**
      * Disconnect from server and destroy Session
      *
      * @param quitMessage
      */
-    public void close(String quitMessage) {
-        if (con != null) {
+    public void close(String quitMessage)
+    {
+        if (con != null)
+        {
             con.quit(quitMessage);
         }
+
         conman.removeSession(this);
         isLoggedIn = false;
     }
@@ -286,31 +314,34 @@ public class Session extends RequestGenerator {
      *
      * @return nick
      */
-    public String getNick() {
+    public String getNick()
+    {
         return getRequestedConnection().getProfile().getActualNick();
     }
 
     /* (non-Javadoc)
      * @see me.mast3rplan.phantombot.jerklib.RequestGenerator#changeNick(java.lang.String)
      */
-    public void changeNick(String newNick) {
+    public void changeNick(String newNick)
+    {
         super.changeNick(newNick);
     }
-
 
     /**
      * Is this Session marked away?
      *
      * @return true if away else false
      */
-    public boolean isAway() {
+    public boolean isAway()
+    {
         return isAway;
     }
 
     /* (non-Javadoc)
      * @see me.mast3rplan.phantombot.jerklib.RequestGenerator#setAway(java.lang.String)
      */
-    public void setAway(String message) {
+    public void setAway(String message)
+    {
         isAway = true;
         super.setAway(message);
     }
@@ -318,23 +349,25 @@ public class Session extends RequestGenerator {
     /**
      * Unset away
      */
-    public void unsetAway() {
+    public void unsetAway()
+    {
         /* if we're not away let's not bother even delegating */
-        if (isAway) {
+        if (isAway)
+        {
             super.unSetAway();
             isAway = false;
         }
     }
 
-	/* methods to get information about connection and server */
-
+    /* methods to get information about connection and server */
     /**
      * Get ServerInformation for Session
      *
      * @return ServerInformation for Session
      * @see ServerInformation
      */
-    public ServerInformation getServerInformation() {
+    public ServerInformation getServerInformation()
+    {
         return serverInfo;
     }
 
@@ -344,30 +377,32 @@ public class Session extends RequestGenerator {
      * @return RequestedConnection for Session
      * @see RequestedConnection
      */
-    public RequestedConnection getRequestedConnection() {
+    public RequestedConnection getRequestedConnection()
+    {
         return rCon;
     }
 
     /**
-     * Returns host name this Session is connected to.
-     * If the session is disconnectd an empty string will be returned.
+     * Returns host name this Session is connected to. If the session is
+     * disconnected an empty string will be returned.
      *
      * @return hostname or an empty string if not connected
      * @see me.mast3rplan.phantombot.jerklib.Session#getRequestedConnection()
      * @see RequestedConnection#getHostName()
      */
-    public String getConnectedHostName() {
+    public String getConnectedHostName()
+    {
         return con == null ? "" : con.getHostName();
     }
 
-
     /**
-     * Adds an IRCEventListener to the Session. This listener will be
-     * notified of all IRCEvents coming from the connected sever.
+     * Adds an IRCEventListener to the Session. This listener will be notified
+     * of all IRCEvents coming from the connected sever.
      *
      * @param listener
      */
-    public void addIRCEventListener(IRCEventListener listener) {
+    public void addIRCEventListener(IRCEventListener listener)
+    {
         listenerList.add(listener);
     }
 
@@ -377,7 +412,8 @@ public class Session extends RequestGenerator {
      * @param listener
      * @return true if listener was removed else false
      */
-    public boolean removeIRCEventListener(IRCEventListener listener) {
+    public boolean removeIRCEventListener(IRCEventListener listener)
+    {
         return listenerList.remove(listener);
     }
 
@@ -386,7 +422,8 @@ public class Session extends RequestGenerator {
      *
      * @return listeners
      */
-    public Collection<IRCEventListener> getIRCEventListeners() {
+    public Collection<IRCEventListener> getIRCEventListeners()
+    {
         return Collections.unmodifiableCollection(listenerList);
     }
 
@@ -397,28 +434,34 @@ public class Session extends RequestGenerator {
      * @see me.mast3rplan.phantombot.jerklib.tasks.Task
      * @see me.mast3rplan.phantombot.jerklib.tasks.TaskImpl
      */
-    public void onEvent(Task task) {
+    public void onEvent(Task task)
+    {
         // null means task should be notified of all Events
         onEvent(task, (Type) null);
     }
 
     /**
-     * Add a task to be ran when any of the given Types
-     * of IRCEvents are received
+     * Add a task to be ran when any of the given Types of IRCEvents are
+     * received
      *
-     * @param task  - task to run
+     * @param task - task to run
      * @param types - types of events task should run on
      * @see me.mast3rplan.phantombot.jerklib.tasks.Task
      * @see me.mast3rplan.phantombot.jerklib.tasks.TaskImpl
      */
-    public void onEvent(Task task, Type... types) {
-        synchronized (taskMap) {
-            for (Type type : types) {
-                if (!taskMap.containsKey(type)) {
+    public void onEvent(Task task, Type... types)
+    {
+        synchronized (taskMap)
+        {
+            for (Type type : types)
+            {
+                if (!taskMap.containsKey(type))
+                {
                     List<Task> tasks = new ArrayList<Task>();
                     tasks.add(task);
                     taskMap.put(type, tasks);
-                } else {
+                } else
+                {
                     taskMap.get(type).add(task);
                 }
             }
@@ -426,34 +469,37 @@ public class Session extends RequestGenerator {
     }
 
     /**
-     * Gets All Tasks attacthed to Session
-     * Indexed by the Type the task is receving events for.
-     * Task type of null are default tasks that receive all events.
-     * Some Tasks can possibly be the value for many Types.
+     * Gets All Tasks attacthed to Session Indexed by the Type the task is
+     * receving events for. Task type of null are default tasks that receive all
+     * events. Some Tasks can possibly be the value for many Types.
      *
      * @return tasks
      */
-    Map<Type, List<Task>> getTasks() {
+    Map<Type, List<Task>> getTasks()
+    {
         return Collections.unmodifiableMap(new HashMap<Type, List<Task>>(taskMap));
     }
 
     /**
-     * Removes a Task from the Session.
-     * Some Tasks can possibly be the value for many Types.
+     * Removes a Task from the Session. Some Tasks can possibly be the value for
+     * many Types.
      *
      * @param t
      */
-    public void removeTask(Task t) {
-        synchronized (taskMap) {
-            for (Iterator<Type> it = taskMap.keySet().iterator(); it.hasNext(); ) {
+    public void removeTask(Task t)
+    {
+        synchronized (taskMap)
+        {
+            for (Iterator<Type> it = taskMap.keySet().iterator(); it.hasNext();)
+            {
                 List<Task> tasks = taskMap.get(it.next());
-                if (tasks != null) {
+                if (tasks != null)
+                {
                     tasks.remove(t);
                 }
             }
         }
     }
-
 
     /**
      * Get a List of Channels Session is currently in
@@ -461,7 +507,8 @@ public class Session extends RequestGenerator {
      * @return channels
      * @see me.mast3rplan.phantombot.jerklib.Channel
      */
-    public List<Channel> getChannels() {
+    public List<Channel> getChannels()
+    {
         return Collections.unmodifiableList(new ArrayList<Channel>(channelMap.values()));
     }
 
@@ -471,7 +518,8 @@ public class Session extends RequestGenerator {
      * @param channelName
      * @return Channel or null if no such Channel is joined.
      */
-    public Channel getChannel(String channelName) {
+    public Channel getChannel(String channelName)
+    {
         return channelMap.get(channelName.toLowerCase());
     }
 
@@ -481,7 +529,8 @@ public class Session extends RequestGenerator {
      * @param channel
      * @see me.mast3rplan.phantombot.jerklib.Channel
      */
-    void addChannel(Channel channel) {
+    void addChannel(Channel channel)
+    {
         channelMap.put(channel.getName().toLowerCase(), channel);
     }
 
@@ -491,7 +540,8 @@ public class Session extends RequestGenerator {
      * @param channel
      * @return true if channel was removed else false
      */
-    boolean removeChannel(Channel channel) {
+    boolean removeChannel(Channel channel)
+    {
         return channelMap.remove(channel.getName().toLowerCase()) == null;
     }
 
@@ -501,10 +551,14 @@ public class Session extends RequestGenerator {
      * @param oldNick
      * @param newNick
      */
-    void nickChanged(String oldNick, String newNick) {
-        synchronized (channelMap) {
-            for (Channel chan : channelMap.values()) {
-                if (chan.getNicks().contains(oldNick)) {
+    void nickChanged(String oldNick, String newNick)
+    {
+        synchronized (channelMap)
+        {
+            for (Channel chan : channelMap.values())
+            {
+                if (chan.getNicks().contains(oldNick))
+                {
                     chan.nickChanged(oldNick, newNick);
                 }
             }
@@ -517,33 +571,38 @@ public class Session extends RequestGenerator {
      * @param nick
      * @return list of Channels nick was found in
      */
-    public List<Channel> removeNickFromAllChannels(String nick) {
+    public List<Channel> removeNickFromAllChannels(String nick)
+    {
         List<Channel> returnList = new ArrayList<Channel>();
-        for (Channel chan : channelMap.values()) {
-            if (chan.removeNick(nick)) {
+        for (Channel chan : channelMap.values())
+        {
+            if (chan.removeNick(nick))
+            {
                 returnList.add(chan);
             }
         }
         return Collections.unmodifiableList(returnList);
     }
 
-	/* methods to track connection attempts */
-
+    /* methods to track connection attempts */
     /**
      * return time of last reconnect attempt
      *
      * @return
      */
-    long getLastRetry() {
+    long getLastRetry()
+    {
         return lastRetry;
     }
 
     /**
      * sets time of last reconnect event
      */
-    void retried() {
-        if (retries > 0) {
-            System.out.println ("Failed to connect to '" + rCon.getHostName () + "', retrying connection.");
+    void retried()
+    {
+        if (retries > 0)
+        {
+            System.out.println("Failed to connect to '" + rCon.getHostName() + "', retrying connection.");
         }
         retries++;
         // System.err.println("Retry :" + retries);
@@ -555,25 +614,27 @@ public class Session extends RequestGenerator {
      *
      * @param con
      */
-    void setConnection(Connection con) {
+    void setConnection(Connection con)
+    {
         this.con = con;
     }
 
     /**
-     * Gets Connection used for this Session. Can return null if
-     * Session is disconnected.
+     * Gets Connection used for this Session. Can return null if Session is
+     * disconnected.
      *
      * @return Connection
      */
-    Connection getConnection() {
+    Connection getConnection()
+    {
         return con;
     }
-
 
     /**
      * Got ping response
      */
-    void gotResponse() {
+    void gotResponse()
+    {
         lastResponse = System.currentTimeMillis();
         state = State.CONNECTED;
     }
@@ -581,17 +642,25 @@ public class Session extends RequestGenerator {
     /**
      * Ping has been sent but no response yet
      */
-    void pingSent() {
+    void pingSent()
+    {
         state = State.PING_SENT;
     }
 
     /**
      * Session has been disconnected
      */
-    void disconnected(Exception e) {
-        if (state == State.DISCONNECTED) return;
+    void disconnected(Exception e)
+    {
+        if (state == State.DISCONNECTED)
+        {
+            return;
+        }
+        
         state = State.DISCONNECTED;
-        if (con != null) {
+        
+        if (con != null)
+        {
             con.quit("");
             con = null;
         }
@@ -603,7 +672,8 @@ public class Session extends RequestGenerator {
     /**
      * Session is now connected
      */
-    void connected() {
+    void connected()
+    {
         retries = 0;
         gotResponse();
     }
@@ -611,21 +681,24 @@ public class Session extends RequestGenerator {
     /**
      * Session is connecting
      */
-    void connecting() {
+    void connecting()
+    {
         state = State.CONNECTING;
     }
 
     /**
      * Session is half connected
      */
-    void halfConnected() {
+    void halfConnected()
+    {
         state = State.HALF_CONNECTED;
     }
 
     /**
      * Session has been marked for removal
      */
-    void markForRemoval() {
+    void markForRemoval()
+    {
         state = State.MARKED_FOR_REMOVAL;
     }
 
@@ -635,22 +708,28 @@ public class Session extends RequestGenerator {
      * @return Session state
      * @see me.mast3rplan.phantombot.jerklib.Session.State
      */
-    State getState() {
+    State getState()
+    {
         long current = System.currentTimeMillis();
 
-        if (state == State.DISCONNECTED) return state;
+        if (state == State.DISCONNECTED)
+        {
+            return state;
+        }
 
-        if (current - lastResponse > 300000 && state == State.NEED_TO_PING) {
+        if (current - lastResponse > 300000 && state == State.NEED_TO_PING)
+        {
             state = State.NEED_TO_RECONNECT;
-        } else if (current - lastResponse > 200000 && state != State.PING_SENT) {
+        } else if (current - lastResponse > 200000 && state != State.PING_SENT)
+        {
             state = State.NEED_TO_PING;
         }
 
         return state;
     }
 
-
-    public int getRetries() {
+    public int getRetries()
+    {
         return retries;
     }
 
@@ -660,11 +739,14 @@ public class Session extends RequestGenerator {
      * @param token
      * @return true if starts with a channel prefix else false
      */
-    public boolean isChannelToken(String token) {
+    public boolean isChannelToken(String token)
+    {
         ServerInformation serverInfo = getServerInformation();
         String[] chanPrefixes = serverInfo.getChannelPrefixes();
-        for (String prefix : chanPrefixes) {
-            if (token.startsWith(prefix)) {
+        for (String prefix : chanPrefixes)
+        {
+            if (token.startsWith(prefix))
+            {
                 return true;
             }
         }
@@ -674,10 +756,12 @@ public class Session extends RequestGenerator {
     /**
      * Send login messages to server
      */
-    void login() {
+    void login()
+    {
         // test :irc.inter.net.il CAP * LS :multi-prefix
         // writeRequests.add(new WriteRequest("CAP LS", this));
-        if(rCon.getPass() != null) {
+        if (rCon.getPass() != null)
+        {
             sayRaw("PASS " + rCon.getPass());
         }
         sayRaw("NICK " + getNick());
@@ -687,19 +771,26 @@ public class Session extends RequestGenerator {
     /* (non-Javadoc)
      * @see java.lang.Object#hashCode()
      */
-    public int hashCode() {
+    public int hashCode()
+    {
         return rCon.getHostName().hashCode();
     }
 
     /* (non-Javadoc)
      * @see java.lang.Object#equals(java.lang.Object)
      */
-    public boolean equals(Object o) {
-        if (o instanceof Session && o.hashCode() == hashCode()) {
+    public boolean equals(Object o)
+    {
+        if (o instanceof Session && o.hashCode() == hashCode())
+        {
             return ((Session) o).getRequestedConnection().getHostName().matches(getRequestedConnection().getHostName())
                     && ((Session) o).getNick().matches(getNick());
         }
         return false;
     }
 
+    public void reconnect()
+    {
+        state = State.NEED_TO_RECONNECT;
+    }
 }

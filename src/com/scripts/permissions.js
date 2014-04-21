@@ -131,7 +131,7 @@ $.on('command', function(event) {
             var subCommand = args[0];
  
             if (subCommand.equalsIgnoreCase("set")) {
-                name = argsString.substring(argsString.indexOf(args[0]) + args[0].length() + 1 + argsString.indexOf(args[1]) + args[1].length() + 1);
+                name = argsString.substring(argsString.indexOf(args[1]) + args[1].length() + 1);
                 
                 $.setUserGroupByName(args[1], name);
                 $.say("Rank for " + $.username.resolve(args[1]) + " changed to " + name + "!");

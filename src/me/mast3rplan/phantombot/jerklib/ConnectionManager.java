@@ -1,5 +1,9 @@
 package me.mast3rplan.phantombot.jerklib;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.channels.*;
+import java.util.*;
 import me.mast3rplan.phantombot.jerklib.Session.State;
 import me.mast3rplan.phantombot.jerklib.events.ErrorEvent;
 import me.mast3rplan.phantombot.jerklib.events.GenericErrorEvent;
@@ -12,11 +16,6 @@ import me.mast3rplan.phantombot.jerklib.parsers.DefaultInternalEventParser;
 import me.mast3rplan.phantombot.jerklib.parsers.InternalEventParser;
 import me.mast3rplan.phantombot.jerklib.tasks.Task;
 import me.mast3rplan.phantombot.jerklib.util.IdentServer;
-
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.channels.*;
-import java.util.*;
 
 /**
  * This class is used to control/store Sessions/Connections.
@@ -571,6 +570,7 @@ public final class ConnectionManager {
                 if (state == State.DISCONNECTED) {
                     long last = session.getLastRetry();
                     long current = System.currentTimeMillis();
+                    
                     if (last > 0 && current - last < 10000) {
                         continue;
                     }

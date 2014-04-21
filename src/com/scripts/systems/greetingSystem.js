@@ -42,6 +42,8 @@ $.on('command', function(event) {
     var argsString = event.getArguments().trim();
     var args = event.getArgs();
     var subCommand;
+    var pre;
+    var suf;
     
     if(command.equalsIgnoreCase("greeting")) {
         if (argsString.isEmpty()){
@@ -63,7 +65,7 @@ $.on('command', function(event) {
             $.inidb.del ("bool", username + "_greeting_enabled");
             $.say ("Greeting disabled for " + $.username.resolve(username));
         } else if (subCommand.equalsIgnoreCase("set")) {
-            if (!$.getUserGroupId(sender) == 0) {
+            if ($.getUserGroupId(sender) == 0) {
                 $.say($.username.resolve(sender) + ", " + $.getUserGroupName(sender) + "s aren't allowed access to this command! Regulars only.");
                 return;
             }
@@ -92,21 +94,16 @@ $.on('command', function(event) {
             pre = $.inidb.get ("string", username + "_greeting_prefix");
             suf = $.inidb.get ("string", username + "_greeting_suffix");
             
-            if (suf == null) {
-                suf = "";
-            }
-            
-            if (pre == null) {
+            if ((pre == null && suf == null) || (pre.isEmpty() && suf.isEmpty())) {
                 $.say($.username.resolve(username) + " has no greeting set.");
             } else {
                 $.say(pre + $.username.resolve(username) + suf);
             }
         } else {
-            if (suf == null) {
-                suf = "";
-            }
+            pre = $.inidb.get ("string", username + "_greeting_prefix");
+            suf = $.inidb.get ("string", username + "_greeting_suffix");
             
-            if (pre == null) {
+            if ((pre == null && suf == null) || (pre.isEmpty() && suf.isEmpty())) {
                 $.say($.username.resolve(sender) + " has no greeting set.");
             } else {
                 $.say(pre + $.username.resolve(sender) + suf);

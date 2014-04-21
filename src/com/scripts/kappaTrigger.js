@@ -8,11 +8,17 @@ $.on('ircChannelMessage', function(event) {
     if (message.indexOf(emote) != -1) {
         $.say(emote);
     }
-
-    emote = "DTR";
+    
+    emote = "im back";
 
     if (message.indexOf(emote) != -1) {
-        $.say(emote);
+        $.say("im front");
+    }
+    
+    emote = "im bak";
+
+    if (message.indexOf(emote) != -1) {
+        $.say("im front");
     }
 
     var helix = "Helix";

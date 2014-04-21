@@ -37,7 +37,7 @@ $.on('command', function(event) {
             }
  
             $var.raffle_tickets = [];
-            $var.raffle_price = args[1];
+            $var.raffle_price = Math.max(args[1], 0);
             $var.raffle_mode = 0;
             $var.raffle_times = {};
             if (isNaN(args[2])) {
@@ -45,7 +45,7 @@ $.on('command', function(event) {
                 $var.raffle_win = args[2];
                 $.say("/me [Raffle] for -> [" + args[2] + "] <- get your entries in by typing '!raffle ticket <amount>'");
             } else {
-                $var.raffle_win = parseInt(args[2]);
+                $var.raffle_win = Math.max(parseInt(args[2]), 0);
                 $.say("/me The [Raffle] for " + args[2] + " " + $.pointname + " has started, doods! Type '!raffle ticket <amount>' to buy tickets for " + args[1] + " " + $.pointname + " per ticket, doods!");
 
             }

@@ -1,27 +1,29 @@
+var ircPrefix = ".";
 
-// NOTE: time is in seconds
-function banUser (user, time) {
+function banUserFor (user, time) {
     $.bancache.addUser (user, time);
     $.bancache.syncToFile ("bannedUsers.bin");
-    $.say ("/ban " + user);
+    
+    banUser(user);
 }
 
 function banUser (user) {
-    $.say ("/ban " + user);
+    $.say (ircPrefix + "ban " + user);
 }
 
 function unbanUser (user) {
-    $.say ("/unban " + user);
+    $.say (ircPrefix + "unban " + user);
     $.bancache.removeUser (user);
 }
  
 function kickUser (user) {
-    $.say ("/kick " + user);
+    $.say (ircPrefix + "kick " + user);
 }
 
 function autoPurgeUser (user) {
     var ban = false;
     var count = $.sinbin.get (user);
+    
     if (count != null) {
         count = count.intValue ();
         ban = count >= 2;
@@ -29,16 +31,17 @@ function autoPurgeUser (user) {
     } else {
         $.sinbin.put (user, 1);
     }
+    
     if (ban) {
         $.sinbin.put (user, 0);
-        banUser (user, 1);
+        banUserFor (user, 1);
     } else {
         timeoutUser (user);
     }
 }
  
 function timeoutUser (user) {
-    $.say ("/timeout " + user + " 2");
+    $.say (ircPrefix + "timeout " + user + " 2");
 }
 
 //var linkson = $.inidb.exists("bool", "linkson");
@@ -99,7 +102,7 @@ $.on('command', function(event) {
                 if (time <= 0) {
                     $.say (time + " is not a valid amount of time");
                 }
-                banUser (args [0], time * 60 * 60);
+                banUserFor (args [0], time * 60 * 60);
                 if (time != 1) {
                     $.say (args [0] + " banned for " + time + " hours");
                 } else {

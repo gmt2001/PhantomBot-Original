@@ -39,7 +39,7 @@ $.on('command', function(event) {
                 return;
             }
             
-            if ($.getUserGroupId(sender) == 0) {
+            if (!$.isMod(sender)) {
                 points = $.inidb.get('points', sender);
                 if(points == null) points = 0;
                 else points = int(points);
@@ -58,7 +58,7 @@ $.on('command', function(event) {
             message = argsString.substring(argsString.indexOf(commandString) + commandString.length() + 1);
             $.inidb.set('command', commandString, message);
             
-            $.registerChatCommand(commandString);
+            $.registerCustomChatCommand(commandString);
             
             $.say($.username.resolve(sender) + ", the command !" + commandString + " was successfully created, dood!");
             return;
@@ -75,6 +75,9 @@ $.on('command', function(event) {
             
             commandString = args[0].toLowerCase();
             $.inidb.del('command', commandString);
+            
+            $.unregisterCustomChatCommand(commandString);
+            
             cmd = $.inidb.del('command', commandString);
             $.say($.username.resolve(sender) + ", the command !" + commandString + " was successfully removed, dood!");
             return;
@@ -100,7 +103,14 @@ $.on('command', function(event) {
     
     if(command.equalsIgnoreCase("helpcom")) {
         $.say("Usage: !addcom <command name> <message to say>, !delcom <command name>, !modcom");
-        $.say("When using !addcom, you can put the text '<sender>' to have the name of any user who says the new command inserted into it. ex. '!addcom hello Hello there <sender>!'");
+        
+        setTimeout(function() {
+            $.say("When using !addcom, you can put the text '<sender>' to have the name of any user who says the new command inserted into it. ex. '!addcom hello Hello there <sender>!'");
+        }, 1000);
+        
+        setTimeout(function() {
+            $.say("When using !addcom, you can also put '<1>', '<2>', and so on to allow arguments. ex. '!addcom kill <sender> just killed <1> with a <2>!'");
+        }, 2000);
     }
     
     var messageCommand = $.inidb.get('command', command.toLowerCase());

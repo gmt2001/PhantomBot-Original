@@ -41,6 +41,12 @@ for(var name in $api) {
 $.on('ircJoinComplete', function(event) {
     $.channel = event.getChannel();
     println("rebooted");
+    
+    var connectedMessage = $.inidb.get('settings', 'conenctedMessage');
+    
+    if (connectedMessage != null && !connectedMessage.isEmpty()) {
+        $.say(connectedMessage);
+    }
 });
 
 $.botname = $.botName;
@@ -87,3 +93,33 @@ $.loadScript('./commands/killCommand.js');
 if (enableRedis2IniConversion && $.inidb.GetBoolean("init", "redis2ini", "converted") == false) {
     $.loadScript('./redis2inidb.js'); 
 }
+
+$.on('command', function(event) {
+    var sender = event.getSender();
+    var username = $.username.resolve(sender);
+    var command = event.getCommand();
+    var argsString = event.getArguments().trim();
+    var args = event.getArgs();
+    
+    if (command.equalsIgnoreCase("setconnectedmessage")) {
+        if (!$.isAdmin(sender)) {
+            $.say("You must be an Administrator to use that command.");
+            return;
+        }
+        
+        $.inidb.set('settings', 'connectedmessage', argsString);
+    }
+    
+    if (command.equalsIgnoreCase("reconnect")) {
+        if (!$.isAdmin(sender)) {
+            $.say("You must be an Administrator to use that command.");
+            return;
+        }
+        
+        $.session.reconnect();
+        $.say("Reconnect scheduled!");
+    }
+});
+
+$.registerChatCommand('setconnectedmessage');
+$.registerChatCommand('reconnect');

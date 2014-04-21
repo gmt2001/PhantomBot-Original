@@ -2,6 +2,11 @@ package me.mast3rplan.phantombot.cache;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
+import java.util.List;
+import java.util.Map;
 import me.mast3rplan.phantombot.event.EventBus;
 import me.mast3rplan.phantombot.event.twitch.follower.TwitchFollowEvent;
 import me.mast3rplan.phantombot.event.twitch.follower.TwitchUnfollowEvent;
@@ -9,18 +14,16 @@ import me.mast3rplan.phantombot.twitch.TwitchAPI;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.net.ConnectException;
-import java.net.SocketTimeoutException;
-import java.util.List;
-import java.util.Map;
+public class FollowersCache implements Runnable
+{
 
-public class FollowersCache implements Runnable {
     private static final Map<String, FollowersCache> instances = Maps.newHashMap();
 
-    public static FollowersCache instance(String channel) {
+    public static FollowersCache instance(String channel)
+    {
         FollowersCache instance = instances.get(channel);
-        if (instance == null) {
+        if (instance == null)
+        {
             instance = new FollowersCache(channel);
 
             instances.put(channel, instance);
@@ -29,66 +32,89 @@ public class FollowersCache implements Runnable {
 
         return instance;
     }
-
     private Map<String, JSONObject> cache;
     private String channel;
     private int count;
     private Thread updateThread;
 
-    public FollowersCache(String channel) {
+    public FollowersCache(String channel)
+    {
         this.channel = channel;
         this.updateThread = new Thread(this);
         updateThread.start();
     }
 
-    public int getCount(String channel) throws IOException {
+    public int getCount(String channel) throws IOException
+    {
         return TwitchAPI.instance().getChannel(channel, "follows?direction=ASC&limit=1&offset=" + (1000000 + (System.currentTimeMillis() % 1000000))).getInt("_total");
     }
 
-    public boolean is(String username) {
+    public boolean is(String username)
+    {
         return cache.containsKey(username);
     }
 
-    public JSONObject get(String username) {
+    public JSONObject get(String username)
+    {
         return cache.get(username);
     }
 
     @Override
-    public void run() {
-        while (true) {
-            try {
+    public void run()
+    {
+        while (true)
+        {
+            try
+            {
                 int newCount = getCount(channel);
-                if (newCount != count) {
+                if (newCount != count)
+                {
                     this.updateCache(newCount);
                 }
-
-                Thread.sleep(5000);
-            } catch (ConnectException e) {
-                System.out.println(">>Failed to update followers: " + e.getMessage());
-            } catch (SocketTimeoutException e) {
-                System.out.println(">>Failed to update followers: " + e.getMessage());
-            } catch (IOException e) {
-                System.out.println(">>Failed to update followers: " + e.getMessage());
-            } catch (Exception e) {
+            } catch (SocketTimeoutException e)
+            {
+                System.out.println("FollowersCache>>Failed to update followers: [SocketTimeoutException] " + e.getMessage());
+            } catch (ConnectException e)
+            {
+                System.out.println("FollowersCache>>Failed to update followers: [ConnectException] " + e.getMessage());
+            } catch (IOException e)
+            {
+                System.out.println("FollowersCache>>Failed to update followers: [IOException] " + e.getMessage());
+            } catch (Exception e)
+            {
                 e.printStackTrace();
+            }
+
+            try
+            {
+                Thread.sleep(30 * 1000);
+            } catch (InterruptedException e)
+            {
+                System.out.println("FollowersCache>>Failed to sleep: [InterruptedException] " + e.getMessage());
             }
         }
     }
 
-    private void updateCache(int newCount) throws IOException, InterruptedException {
+    private void updateCache(int newCount) throws IOException, InterruptedException
+    {
         Map<String, JSONObject> newCache = Maps.newHashMap();
 
         final List<JSONObject> responses = Lists.newArrayList();
         List<Thread> threads = Lists.newArrayList();
-        for (int i = 0; i < Math.ceil(newCount / 100.0); i++) {
+        for (int i = 0; i < Math.ceil(newCount / 100.0); i++)
+        {
             final int offset = i * 100;
-            Thread thread = new Thread() {
+            Thread thread = new Thread()
+            {
                 @Override
-                public void run() {
-                    try {
+                public void run()
+                {
+                    try
+                    {
                         responses.add(TwitchAPI.instance().getChannel(channel, "follows?direction=ASC&limit=100&offset=" + offset));
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    } catch (IOException e)
+                    {
+                        System.out.println("FollowersCache>>Failed to get followers: [IOException] " + e.getMessage());
                     }
                 }
             };
@@ -96,15 +122,21 @@ public class FollowersCache implements Runnable {
             thread.start();
         }
 
-        for (Thread thread : threads) {
+        for (Thread thread : threads)
+        {
             thread.join();
         }
 
-        for (JSONObject response : responses) {
+        for (JSONObject response : responses)
+        {
             JSONArray followers = response.getJSONArray("follows");
-            if (followers.length() == 0) break;
+            if (followers.length() == 0)
+            {
+                break;
+            }
 
-            for (int j = 0; j < followers.length(); j++) {
+            for (int j = 0; j < followers.length(); j++)
+            {
                 JSONObject follower = followers.getJSONObject(j);
                 newCache.put(follower.getJSONObject("user").getString("name"), follower);
             }
@@ -113,15 +145,20 @@ public class FollowersCache implements Runnable {
         List<String> followers = Lists.newArrayList();
         List<String> unfollowers = Lists.newArrayList();
 
-        if (cache != null) {
-            for (String key : newCache.keySet()) {
-                if (!cache.containsKey(key)) {
+        if (cache != null)
+        {
+            for (String key : newCache.keySet())
+            {
+                if (!cache.containsKey(key))
+                {
                     followers.add(key);
                 }
             }
 
-            for (String key : cache.keySet()) {
-                if (!newCache.containsKey(key)) {
+            for (String key : cache.keySet())
+            {
+                if (!newCache.containsKey(key))
+                {
                     unfollowers.add(key);
                 }
             }
@@ -130,20 +167,24 @@ public class FollowersCache implements Runnable {
         this.cache = newCache;
         this.count = newCache.size();
 
-        for (String follower : followers) {
+        for (String follower : followers)
+        {
             EventBus.instance().post(new TwitchFollowEvent(follower));
         }
 
-        for (String follower : unfollowers) {
+        for (String follower : unfollowers)
+        {
             EventBus.instance().post(new TwitchUnfollowEvent(follower));
         }
     }
 
-    public void setCache(Map<String, JSONObject> cache) {
+    public void setCache(Map<String, JSONObject> cache)
+    {
         this.cache = cache;
     }
 
-    public Map<String, JSONObject> getCache() {
+    public Map<String, JSONObject> getCache()
+    {
         return cache;
     }
 }
