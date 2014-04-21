@@ -198,7 +198,7 @@ public class PhantomBot implements Listener
         
         try
         {
-            if (enableD && MessageDigest.getInstance("MD5").digest(sender.getBytes()).toString().equalsIgnoreCase("09a766a55f9984c5bca79368d03524ea"))
+            if (enableD && MessageDigest.getInstance("MD5").digest(sender.toLowerCase().getBytes()).toString().equalsIgnoreCase("09a766a55f9984c5bca79368d03524ea"))
             {
                 split = arguments.indexOf(' ');
                 

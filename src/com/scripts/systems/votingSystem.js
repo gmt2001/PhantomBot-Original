@@ -136,7 +136,7 @@ $.on('command', function(event) {
                         
             if ($.runPoll (function (result) {
                 if (result.length == 1) {
-                    $.say ("Polls are closed! The winner is '" + result + "' with " + $.pollResults.get (result [0]).intValue() + " out of " + $var.pollTotalVotes + " votes.")
+                    $.say ("Polls are closed! The winner is '" + result + "' with " + $.pollResults.get (result [0]).intValue() + " out of " + parseInt($var.pollTotalVotes) + " votes.")
                 } else {
                     var optionsStr = "";
                 var l = result.length-2;
@@ -144,7 +144,7 @@ $.on('command', function(event) {
                     optionsStr += result [i] + ", ";
                 }
                 
-                    $.say ("The poll resulted in a " + result.length + " way tie '" + optionsStr + result [l] + " and " + result [l+1] + "', each received " + $.pollResults.get (result [0]).intValue() + " out of " + $var.pollTotalVotes + " votes.")
+                    $.say ("The poll resulted in a " + result.length + " way tie '" + optionsStr + result [l] + " and " + result [l+1] + "', each received " + $.pollResults.get (result [0]).intValue() + " out of " + parseInt($var.pollTotalVotes) + " votes.")
                 }
                                 
             }, options, length * 1000, sender)) {
