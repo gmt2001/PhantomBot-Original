@@ -15,10 +15,11 @@ import org.json.JSONObject;
 public class TwitchAPIv2
 {
 
-    public static final TwitchAPIv2 instance = new TwitchAPIv2();
+    private static final TwitchAPIv2 instance = new TwitchAPIv2();
     private static final String base_url = "https://api.twitch.tv/kraken";
     private static final String header_accept = "application/vnd.twitchtv.v2+json";
     private static final int timeout = 5 * 1000;
+    private String clientid = "";
 
     private enum request_type
     {
@@ -42,11 +43,6 @@ public class TwitchAPIv2
     }
 
     private JSONObject GetData(request_type type, String url, String post, String oauth)
-    {
-        return GetData(type, url, post, oauth, "");
-    }
-
-    private JSONObject GetData(request_type type, String url, String post, String oauth, String clientid)
     {
         JSONObject j = new JSONObject();
 
@@ -114,6 +110,15 @@ public class TwitchAPIv2
         }
 
         return j;
+    }
+    
+    /**
+     * Sets the Twitch API Client-ID header
+     * @param clientid 
+     */
+    public void SetClientID(String clientid)
+    {
+        this.clientid = clientid;
     }
 
     /**
