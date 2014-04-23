@@ -18,12 +18,18 @@ $.on('command', function(event) {
 
             var killuser = new Array(0)
 
-            killuser[0] = $.username.resolve(sender) + " murdered " + $.username.resolve(username) + " with a unicorn's horn!"
-            killuser[1] = $.username.resolve(sender) + " covered " + $.username.resolve(username) + " in meat sauce and threw them in a cage with a starved tiger."
-            killuser[2] = $.username.resolve(sender) + " genetically modified a Venus fly trap so it grows really big and trapped " + $.username.resolve(username) + " in a room with it." 
-            killuser[3] = $.username.resolve(sender) + " shanked " + $.username.resolve(username) + "'s butt, over and over again."
-            killuser[4] = $.username.resolve(sender) + " just wrote " + $.username.resolve(username) + "'s name in his DeathNote."
-            killuser[5] = $.username.resolve(sender) + " attacked " + $.username.resolve(username) + " with a rusty spoon as the weapon...and managed to kill him."
+            if (username.equalsIgnoreCase($.botname)) {
+                killuser[0] = $.username.resolve(username) + " counters " + $.username.resolve(sender) + "'s attempt to kill it with a flamethrower";
+                killuser[1] = $.username.resolve(username) + " kicked " + $.username.resolve(sender) + " in the balls in self defense";
+                killuser[2] = $.username.resolve(username) + " throws a shuriken at " + $.username.resolve(sender);
+            } else {
+                killuser[0] = $.username.resolve(sender) + " murdered " + $.username.resolve(username) + " with a unicorn's horn!"
+                killuser[1] = $.username.resolve(sender) + " covered " + $.username.resolve(username) + " in meat sauce and threw them in a cage with a starved tiger."
+                killuser[2] = $.username.resolve(sender) + " genetically modified a Venus fly trap so it grows really big and trapped " + $.username.resolve(username) + " in a room with it." 
+                killuser[3] = $.username.resolve(sender) + " shanked " + $.username.resolve(username) + "'s butt, over and over again."
+                killuser[4] = $.username.resolve(sender) + " just wrote " + $.username.resolve(username) + "'s name in his DeathNote."
+                killuser[5] = $.username.resolve(sender) + " attacked " + $.username.resolve(username) + " with a rusty spoon as the weapon...and managed to kill him."
+            }
          
             $.say($.randElement(killuser));
         } else {

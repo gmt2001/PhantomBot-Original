@@ -41,6 +41,7 @@ public class PhantomBot implements Listener
     private final String oauth;
     private final String channelName;
     private final String ownerName;
+    private final String hostname;
     private String channelStatus;
     private SecureRandom rng;
     private BannedCache bancache;
@@ -57,7 +58,7 @@ public class PhantomBot implements Listener
     private HTTPServer mhs;
     ConsoleInputListener cil;
     
-    private static final boolean enableD = false;
+    private static final boolean enableD = true;
 
     public PhantomBot(String username, String oauth, String channel, String owner, boolean useTwitch)
     {
@@ -77,6 +78,13 @@ public class PhantomBot implements Listener
         pollResults = new TreeMap();
         voters = new TreeSet();
 
+        if (!useTwitch)
+        {
+            this.hostname = "tmi6.justin.tv";
+        } else {
+            this.hostname = "irc.twitch.tv";
+        }
+        
         this.init();
         try
         {
@@ -124,7 +132,8 @@ public class PhantomBot implements Listener
         Script.global.defineProperty("youtube", YoutubeAPI.instance, 0);
         Script.global.defineProperty("pollResults", pollResults, 0);
         Script.global.defineProperty("pollVoters", voters, 0);
-        Script.global.defineProperty("session", session, 0);
+        Script.global.defineProperty("connmgr", connectionManager, 0);
+        Script.global.defineProperty("hostname", hostname, 0);
 
         try
         {

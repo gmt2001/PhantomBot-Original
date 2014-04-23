@@ -110,6 +110,11 @@ public final class ConnectionManager {
     public Session getSession(String name) {
         return sessionMap.get(name);
     }
+    
+    public void reconnectSession(String hostname) {
+        Session s = getSession(hostname);
+        s.reconnect();
+    }
 
     /**
      * Adds a listener to be notified of all writes

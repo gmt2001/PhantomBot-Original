@@ -108,6 +108,7 @@ $.on('command', function(event) {
         }
         
         $.inidb.set('settings', 'connectedmessage', argsString);
+        $.say("Connection message set!");
     }
     
     if (command.equalsIgnoreCase("reconnect")) {
@@ -116,7 +117,7 @@ $.on('command', function(event) {
             return;
         }
         
-        $.session.reconnect();
+        $.connmgr.reconnectSession($.hostname);
         $.say("Reconnect scheduled!");
     }
 });
