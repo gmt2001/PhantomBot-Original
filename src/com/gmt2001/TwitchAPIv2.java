@@ -90,25 +90,25 @@ public class TwitchAPIv2
         } catch (MalformedURLException ex)
         {
             j.put("_success", false);
-            j.put("_http", "");
+            j.put("_http", 0);
             j.put("_exception", "MalformedURLException");
             j.put("_exceptionMessage", ex.getMessage());
         } catch (SocketTimeoutException ex)
         {
             j.put("_success", false);
-            j.put("_http", "");
+            j.put("_http", 0);
             j.put("_exception", "SocketTimeoutException");
             j.put("_exceptionMessage", ex.getMessage());
         } catch (IOException ex)
         {
             j.put("_success", false);
-            j.put("_http", "");
+            j.put("_http", 0);
             j.put("_exception", "IOException");
             j.put("_exceptionMessage", ex.getMessage());
         } catch (Exception ex)
         {
             j.put("_success", false);
-            j.put("_http", "");
+            j.put("_http", 0);
             j.put("_exception", "Exception [" + ex.getClass().getName() + "]");
             j.put("_exceptionMessage", ex.getMessage());
         }
@@ -167,7 +167,7 @@ public class TwitchAPIv2
     public JSONObject GetChannelFollows(String channel, int limit, int offset)
     {
         limit = Math.max(0, Math.min(limit, 100));
-        offset = Math.max(0, limit);
+        offset = Math.max(0, offset);
 
         return GetData(request_type.GET, base_url + "/channels/" + channel + "/follows?limit=" + limit + "&offset=" + offset);
     }

