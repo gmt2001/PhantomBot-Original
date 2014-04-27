@@ -9,15 +9,15 @@ import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 
 /**
- * Communicates with Twitch Kraken server using the version 2 API
+ * Communicates with Twitch Kraken server using the version 3 API
  * @author gmt2001
  */
-public class TwitchAPIv2
+public class TwitchAPIv3
 {
 
-    private static final TwitchAPIv2 instance = new TwitchAPIv2();
+    private static final TwitchAPIv3 instance = new TwitchAPIv3();
     private static final String base_url = "https://api.twitch.tv/kraken";
-    private static final String header_accept = "application/vnd.twitchtv.v2+json";
+    private static final String header_accept = "application/vnd.twitchtv.v3+json";
     private static final int timeout = 5 * 1000;
     private String clientid = "";
 
@@ -27,7 +27,7 @@ public class TwitchAPIv2
         GET, POST, PUT, DELETE
     };
 
-    public static TwitchAPIv2 instance()
+    public static TwitchAPIv3 instance()
     {
         return instance;
     }
@@ -161,9 +161,10 @@ public class TwitchAPIv2
      * @param oauth
      * @param status
      * @param game
+     * @param delay -1 to not update
      * @return
      */
-    public JSONObject UpdateChannel(String channel, String oauth, String status, String game)
+    public JSONObject UpdateChannel(String channel, String oauth, String status, String game, int delay)
     {
         JSONObject j = new JSONObject();
         JSONObject c = new JSONObject();
@@ -178,6 +179,11 @@ public class TwitchAPIv2
             c.put("game", game);
         }
 
+        if (delay >= 0)
+        {
+            c.put("delay", delay);
+        }
+
         j.put("channel", c);
 
         return GetData(request_type.PUT, base_url + "/channels/" + channel, j.toString(), oauth);
@@ -189,14 +195,22 @@ public class TwitchAPIv2
      * @param channel
      * @param limit between 1 and 100
      * @param offset
+     * @param ascending
      * @return
      */
-    public JSONObject GetChannelFollows(String channel, int limit, int offset)
+    public JSONObject GetChannelFollows(String channel, int limit, int offset, boolean ascending)
     {
         limit = Math.max(0, Math.min(limit, 100));
         offset = Math.max(0, offset);
+        
+        String dir = "desc";
+        
+        if (ascending)
+        {
+            dir = "asc";
+        }
 
-        return GetData(request_type.GET, base_url + "/channels/" + channel + "/follows?limit=" + limit + "&offset=" + offset);
+        return GetData(request_type.GET, base_url + "/channels/" + channel + "/follows?limit=" + limit + "&offset=" + offset + "&direction=" + dir);
     }
 
     /**
