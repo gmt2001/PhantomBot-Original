@@ -76,34 +76,56 @@ public class TwitchAPIv2
                 IOUtils.write(post, c.getOutputStream());
             }
 
-            String content = IOUtils.toString(c.getInputStream(), c.getContentEncoding());
+            String content;
+            
+            if (c.getResponseCode() == 200)
+            {
+                content = IOUtils.toString(c.getInputStream(), c.getContentEncoding());
+            } else {
+                content = IOUtils.toString(c.getErrorStream(), c.getContentEncoding());
+            }
 
             j = new JSONObject(content);
             j.put("_success", true);
+            j.put("_type", type.name());
+            j.put("_url", url);
+            j.put("_post", post);
             j.put("_http", c.getResponseCode());
             j.put("_exception", "");
             j.put("_exceptionMessage", "");
         } catch (MalformedURLException ex)
         {
             j.put("_success", false);
+            j.put("_type", type.name());
+            j.put("_url", url);
+            j.put("_post", post);
             j.put("_http", 0);
             j.put("_exception", "MalformedURLException");
             j.put("_exceptionMessage", ex.getMessage());
         } catch (SocketTimeoutException ex)
         {
             j.put("_success", false);
+            j.put("_type", type.name());
+            j.put("_url", url);
+            j.put("_post", post);
             j.put("_http", 0);
             j.put("_exception", "SocketTimeoutException");
             j.put("_exceptionMessage", ex.getMessage());
         } catch (IOException ex)
         {
             j.put("_success", false);
+            j.put("_type", type.name());
+            j.put("_url", url);
+            j.put("_post", post);
             j.put("_http", 0);
             j.put("_exception", "IOException");
             j.put("_exceptionMessage", ex.getMessage());
         } catch (Exception ex)
         {
             j.put("_success", false);
+            j.put("_type", type.name());
+            j.put("_url", url);
+            j.put("_post", post);
             j.put("_http", 0);
             j.put("_exception", "Exception [" + ex.getClass().getName() + "]");
             j.put("_exceptionMessage", ex.getMessage());

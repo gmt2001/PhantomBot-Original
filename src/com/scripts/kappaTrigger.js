@@ -21,6 +21,24 @@ $.on('ircChannelMessage', function(event) {
         $.say("im front");
     }
     
+    emote = "i'm back";
+
+    if (message.indexOf(emote) != -1) {
+        $.say("im front");
+    }
+    
+    emote = "i'm bak";
+
+    if (message.indexOf(emote) != -1) {
+        $.say("im front");
+    }
+    
+    emote = "I'm back";
+
+    if (message.indexOf(emote) != -1) {
+        $.say("im front");
+    }
+    
     emote = "back"
     
     if (message.toLowerCase().startsWith(emote)) {
@@ -43,11 +61,5 @@ $.on('ircChannelMessage', function(event) {
 
     if (message.indexOf(helix) != -1) {
         $.say($.randElement(messages));
-    }
-
-    emote = "potato";
-
-    if (message.indexOf(emote) != -1) {
-        $.say("I'll take a potato ship and.. EAT IT!");
     }
 });

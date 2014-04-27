@@ -47,9 +47,17 @@ public class FollowersCache implements Runnable
 
         if (j.getBoolean("_success"))
         {
-            int i = j.getInt("_total");
+            if (j.getInt("_http") == 200)
+            {
+                int i = j.getInt("_total");
 
-            return i;
+                return i;
+            } else
+            {
+                throw new Exception("[HTTPErrorException] HTTP " + j.getInt("status") + " " + j.getString("error") + ". req="
+                        + j.getString("_type") + " " + j.getString("_url") + " " + j.getString("_post") + "   message="
+                        + j.getString("message"));
+            }
         } else
         {
             throw new Exception("[" + j.getString("_exception") + "] " + j.getString("_exceptionMessage"));
@@ -121,7 +129,22 @@ public class FollowersCache implements Runnable
 
                     if (j.getBoolean("_success"))
                     {
-                        responses.add(j);
+                        if (j.getInt("_http") == 200)
+                        {
+                            responses.add(j);
+
+                        } else
+                        {
+                            try
+                            {
+                                throw new Exception("[HTTPErrorException] HTTP " + j.getInt("status") + " " + j.getString("error") + ". req="
+                                        + j.getString("_type") + " " + j.getString("_url") + " " + j.getString("_post") + "   message="
+                                        + j.getString("message"));
+                            } catch (Exception e)
+                            {
+                                System.out.println("FollowersCache.updateCache>>Failed to update followers: " + e.getMessage());
+                            }
+                        }
                     } else
                     {
                         try

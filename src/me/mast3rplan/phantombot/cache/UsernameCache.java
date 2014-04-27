@@ -30,9 +30,26 @@ public class UsernameCache
 
                 if (user.getBoolean("_success"))
                 {
-                    String displayName = user.getString("display_name");
-                    cache.put(username, displayName);
-                    return displayName;
+                    if (user.getInt("_http") == 200)
+                    {
+                        String displayName = user.getString("display_name");
+                        cache.put(username, displayName);
+
+                        return displayName;
+                    } else
+                    {
+                        try
+                        {
+                            throw new Exception("[HTTPErrorException] HTTP " + user.getInt("status") + " " + user.getString("error") + ". req="
+                                    + user.getString("_type") + " " + user.getString("_url") + " " + user.getString("_post") + "   message="
+                                    + user.getString("message"));
+                        } catch (Exception e)
+                        {
+                            System.out.println("FollowersCache.updateCache>>Failed to update followers: " + e.getMessage());
+                            
+                            return username;
+                        }
+                    }
                 } else
                 {
                     return username;
