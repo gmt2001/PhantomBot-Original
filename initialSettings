@@ -1,0 +1,8 @@
+groups==2=Bro
+groups==3=Broski
+groups==4=Brochaho
+groups==5=Bromano
+settings==pointname=BroPoints
+settings==connectedMessage=Connected to your face...
+settings==nonmodcommands=1
+settings==pointgain=1

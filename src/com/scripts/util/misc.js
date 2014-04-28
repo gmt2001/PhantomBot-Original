@@ -2,14 +2,16 @@ $.int = function(i) {
     return java.lang.Integer(i);
 };
 
-var lastSay = 0;
-
 $.say = function(s) {
-    str = String (s);
-    println (str);
-    $.channel.say(str);
-    return s;
+    $.ssay(s);
 }; 
+
+$.ssay = function(s) {
+    var str = String(s);
+    
+    println(str);
+    $.channel.say(str);
+}
 
 $.list = { };
 $.list.forEach = function(list, callback) {

@@ -4,16 +4,26 @@ $.on('command', function(event) {
     var argsString = event.getArguments().trim();
     var num_quotes = parseInt($.inidb.get("quotes", "num_quotes"));
     var quote;
+    var num;
     
     if(command.equalsIgnoreCase("quote")) {
-        if (num_quotes == null || isNaN(num_quotes) || num_quotes == 0) {
+         if (argsString.length() > 0) {
+                num = parseInt(argsString);
+        } else {
+                num = $.rand(num_quotes);
+        }
+
+        if (isNaN(num_quotes) || num_quotes == 0) {
             $.say("There are no quotes at this time");
             return;
         }
-        
-        var num = $.rand(num_quotes);
-        
-        $.say("#" + num + ": " + $.inidb.get("quotes", "quote_" + num));
+
+        if ($.inidb.get("quotes", "quote_" + num) == null) {
+            $.say("There are only " + num_quotes + " quotes right now! Remember that quotes are numbered from 0 to " + (num_quotes - 1) + "!");
+
+        } else {
+            $.say("#" + num + ": " + $.inidb.get("quotes", "quote_" + num));
+        }
     }
     
     if (command.equalsIgnoreCase("addquote")) {

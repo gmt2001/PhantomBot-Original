@@ -40,12 +40,13 @@ for(var name in $api) {
 
 $.on('ircJoinComplete', function(event) {
     $.channel = event.getChannel();
-    println("rebooted");
     
-    var connectedMessage = $.inidb.get('settings', 'conenctedMessage');
+    var connectedMessage = $.inidb.get('settings', 'connectedMessage');
     
     if (connectedMessage != null && !connectedMessage.isEmpty()) {
         $.say(connectedMessage);
+    } else {
+        println("ready");
     }
 });
 
@@ -53,8 +54,8 @@ $.botname = $.botName;
 $.botowner = $.ownerName;
 $.pointname = $.inidb.get('settings','pointname');
 
-if ($.pointname == undefined || $.pointname == null) {
-    $.pointname = "Player Points";
+if ($.pointname == undefined || $.pointname == null || $.pointname.isEmpty()) {
+    $.pointname = "Points";
 }
 
 // [ ----------------------(Plugins enable/disable)------------------------ ]
@@ -63,7 +64,9 @@ $.loadScript('./util/commandList.js');
 
 $.loadScript('./systems/fileSystem.js');
 
-if ($.inidb.GetBoolean("init", "initialsettings", "loaded") == false) {
+$var.initialsettings_update = 1;
+if ($.inidb.GetBoolean("init", "initialsettings", "loaded") == false
+    || $.inidb.GetInteger("init", "initialsettings", "update") < $var.initialsettings_update) {
     $.loadScript('./initialsettings.js');
 }
 
@@ -87,7 +90,6 @@ $.loadScript('./commands/addCommand.js');
 $.loadScript('./commands/quoteCommand.js');
 $.loadScript('./commands/randomCommand.js');
 $.loadScript('./commands/rollCommand.js');
-$.loadScript('./commands/donationCommand.js');
 $.loadScript('./commands/killCommand.js');
 
 if (enableRedis2IniConversion && $.inidb.GetBoolean("init", "redis2ini", "converted") == false) {

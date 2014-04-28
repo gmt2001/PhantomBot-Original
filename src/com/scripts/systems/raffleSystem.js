@@ -3,19 +3,31 @@ $.on('command', function(event) {
     var username = $.username.resolve(sender);
     var command = event.getCommand();
     var argsString = event.getArguments().trim();
-    var args;
-    if(argsString.isEmpty()) {
-        args = [];
-    } else {
-        args = argsString.split(" ");
-    }
+    var args = event.getArgs();
  
     if(command.equalsIgnoreCase("raffle")) {
+        var followers;
+        var prices;
+        var winner;
+        var followed;
+        var i;
+        
         if (args.length == 0) {
             if ($var.raffle_running) {
-                $.say("/me Time for a Raffle! Type '!raffle ticket <amount>' to buy tickets." + " Each ticket costs " + $var.raffle_price + " " + $.pointname + " per ticket, doods! Type '!raffle end' to choose a winner");
+                followers = "";
+                prices = "";
+                
+                if ($var.raffle_followers) {
+                    followers = " You must be following the channel to win!";
+                }
+                
+                if ($var.raffle_price > 0) {
+                    prices = " Entering costs " + $var.raffle_price + " " + $.pointname + "!";
+                }
+                
+                $.say("/me Time for a Raffle! Type '" + $var.raffle_keyword + "' to enter!." + followers + prices + " Type '!raffle end' to choose a winner");
             } else {
-                $.say("Usage: !raffle start <price> <points reward>, !raffle start <price> <custom reward (for game keys etc)>, !raffle end, !raffle ticket <amount>");
+                $.say("Usage: !raffle start [-followers] <price> <keyword> <points reward>, !raffle start [-followers] <price> <keyword> <custom reward (for game keys etc)>, !raffle end, !raffle repick");
             }
             return;
         }
@@ -24,102 +36,178 @@ $.on('command', function(event) {
  
         if (subCommand.equalsIgnoreCase("start")) {
             if (!$.isMod(sender)) {
-                $.say($.username.resolve(sender) + ", " + $.getUserGroupName(sender) + "s aren't allowed to start raffles! Moderators only.");
+                $.say(username + ", " + $.getUserGroupName(sender) + "s aren't allowed to start raffles! Moderators only.");
                 return;
             }
  
-            if ($var.raffle_running) return;
-            if (args.length < 3) return;
- 
-            if (isNaN(args[1])) {
-                $.say("You typed the command arguments the wrong way it's 'raffle start <price> <reward>' " + username + "!");
+            if ($var.raffle_running || args.length < 4) {
+                return;
+            }
+            
+            var followers_only = false;
+            var price = -1;
+            var keyword = "";
+            var reward = "";
+            i = 1;
+            
+            if (args[i] != null && args[i] != undefined && args[i].equalsIgnoreCase("-followers")) {
+                followers_only = true;
+                i++;
+            }
+            
+            if (args[i] != null && args[i] != undefined && !isNaN(args[i])) {
+                price = parseInt(args[i]);
+                i++;
+            }
+            
+            if (args[i] != null && args[i] != undefined && !args[i].isEmpty()) {
+                keyword = args[i];
+                i++;
+            }
+            
+            if (args[i] != null && args[i] != undefined && !args[i].isEmpty()) {
+                reward = args[i];
+                i++;
+            }
+            
+            if (price <= -1 || keyword.isEmpty() || reward.isEmpty()) {
+                $.say("Invalid format. Usage: !raffle start [-followers] <price> <keyword> <reward>");
                 return;
             }
  
-            $var.raffle_tickets = [];
-            $var.raffle_price = Math.max(args[1], 0);
+            $var.raffle_entrants = [];
+            $var.raffle_price = Math.max(price, 0);
             $var.raffle_mode = 0;
-            $var.raffle_times = {};
-            if (isNaN(args[2])) {
+            $var.raffle_keyword = keyword;
+            $var.raffle_followers = followers_only;
+            
+            followers = "";
+            prices = "";
+            
+            if (followers_only) {
+                followers = " You must be following the channel to win!";
+            }
+                
+            if (price > 0) {
+                prices = " Entering costs " + $var.raffle_price + " " + $.pointname + "!";
+            }
+            
+            if (isNaN(reward)) {
                 $var.raffle_mode = 1;
-                $var.raffle_win = args[2];
-                $.say("/me [Raffle] for -> [" + args[2] + "] <- get your entries in by typing '!raffle ticket <amount>'");
+                $var.raffle_win = reward;
+                
+                $.say("/me [Raffle] for -> [" + reward + "] <-" + followers + prices + " Enter to win by saying the keyword: " + keyword);
             } else {
-                $var.raffle_win = Math.max(parseInt(args[2]), 0);
-                $.say("/me The [Raffle] for " + args[2] + " " + $.pointname + " has started, doods! Type '!raffle ticket <amount>' to buy tickets for " + args[1] + " " + $.pointname + " per ticket, doods!");
+                $var.raffle_win = Math.max(parseInt(reward), 0);
+                
+                $.say("/me [Raffle] for -> [" + reward + " " + $.pointname + "] <-" + followers + prices + " Enter to win by saying the keyword: " + keyword);
 
             }
+            
             $var.raffle_running = true;
-        } else if (subCommand.equalsIgnoreCase("ticket")) {
-            if (!$var.raffle_running) return;
-            if (args.length < 2) return;
-           
-            var times = parseInt(args[1]);
- 
-            var atimes = $var.raffle_times[username];
-            println (atimes);
-            if(atimes == undefined) {
-                atimes = 0;
-            } else {
-                atimes = int(atimes);
-            }
- 
-            if (atimes + times >= 6) {
-                $.say(sender + ", you can only buy up to 5 tickets, dood!");
-                return;
-            }
- 
-            var price = parseInt($var.raffle_price) * times;
-           
-            var points = $.inidb.get('points', sender);
-            if(points == null) points = 0;
-            else points = int(points);
-           
-            if(price > points) {
-                $.say("/me " + $.username.resolve(sender) + ", " + " you don't have enough " + $.pointname + " to buy that much, dood!");
-                return;
-            }
- 
-            if (price <= 0) {
-                $.say("/me " +  $.username.resolve(sender) + ", " + " please use a positive amount of tickets, dood!");
-                return;  
-            }
- 
-            $.inidb.decr('points', sender, price);
- 
-            for (var i = 0; i < parseInt(args[1]); i++) {
-                $var.raffle_tickets.push(username);
-            }
-           
-            $var.raffle_tickets[username] = atimes + times;
- 
-            $.say($.username.resolve(sender) + " bought " + args[1] + " tickets!");
         } else if (subCommand.equalsIgnoreCase("end")) {
             if (!$.isMod(sender)) {
-                $.say("/me " +  $.username.resolve(sender) + ", " + $.getUserGroupName(username) + "s aren't allowed to end raffles! Moderators only.");
+                $.say("/me " +  username + ", " + $.getUserGroupName(username) + "s aren't allowed to end raffles! Moderators only.");
                 return;
             }
  
-            if (!$var.raffle_running) return;
+            if (!$var.raffle_running) {
+                return;
+            }
+            
+            $var.raffle_running = false;
  
-            if ($var.raffle_tickets == []) {
-                $.say("/me Raffle has ended! No one entered the raffle.");
+            if ($var.raffle_entrants.length == 0) {
+                $.say("/me The raffle has ended! No one entered the raffle.");
+                return;
             }
  
-            var winner = $.randElement($var.raffle_tickets);
+            i = 0;
+ 
+            do {
+                if (i > ($var.raffle_entrants.length * 2)) {
+                    winner = null;
+                    break;
+                }
+                
+                winner = $.randElement($var.raffle_entrants);
+                followed = $.inidb.get('followed', winner.toLowerCase());
+                
+                i++;
+            } while ($var.raffle_followers && (followed == null || followed == undefined || !followed.equalsIgnoreCase("1")));
+            
             if (winner == null) {
-                winner = "None";
+                $.say("/me There is no winner!");
+                return;
             }
 
 
             if ($var.raffle_mode == 0) {
                 $.say("/me [Winner] -> " + winner + "! Congratulations! " + $var.raffle_win + " " + $.pointname + " have been credited to your account!");
+                
                 $.inidb.incr('points', winner.toLowerCase(), $var.raffle_win);
             } else {
                 $.say("/me [Winner] for [" + $var.raffle_win + "] is " + winner + "! Congratulations!");
             }
-            $var.raffle_running = false;
+        } else if (subCommand.equalsIgnoreCase("repick")) {
+            if (!$.isMod(sender)) {
+                $.say("/me " +  username + ", " + $.getUserGroupName(username) + "s aren't allowed to end raffles! Moderators only.");
+                return;
+            }
+ 
+            if ($var.raffle_running || $var.raffle_entrants.length == 0 || $var.raffle_mode == 0) {
+                return;
+            }
+ 
+            i = 0;
+ 
+            do {
+                if (i > ($var.raffle_entrants.length * 2)) {
+                    winner = null;
+                    break;
+                }
+                
+                winner = $.randElement($var.raffle_entrants);
+                followed = $.inidb.get('followed', winner.toLowerCase());
+                
+                i++;
+            } while ($var.raffle_followers && (followed == null || followed == undefined || !followed.equalsIgnoreCase("1")));
+            
+            if (winner == null) {
+                $.say("/me There is no winner!");
+            } else {
+                $.say("/me [Winner] for [" + $var.raffle_win + "] is " + winner + "! Congratulations!");
+            }
         }
+    }
+});
+
+$.on('ircChannelMessage', function(event) {
+    var sender = event.getSender();
+    var username = $.username.resolve(sender);
+    var message = event.getMessage();
+    
+    if ($var.raffle_running) {
+        if (!message.toLowerCase().contains($var.raffle_keyword.toLowerCase()) || $.array.contains($var.raffle_entrants, sender)) {
+            return;
+        }
+            
+        var points = $.inidb.get('points', sender);
+            
+        if(points == null) {
+            points = 0;
+        } else {
+            points = int(points);
+        }
+           
+        if ($var.raffle_price > points) {
+            $.say("/me " + username + ", " + " you don't have enough " + $.pointname + " to enter!");
+            return;
+        }
+ 
+        $.inidb.decr('points', sender, price);
+ 
+        $var.raffle_entrants.push(username);
     }
 });
 

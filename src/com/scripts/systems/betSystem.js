@@ -1,14 +1,3 @@
-/* 
-!bet >> Current Bet Session || Type '!bet option1 vs option2' to start
-!bet option1 vs option2 >> starts a new bet
-!bet 1 <amount> || !bet 2 <amount>
-Timer 30 seconds
-Bets are locked!
-!bet end option
-The winning bet is "option" reward points have been distributed!
-*/
-
-
 var betstart = 0;
 var betlength = 1 * 60 * 1000;
 var minbets = 2;
@@ -47,7 +36,7 @@ $.on('command', function(event) {
 
                 $var.bet_table = { };
                 $var.bet_running = true;
-                $.say(" Bets are open for " + optionString + " >> Awaiting players to wager their points with :'!bet <amount> <option>'");
+                $.say(" Bets are open for " + optionString + " >> Awaiting players to wager their points with '!bet <amount> <option>'");
                 $var.bet_optionsString = optionString;
 
                 $var.bet_id = System.currentTimeMillis();

@@ -43,6 +43,7 @@ $.on('command', function(event) {
             }
             
             var points_user = sender;
+            
             if (args.length == 1) {
                 points_user = args[0].toLowerCase();
             }
@@ -69,10 +70,33 @@ $.on('command', function(event) {
     if (command.equalsIgnoreCase("users")) {
         $.say($.channel.getNicks());
     }
+    
+    if (command.equalsIgnoreCase("pointgain")) {
+        if (args.length >= 2) {
+            if (!$.isAdmin(sender)) {
+                $.say("You must be a Administrator to use this command " + username + ".");
+                return;
+            }
+            
+            action = args[0];
+            if (action.equalsIgnoreCase("set")) {
+                $.inidb.set('settings', 'pointgain', args[1]);
+                $.say("Set! Everyone will now earn " + $.inidb.get('settings', 'pointgain') + " " + $.pointname + " every 10 minutes.");
+            } 
+
+        } else {
+            $.say("Current point gain for everyone is  " + $.inidb.get('settings', 'pointgain') + " " + $.pointname + " for every 10 minutes.");
+        }
+    }
 });
+
+if ($.inidb.get('settings', 'pointgain') == null) {
+    $.inidb.set('settings', 'pointgain', 1);
+}
 
 $.registerChatCommand("points");
 $.registerChatCommand("points help");
+$.registerChatCommand("pointgain");
 $.registerChatCommand("users");
 
 $.setInterval(function() {
@@ -89,10 +113,6 @@ $.setInterval(function() {
                 $.inidb.set("string", nick + "_greeting_suffix", " to the channel!");
             }
         }
-    // Timer needed and resets every 30 days. Don't know how to replace $.inidb.get('time' with this.
-    /*if ($.inidb.get('time', nick) >= 2592000 * 1000 && $.hasGroupByName(nick, "DOOD")) {
-            $.setUserGroupByName(nick, "Prinny"); 
-        } */
     });
 
 }, 1000 * 60);
@@ -101,11 +121,14 @@ $.setInterval(function() {
     var nicks = $.channel.getNicks();
     // if ($.channelStatus.equals("online")) {
     $.list.forEach(nicks, function(i, nick) {
-        var amount = 1;
-        if ($.hasGroupByName(nick, "Regular")) amount = 2;
-        if ($.hasGroupByName(nick, "Prinny")) amount = 3;
-        if ($.hasGroupByName(nick, "Golden")) amount = 4;
-        if ($.hasGroupByName(nick, "Burning")) amount = 5;
+        var amount = $.inidb.get('settings', 'pointgain');
+        
+        if ($.hasGroupById(nick, 1)) amount = amount + 0.5;
+        if ($.hasGroupById(nick, 2)) amount = amount + 0.5;
+        if ($.hasGroupById(nick, 3)) amount = amount + 0.5;
+        if ($.hasGroupById(nick, 4)) amount = amount + 0.5;
+        if ($.hasGroupById(nick, 5)) amount = amount + 0.5;
+        
         $.inidb.incr('points', nick, amount);
     });
 
@@ -116,7 +139,7 @@ $.setInterval(function() {
     }  */
 }, 600000);
 
-/* $.setInterval(function() {
+    /* $.setInterval(function() {
     var status = $.twitch.getStream("phantomindex");
     if (status.isNull("stream")) {
         $.channelStatus = "offline";
