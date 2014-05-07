@@ -1,3 +1,5 @@
+var arrRollLimiter = new Array();
+
 $.on('command', function(event) {
     var sender = event.getSender();
     var username = $.username.resolve(sender);
@@ -6,6 +8,26 @@ $.on('command', function(event) {
     var args = event.getArgs();
 
     if(command.equalsIgnoreCase("roll")) {
+        var found = false;
+        
+        for (var i = 0; i < arrRollLimiter.length; i++) {
+            if (arrRollLimiter[i][0].equalsIgnoreCase(username)) {
+                if (arrRollLimiter[i][1] < System.currentTimeMillis()) {
+                    arrRollLimiter[i][1] = System.currentTimeMillis() + (30 * 1000);
+                    break;
+                } else {
+                    $.say(username + ", you can only use !roll once every 30 seconds!");
+                    return;
+                }
+                
+                found = true;
+            }
+        }
+        
+        if (found == false) {
+            arrRollLimiter.push(new Array(username, System.currentTimeMillis() + (30 * 1000)));
+        }
+        
         if (args.length == 0) {
             var d1 = $.randRange(1, 6);
             var d2 = $.randRange(1, 6);
@@ -62,6 +84,11 @@ $.on('command', function(event) {
                 win[11] = "The ninja strikes!"
                 win[12] = "The ninja strikes!"
             }
+            
+            if (username.equalsIgnoreCase("acavedo")) {
+                username = "Avocado"
+            }
+            
             if(d1 == d2) {
                 $.say(username + " rolled Doubles >> " + die1 + " & " + die2 + "! " + "You won " + (die1+die2 * 2) + " " + $.pointname + "!" + " " +$.randElement(win));
                 $.inidb.incr('points', sender, die1+die2 * 2); 
