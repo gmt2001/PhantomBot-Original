@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import me.mast3rplan.phantombot.event.EventBus;
 import me.mast3rplan.phantombot.event.twitch.follower.TwitchFollowEvent;
+import me.mast3rplan.phantombot.event.twitch.follower.TwitchFollowsInitializedEvent;
 import me.mast3rplan.phantombot.event.twitch.follower.TwitchUnfollowEvent;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -33,6 +34,7 @@ public class FollowersCache implements Runnable
     private String channel;
     private int count;
     private Thread updateThread;
+    private boolean firstUpdate = true;
 
     public FollowersCache(String channel)
     {
@@ -215,6 +217,12 @@ public class FollowersCache implements Runnable
         for (String follower : unfollowers)
         {
             EventBus.instance().post(new TwitchUnfollowEvent(follower));
+        }
+        
+        if (firstUpdate)
+        {
+            firstUpdate = false;
+            EventBus.instance().post(new TwitchFollowsInitializedEvent());
         }
     }
 

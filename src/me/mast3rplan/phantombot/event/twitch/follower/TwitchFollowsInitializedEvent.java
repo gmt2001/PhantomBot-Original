@@ -5,7 +5,7 @@ import me.mast3rplan.phantombot.event.twitch.TwitchEvent;
 public class TwitchFollowsInitializedEvent extends TwitchEvent
 {
 
-    protected TwitchFollowsInitializedEvent()
+    public TwitchFollowsInitializedEvent()
     {
     }
 }

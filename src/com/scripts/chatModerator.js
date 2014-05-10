@@ -1,5 +1,6 @@
 var ircPrefix = ".";
 var autoBanPhrases = new Array();
+var permitList = new Array();
 
 function banUserFor (user, time) {
     $.bancache.addUser (user, time);
@@ -36,7 +37,8 @@ function autoPurgeUser (user) {
     
     if (ban) {
         $.sinbin.put (user, 0);
-        banUserFor (user, 1);
+        banUserFor (user, 10 * 60);
+        $.say(user + " was banned for 10 minutes for failing to heed auto-moderation warnings.");
     } else {
         timeoutUser (user, 2);
     }
@@ -46,7 +48,7 @@ function timeoutUser (user, fortime) {
     $.say (ircPrefix + "timeout " + user + " " + fortime);
 }
 
-//var linkson = $.inidb.exists("bool", "linkson");
+var linkson = $.inidb.get("settings", "linkson") == "1";
 $.bancache.loadFromFile ("bannedUsers.bin");
 
 $.on('command', function(event) {
@@ -79,36 +81,49 @@ $.on('command', function(event) {
         } else {
             $.say ("Only a Moderator can use this command! " + username);
         }
-		
+    } else if (command.equalsIgnoreCase("permit")) {
+        if ($.isMod(sender)) {
+            if (argsString.length() > 0 && linkson == false) {
+                permitList.push(new Array(argsString, System.currentTimeMillis() + (60 * 1000)));
+                
+                $.say (argsString + " is permitted to post a link during the next 60 seconds!");
+            }
+        } else {
+            $.say ("Only a Moderator can use this command! " + username);
+        }
     } else if (command.equalsIgnoreCase("links")) {
-		
-        /*if ($.isMod(sender)) {
-			
-			if (args [0].equalsIgnoreCase("on")) {
-				if (!linkson) {
-					$.inidb.set("bool", "linkson", "true");
-					linkson = true;
-					$.say("Links enabled");
-				} else {
-					$.say("Links already enabled");
-				}
-			} else {
-				if (linkson) {
-					$.inidb.del("bool", "linkson");
-					linkson = false;
-					$.say("Links disabled");
-				} else {
-					$.say("Links already disabled");
-				}
-			}
-			
-		} else {
-			$.say ("That is a mod only command")
-		}*/
-        $.say ("That command is currently disabled")
-		
+        if ($.isMod(sender)) {
+            if (args.length == 0) {
+                var endis = "allowed";
+                
+                if (!linkson) {
+                    endis = "moderated";
+                }
+                
+                $.say("Links are " + endis + "! Say '!links <allow|moderate>' to change this");
+            } else if (args[0].equalsIgnoreCase("allow")) {
+                if (!linkson) {
+                    $.inidb.set("settings", "linkson", "1");
+                    
+                    linkson = true;
+                    $.say("Links allowed");
+                } else {
+                    $.say("Links already allowed");
+                }
+            } else {
+                if (linkson) {
+                    $.inidb.set("settings", "linkson", "0");
+                    
+                    linkson = false;
+                    $.say("Links moderated");
+                } else {
+                    $.say("Links already moderated");
+                }
+            }
+        } else {
+            $.say ("Only a Moderator can use this command! " + username);
+        }	
     } else if (command.equalsIgnoreCase("ban")) {
-		
         if ($.isMod(sender)) {
             if (args.length == 2) {
                 var time = parseInt (args [1]);
@@ -125,13 +140,10 @@ $.on('command', function(event) {
                 banUser (args [0]);
                 $.say (args [0] + " banned indefinitely");
             }
-			
         } else {
             $.say ("Only a Moderator can use this command! " + username);
         }
-		
     } else if (command.equalsIgnoreCase("unban")) {
-		
         if ($.isMod(sender)) {
 			
             unbanUser (args [0]);
@@ -165,20 +177,37 @@ $.on('ircChannelMessage', function(event) {
 	
     var caps = event.getCapsCount ();
     var capsRatio = (caps*1.0)/message.length ();
+    var i;
 	
     if (capsRatio > 0.30 && message.length () > 70) {
         autoPurgeUser (username);
         $.say(chatName + " -> that was way too many caps! [Warning]");
-    } /*else if (linkson == false) {
-		if (event.isLink () && $.getUserGroupId (sender) < $.getGroupIdByName ("mod")) {
-			timeoutUser (username, 2);
-			$.say("Woah there " + chatName + ", posting links is currently disabled");
-		}
-	}*/
-    var i;
+    } else if (linkson == false) {
+        if ((event.isLink() || event.isUrl()) && !$.isMod(sender)) {
+            var permitted = false;
+            
+            for (i = 0; i < permitList.length; i++) {
+                if (i < permitList.length) {
+                    if (permitList[i][0].toLowerCase() == sender) {
+                        if (permitList[i][1] >= System.currentTimeMillis()) {
+                            permitted = true;
+                        }
+                    
+                        permitList.splice(i, 1);
+                        i--;
+                    }
+                }
+            }
+            
+            if (permitted == false) {
+                autoPurgeUser(username);
+                $.say("Dont post links without permission, " + username + "!");
+            }
+        }
+    }
 
     for (i = 0; i < autoBanPhrases.length; i++) {
-        if (message.indexOf(autoBanPhrases[i].toLowerCase()) != -1 && !$.isMod(sender)) {
+        if (message.indexOf(autoBanPhrases[i].toLowerCase()) != -1 && !$.isMod(sender) && autoBanPhrases[i].length() > 0) {
             banUser(username);
             $.say (username + " auto-banned indefinitely for using banned phrase #" + i);
             return;
@@ -188,20 +217,31 @@ $.on('ircChannelMessage', function(event) {
 
 $.registerChatCommand("purge");
 $.registerChatCommand("timeout");
-$.registerChatCommand("links");
 $.registerChatCommand("ban");
 $.registerChatCommand("unban");
 $.registerChatCommand("autoban");
+$.registerChatCommand("links");
+$.registerChatCommand("permit");
 
 $.setInterval(function() {
     var reformed = $.bancache.getReformedUsers ();
     var l = reformed.length;
+    var i;
     
-    for (var i = 0; i < l; ++i) {
+    for (i = 0; i < l; ++i) {
         unbanUser (reformed[i]);
     }
     
     $.bancache.syncToFile ("bannedUsers.bin");
+    
+    for (i = 0; i < permitList.length; i++) {
+        if (i < permitList.length) {
+            if (permitList[i][1] < System.currentTimeMillis()) {
+                permitList.splice(i, 1);
+                i--;
+            }
+        }
+    }
 }, 60);
 
 var num_phrases = parseInt($.inidb.get("autobanphrases", "num_phrases"));

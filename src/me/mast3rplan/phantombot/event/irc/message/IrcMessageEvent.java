@@ -1,53 +1,94 @@
 package me.mast3rplan.phantombot.event.irc.message;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.regex.Pattern;
 import me.mast3rplan.phantombot.event.irc.IrcEvent;
 import me.mast3rplan.phantombot.jerklib.Session;
 import org.apache.commons.lang3.CharUtils;
 
-public abstract class IrcMessageEvent extends IrcEvent {
+public abstract class IrcMessageEvent extends IrcEvent
+{
+
     private String sender;
     private String message;
     /*public static Pattern addressPtn = Pattern.compile (
-            "((\\w*\\.)*((a(ero|sia)|biz|cat|co(m|op)|edu|gov|i(nfo|nt)|jobs|m(e|il|obi|useum)|n(ame|et)|org|p(ost|ro)|t(el|ravel)|xxx)|" + 
-                "(\\w*\\.\\w{2,4}))([ /\\\\$].*)?)|" +
-            "(([0-9]{1,3}\\.){3}[0-9]{1,3})|" + 
-            "(([0-9a-fA-F]{1,4}:){0,7}:?:?([0-9a-fA-F]{1,4})(:[0-9a-fA-F]{1,4}){0,7})" +
-            "");*/
-    public static Pattern addressPtn = Pattern.compile (
-            "(http://)?(www\\.)?(\\w+\\.)+(a(ero|sia)|biz|cat|co(m|op)|edu|gov|i(nfo|nt)|jobs|m(e|il|obi|useum)|n(ame|et)|org|p(ost|ro)|t(el|ravel)|xxx)(\\.\\w{1,4})?(:[0-9])?[\\x20-\\x7E]*"
-            //"((\\w{1,5}://)?(\\w+\\.)+\\w\\w+([ :/\\\\].*)?)|" +
+     "((\\w*\\.)*((a(ero|sia)|biz|cat|co(m|op)|edu|gov|i(nfo|nt)|jobs|m(e|il|obi|useum)|n(ame|et)|org|p(ost|ro)|t(el|ravel)|xxx)|" + 
+     "(\\w*\\.\\w{2,4}))([ /\\\\$].*)?)|" +
+     "(([0-9]{1,3}\\.){3}[0-9]{1,3})|" + 
+     "(([0-9a-fA-F]{1,4}:){0,7}:?:?([0-9a-fA-F]{1,4})(:[0-9a-fA-F]{1,4}){0,7})" +
+     "");*/
+    public static Pattern addressPtn = Pattern.compile(
+            "(http://)?(www\\.)?(\\w+\\.)+(a(ero|sia)|biz|cat|co(m|op)|edu|gov|i(nfo|nt)|jobs|m(e|il|obi|useum)|n(ame|et)|org|p(ost|ro)|t(el|ravel)|xxx)(\\.\\w{1,4})?(:[0-9])?[\\x20-\\x7E]*" //"((\\w{1,5}://)?(\\w+\\.)+\\w\\w+([ :/\\\\].*)?)|" +
             //"(([0-9]{1,3}\\.){3}[0-9]{1,3})|" +
             //"(([0-9a-fA-F]{1,4}:){0,7}:?:?([0-9a-fA-F]{1,4})(:[0-9a-fA-F]{1,4}){0,7})"
             );
 
-    protected IrcMessageEvent(Session session, String sender, String message) {
+    protected IrcMessageEvent(Session session, String sender, String message)
+    {
         super(session);
         this.sender = sender;
         this.message = message;
     }
 
-    public String getSender() {
+    public String getSender()
+    {
         return sender;
     }
 
-    public String getMessage() {
+    public String getMessage()
+    {
         return message;
     }
-    
-    public int getCapsCount () {
+
+    public int getCapsCount()
+    {
         int count = 0;
-        for (int i=0, l=message.length (); i<l; ++i) {
-            if (CharUtils.isAsciiAlphaUpper(message.charAt(i))) ++count;
+        for (int i = 0, l = message.length(); i < l; ++i)
+        {
+            if (CharUtils.isAsciiAlphaUpper(message.charAt(i)))
+            {
+                ++count;
+            }
         }
         return count;
     }
-    
-    public boolean isLink () {
-        String [] arr = message.split (" ");
-        for (String s : arr) {
-            if (IrcMessageEvent.addressPtn.matcher(s).matches()) return true;
+
+    public boolean isLink()
+    {
+        String[] arr = message.split(" ");
+        for (String s : arr)
+        {
+            if (IrcMessageEvent.addressPtn.matcher(s).matches())
+            {
+                return true;
+            }
         }
         return false;
+    }
+
+    public boolean isUrl()
+    {
+        boolean ret = false;
+        String[] arr = message.split(" ");
+        for (String s : arr)
+        {
+            try
+            {
+                URL u = new URL(s);
+                ret = true;
+            } catch (MalformedURLException ex)
+            {
+                try
+                {
+                    URL u = new URL("http://" + s);
+                    ret = true;
+                } catch (MalformedURLException ex2)
+                {
+                }
+            }
+        }
+
+        return ret;
     }
 }
