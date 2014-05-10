@@ -31,7 +31,7 @@ println("\r   " + lines.length + "/" + lines.length);
 println("   Saving...");
 
 $.inidb.SetBoolean("init", "initialsettings", "loaded", true);
-$.inidb.SetInteger("init", "initialsettings", "update", parseInt($var.initialsettings_update));
+$.inidb.SetInteger("init", "initialsettings", "update", parseInt($.initialsettings_update));
 $.inidb.SaveAll(true);
 
 println("End initialsettings...");

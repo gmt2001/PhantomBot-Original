@@ -1,4 +1,5 @@
 var ircPrefix = ".";
+var autoBanPhrases = new Array();
 
 function banUserFor (user, time) {
     $.bancache.addUser (user, time);
@@ -9,6 +10,7 @@ function banUserFor (user, time) {
 
 function banUser (user) {
     $.say (ircPrefix + "ban " + user);
+    timeoutUser(user, 2);
 }
 
 function unbanUser (user) {
@@ -36,12 +38,12 @@ function autoPurgeUser (user) {
         $.sinbin.put (user, 0);
         banUserFor (user, 1);
     } else {
-        timeoutUser (user);
+        timeoutUser (user, 2);
     }
 }
  
-function timeoutUser (user) {
-    $.say (ircPrefix + "timeout " + user + " 2");
+function timeoutUser (user, fortime) {
+    $.say (ircPrefix + "timeout " + user + " " + fortime);
 }
 
 //var linkson = $.inidb.exists("bool", "linkson");
@@ -51,6 +53,7 @@ $.on('command', function(event) {
     var sender = event.getSender();
     var username = $.username.resolve(sender);
     var command = event.getCommand();
+    var argsString = event.getArguments().trim();
     var args = event.getArgs ();
 	
     if (command.equalsIgnoreCase("chat") && username.equalsIgnoreCase($.botname)) {
@@ -58,7 +61,7 @@ $.on('command', function(event) {
     } else if (command.equalsIgnoreCase("purge")) {
         if ($.isMod(sender)) {
             if (args.length == 1) {
-                timeoutUser (args [0]);
+                timeoutUser (args [0], 2);
             } else {
                 $.say ("You must specify a user to purge")
             }
@@ -66,9 +69,20 @@ $.on('command', function(event) {
             $.say ("Only a Moderator can use this command! " + username);
         }
 		
+    } else if (command.equalsIgnoreCase("timeout")) {
+        if ($.isMod(sender)) {
+            if (args.length == 1) {
+                timeoutUser (args [0], 600);
+            } else {
+                $.say ("You must specify a user to timeout")
+            }
+        } else {
+            $.say ("Only a Moderator can use this command! " + username);
+        }
+		
     } else if (command.equalsIgnoreCase("links")) {
 		
-        /*if ($.isMod(sender) || username.equalsIgnoreCase($.botname)) {
+        /*if ($.isMod(sender)) {
 			
 			if (args [0].equalsIgnoreCase("on")) {
 				if (!linkson) {
@@ -95,8 +109,7 @@ $.on('command', function(event) {
 		
     } else if (command.equalsIgnoreCase("ban")) {
 		
-        if ($.isMod(sender) || username.equalsIgnoreCase($.botname)) {
-			
+        if ($.isMod(sender)) {
             if (args.length == 2) {
                 var time = parseInt (args [1]);
                 if (time <= 0) {
@@ -119,17 +132,29 @@ $.on('command', function(event) {
 		
     } else if (command.equalsIgnoreCase("unban")) {
 		
-        if ($.isMod(sender) || username.equalsIgnoreCase($.botname)) {
+        if ($.isMod(sender)) {
 			
             unbanUser (args [0]);
             $.say (args [0] + " is no longer banned");
 			
         } else {
             $.say ("Only a Moderator can use this command! " + username);
-        }
-		
+        }	
+    } else if (command.equalsIgnoreCase("autoban")) {
+        if ($.isMod(sender)) {
+            if (argsString.length() > 0) {
+                autoBanPhrases.push(argsString);
+            
+                var num_phrases = $.inidb.get("autobanphrases", "num_phrases");
+                $.inidb.set("autobanphrases", "phrase_" + num_phrases, argsString);
+                $.inidb.incr("autobanphrases", "num_phrases", 1);
+            
+                $.say("Added a phrase to the autoban list! This can only be undone manually!");
+            }
+        } else {
+            $.say ("Only a Moderator can use this command! " + username);
+        }	
     }
-	
 });
 
 $.on('ircChannelMessage', function(event) {
@@ -146,17 +171,27 @@ $.on('ircChannelMessage', function(event) {
         $.say(chatName + " -> that was way too many caps! [Warning]");
     } /*else if (linkson == false) {
 		if (event.isLink () && $.getUserGroupId (sender) < $.getGroupIdByName ("mod")) {
-			timeoutUser (username);
+			timeoutUser (username, 2);
 			$.say("Woah there " + chatName + ", posting links is currently disabled");
 		}
 	}*/
+    var i;
 
+    for (i = 0; i < autoBanPhrases.length; i++) {
+        if (message.indexOf(autoBanPhrases[i].toLowerCase()) != -1 && !$.isMod(sender)) {
+            banUser(username);
+            $.say (username + " auto-banned indefinitely for using banned phrase #" + i);
+            return;
+        }
+    }
 });
 
 $.registerChatCommand("purge");
+$.registerChatCommand("timeout");
 $.registerChatCommand("links");
 $.registerChatCommand("ban");
 $.registerChatCommand("unban");
+$.registerChatCommand("autoban");
 
 $.setInterval(function() {
     var reformed = $.bancache.getReformedUsers ();
@@ -168,3 +203,10 @@ $.setInterval(function() {
     
     $.bancache.syncToFile ("bannedUsers.bin");
 }, 60);
+
+var num_phrases = parseInt($.inidb.get("autobanphrases", "num_phrases"));
+var i;
+
+for (i = 0; i < num_phrases; i++) {
+    autoBanPhrases.push($.inidb.get("autobanphrases", "phrase_" + i));
+}

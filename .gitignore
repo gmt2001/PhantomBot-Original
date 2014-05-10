@@ -1,5 +1,6 @@
 build.xml
 manifest.mf
+botlogin
 nbproject/*
 /build/
 /dist/

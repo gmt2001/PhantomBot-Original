@@ -1,3 +1,5 @@
+var announceFollows = false;
+
 $.on('twitchFollow', function(event) {
     var follower = event.getFollower().toLowerCase();
     var username = $.username.resolve(follower);
@@ -6,11 +8,11 @@ $.on('twitchFollow', function(event) {
     
     if (followed == null || followed == undefined || followed.isEmpty()) {
         $.inidb.set('followed', follower, 1);
-        $.say("Thanks for the follow " + username + "! +100 " + $.pointname + "!");
+        if (announceFollows) {
+            $.say("Thanks for the follow " + username + "! +100 " + $.pointname + "!");
+        }
         $.inidb.incr('points', follower, 100);
-    }
-    
-    if (followed.equalsIgnoreCase("0")) {
+    } else if (followed.equalsIgnoreCase("0")) {
         $.inidb.set('followed', follower, 1);
     }
 });
@@ -28,4 +30,8 @@ $.on('twitchUnfollow', function(event) {
     if (followed.equalsIgnoreCase("1")) {
         $.inidb.set('followed', follower, 0);
     }
+});
+
+$.on('twitchFollowsInitialized', function(event) {
+    announceFollows = true;
 });

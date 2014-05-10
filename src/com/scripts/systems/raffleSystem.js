@@ -27,7 +27,7 @@ $.on('command', function(event) {
                 
                 $.say("/me Time for a Raffle! Type '" + $var.raffle_keyword + "' to enter!." + followers + prices + " Type '!raffle end' to choose a winner");
             } else {
-                $.say("Usage: !raffle start [-followers] < price> <keyword> <points reward>, !raffle start [-followers] < price> <keyword> <custom reward (for game keys etc)>, !raffle end, !raffle repick");
+                $.say("Usage: !raffle start [-followers] < price> <keyword> < points reward>, !raffle start [-followers] < price> <keyword> <custom reward (for game keys etc)>, !raffle end, !raffle repick");
             }
             return;
         }

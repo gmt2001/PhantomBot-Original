@@ -64,9 +64,9 @@ $.loadScript('./util/commandList.js');
 
 $.loadScript('./systems/fileSystem.js');
 
-$var.initialsettings_update = 1;
+$.initialsettings_update = 1;
 if ($.inidb.GetBoolean("init", "initialsettings", "loaded") == false
-    || $.inidb.GetInteger("init", "initialsettings", "update") < $var.initialsettings_update) {
+    || $.inidb.GetInteger("init", "initialsettings", "update") < $.initialsettings_update) {
     $.loadScript('./initialsettings.js');
 }
 
