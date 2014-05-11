@@ -183,7 +183,7 @@ $.on('ircChannelMessage', function(event) {
         autoPurgeUser (username);
         $.say(chatName + " -> that was way too many caps! [Warning]");
     } else if (linkson == false) {
-        if ((event.isLink() || event.isUrl()) && !$.isMod(sender)) {
+        if (event.isLink() == true && !$.isMod(sender)) {
             var permitted = false;
             
             for (i = 0; i < permitList.length; i++) {

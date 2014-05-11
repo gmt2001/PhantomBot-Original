@@ -1,7 +1,5 @@
 package me.mast3rplan.phantombot.event.irc.message;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.regex.Pattern;
 import me.mast3rplan.phantombot.event.irc.IrcEvent;
 import me.mast3rplan.phantombot.jerklib.Session;
@@ -56,39 +54,6 @@ public abstract class IrcMessageEvent extends IrcEvent
 
     public boolean isLink()
     {
-        String[] arr = message.split(" ");
-        for (String s : arr)
-        {
-            if (IrcMessageEvent.addressPtn.matcher(s).matches())
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public boolean isUrl()
-    {
-        boolean ret = false;
-        String[] arr = message.split(" ");
-        for (String s : arr)
-        {
-            try
-            {
-                URL u = new URL(s);
-                ret = true;
-            } catch (MalformedURLException ex)
-            {
-                try
-                {
-                    URL u = new URL("http://" + s);
-                    ret = true;
-                } catch (MalformedURLException ex2)
-                {
-                }
-            }
-        }
-
-        return ret;
+        return IrcMessageEvent.addressPtn.matcher(message).find();
     }
 }
