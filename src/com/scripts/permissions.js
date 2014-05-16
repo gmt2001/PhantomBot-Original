@@ -1,3 +1,5 @@
+var modeOUsers = new Array();
+
 $.isBot = function (user) {
     return user.equalsIgnoreCase($.botname);
 }
@@ -11,7 +13,11 @@ $.isAdmin = function (user) {
 }
 
 $.isMod = function (user) {
-    return $.hasGroupByName(user, "Moderator") || $.isAdmin(user);
+    return $.hasGroupByName(user, "Moderator") || $.hasModeO(user) || $.isAdmin(user);
+}
+
+$.hasModeO = function (user) {
+    return $.array.contains(modeOUsers, user.toLowerCase());
 }
 
 $.hasGroupById = function(user, id) {
@@ -112,6 +118,8 @@ $.on('command', function(event) {
     var args;
     var name;
     var i;
+    var it;
+    var s;
     var allowed = true;
     
     if(argsString.isEmpty()) {
@@ -215,8 +223,95 @@ $.on('command', function(event) {
             }
         }
     }
+
+    if (command.equalsIgnoreCase("users")) {
+        it = $.channel.getNicks().iterator();
+        s = "Users in channel: ";
+        
+        while (it.hasNext() == true) {
+            name = it.next();
+            
+            if (s.length() > 18) {
+                s += ", ";
+            }
+                
+            s += name.toLowerCase();
+        }
+        
+        $.say(s);
+    }
+    
+    if (command.equalsIgnoreCase("mods")) {
+        it = $.channel.getNicks().iterator();
+        s = "Mods in channel: ";
+        
+        while (it.hasNext() == true) {
+            name = it.next();
+            
+            if ($.isMod(name.toLowerCase())) {
+                if (s.length() > 17) {
+                    s += ", ";
+                }
+                
+                s += name.toLowerCase();
+            }
+        }
+        
+        $.say(s);
+    }
+    
+    if (command.equalsIgnoreCase("admins")) {
+        it = $.channel.getNicks().iterator();
+        s = "Admins in channel: ";
+        
+        while (it.hasNext() == true) {
+            name = it.next();
+            
+            if ($.isAdmin(name.toLowerCase())) {
+                if (s.length() > 17) {
+                    s += ", ";
+                }
+                
+                s += name.toLowerCase();
+            }
+        }
+        
+        $.say(s);
+    }
+});
+
+$.on('ircChannelLeave', function(event) {
+    var u = $.username.resolve(event.getUser());
+    var username = u.toLowerCase();
+    
+    if ($.array.contains(modeOUsers, username)) {
+        for (var i = 0; i < modeOUsers.length; i++) {
+            if (modeOUsers[i].equalsIgnoreCase(username)) {
+                modeOUsers.splice(i, 1);
+            }
+        }
+    }
+});
+
+$.on('ircChannelUserMode', function(event) {
+    if (event.getMode().equalsIgnoreCase("o")) {
+        if (event.getAdd()) {
+            if (!$.array.contains(modeOUsers, event.getUser().toLowerCase())) {
+                modeOUsers.push(event.getUser().toLowerCase());
+            }
+        } else {
+            for (var i = 0; i < modeOUsers.length; i++) {
+                if (modeOUsers[i].equalsIgnoreCase(event.getUser().toLowerCase())) {
+                    modeOUsers.splice(i, 1);
+                }
+            }
+        }
+    }
 });
 
 $.registerChatCommand("perm set");
 $.registerChatCommand("rank");
 $.registerChatCommand("rankname");
+$.registerChatCommand("users");
+$.registerChatCommand("mods");
+$.registerChatCommand("admins");

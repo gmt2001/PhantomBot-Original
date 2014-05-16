@@ -92,7 +92,7 @@ $.on('command', function(event) {
             $.say ("Only a Moderator can use this command! " + username);
         }
     } else if (command.equalsIgnoreCase("links")) {
-        if ($.isMod(sender)) {
+        if ($.isMod(sender) || args.length == 0) {
             if (args.length == 0) {
                 var endis = "allowed";
                 

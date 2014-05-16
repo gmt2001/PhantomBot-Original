@@ -103,6 +103,7 @@ $.loadScript('./commands/quoteCommand.js');
 $.loadScript('./commands/randomCommand.js');
 $.loadScript('./commands/rollCommand.js');
 $.loadScript('./commands/killCommand.js');
+$.loadScript('./commands/top10Command.js');
 
 if (enableRedis2IniConversion && $.inidb.GetBoolean("init", "redis2ini", "converted") == false) {
     $.loadScript('./redis2inidb.js'); 

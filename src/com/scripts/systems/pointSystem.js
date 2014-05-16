@@ -66,10 +66,6 @@ $.on('command', function(event) {
             $.say($.username.resolve(points_user) + " has " + int(points) + " " + $.pointname + " -- [" + timeString + " ]");
         }
     }
-
-    if (command.equalsIgnoreCase("users")) {
-        $.say($.channel.getNicks());
-    }
     
     if (command.equalsIgnoreCase("pointgain")) {
         if (args.length >= 2) {
@@ -97,7 +93,6 @@ if ($.inidb.get('settings', 'pointgain') == null) {
 $.registerChatCommand("points");
 $.registerChatCommand("points help");
 $.registerChatCommand("pointgain");
-$.registerChatCommand("users");
 
 $.setInterval(function() {
     var nicks = $.channel.getNicks();
