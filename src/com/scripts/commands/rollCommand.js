@@ -9,8 +9,9 @@ $.on('command', function(event) {
 
     if(command.equalsIgnoreCase("roll")) {
         var found = false;
+        var i;
         
-        for (var i = 0; i < arrRollLimiter.length; i++) {
+        for (i = 0; i < arrRollLimiter.length; i++) {
             if (arrRollLimiter[i][0].equalsIgnoreCase(username)) {
                 if (arrRollLimiter[i][1] < System.currentTimeMillis()) {
                     arrRollLimiter[i][1] = System.currentTimeMillis() + (30 * 1000);
@@ -95,7 +96,9 @@ $.on('command', function(event) {
             } else {
                 $.say(username + " rolled a " + die1 + " & " + die2 + ". " + $.randElement(lost));
             }
-        } else {
+        } else if (args.length  == 1 && args[0].equalsIgnoreCase("help")) {
+            $.say("To do a DnD roll, say '!roll <dice definition>[ + <dice definition or number>]. For example: '!roll 2d6 + d20 + 2'. Limit 7 dice definitions or numbers per !roll command. A dice definition is [# to roll]d<number of sides>. Valid number of sides: 4, 6, 8, 10, 12, 20, 100");
+        } else if (args.length < 14) {
             var result = "";
             var die = 0;
             var dtotal = 0;
@@ -109,6 +112,7 @@ $.on('command', function(event) {
             var m;
             var s;
             var pos;
+            var valid = true;
             
             args = argsString.split("\\+");
             
@@ -120,7 +124,7 @@ $.on('command', function(event) {
             dstr[20] = "{(n)}";
             dstr[100] = "**n**";
             
-            for (var i = 0; i < args.length; i++) {
+            for (i = 0; i < args.length; i++) {
                 args[i] = args[i].trim();
                 lookd = true;
                 
@@ -165,9 +169,19 @@ $.on('command', function(event) {
                         
                     result = result + die;
                 }
+                
+                if (isNaN(parseInt(args[i])) && lookd) {
+                    valid = false;
+                }
             }
             
-            $.say(username + " rolled " + result + " = " + dtotal);
+            if (valid) {
+                $.say(username + " rolled " + result + " = " + dtotal);
+            } else {
+                $.say("Invalid roll definition, " + username + "! Say '!roll help' for help");
+            }
+        } else {
+            $.say("Dont spam rolls, " + username + "!");
         }
     }
 });

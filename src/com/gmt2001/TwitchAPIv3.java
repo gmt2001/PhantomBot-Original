@@ -48,6 +48,15 @@ public class TwitchAPIv3
 
         try
         {
+            if (url.contains("?"))
+            {
+                url += "&utcnow=" + System.currentTimeMillis();
+            }
+            else
+            {
+                url += "?utcnow=" + System.currentTimeMillis();
+            }
+            
             URL u = new URL(url);
             HttpsURLConnection c = (HttpsURLConnection) u.openConnection();
 

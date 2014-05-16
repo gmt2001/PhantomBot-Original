@@ -1,10 +1,9 @@
 package me.mast3rplan.phantombot.jerklib.events;
 
+import java.util.List;
 import me.mast3rplan.phantombot.jerklib.Channel;
 import me.mast3rplan.phantombot.jerklib.ModeAdjustment;
 import me.mast3rplan.phantombot.jerklib.Session;
-
-import java.util.List;
 
 /**
  * @author mohadib

@@ -1,5 +1,6 @@
 package me.mast3rplan.phantombot;
 
+import com.gmt2001.IniStore;
 import com.google.common.eventbus.Subscribe;
 import java.io.File;
 import java.io.IOException;
@@ -17,6 +18,7 @@ import me.mast3rplan.phantombot.event.EventBus;
 import me.mast3rplan.phantombot.event.Listener;
 import me.mast3rplan.phantombot.event.command.CommandEvent;
 import me.mast3rplan.phantombot.event.console.ConsoleInputEvent;
+import me.mast3rplan.phantombot.event.irc.channel.IrcChannelUserModeEvent;
 import me.mast3rplan.phantombot.event.irc.complete.IrcConnectCompleteEvent;
 import me.mast3rplan.phantombot.event.irc.complete.IrcJoinCompleteEvent;
 import me.mast3rplan.phantombot.event.irc.message.IrcChannelMessageEvent;
@@ -30,7 +32,6 @@ import me.mast3rplan.phantombot.script.Script;
 import me.mast3rplan.phantombot.script.ScriptEventManager;
 import me.mast3rplan.phantombot.script.ScriptManager;
 import me.mast3rplan.phantombot.store.DataStore;
-import me.mast3rplan.phantombot.store.IniStore;
 import me.mast3rplan.phantombot.twitch.TwitchAPI;
 import me.mast3rplan.phantombot.youtube.YoutubeAPI;
 import org.apache.commons.io.FileUtils;
@@ -171,10 +172,20 @@ public class PhantomBot implements Listener
     }
 
     @Subscribe
+    public void onIRCChannelUserMode(IrcChannelUserModeEvent event)
+    {
+        if (event.getUser().equalsIgnoreCase(username) && event.getMode().equalsIgnoreCase("o")
+                && event.getChannel().getName().equalsIgnoreCase(channel.getName()))
+        {
+            channel.setAllowSendMessages(event.getAdd());
+        }
+    }
+
+    @Subscribe
     public void onConsoleMessage(ConsoleInputEvent msg)
     {
         String message = msg.getMsg();
-
+        
         if (message.equals("save"))
         {
             IniStore.instance().SaveAll(true);
@@ -347,5 +358,13 @@ public class PhantomBot implements Listener
             }
         }
         return false;
+    }
+
+    @Override
+    protected void finalize() throws Throwable
+    {
+        session.close("");
+        
+        super.finalize();
     }
 }

@@ -179,11 +179,12 @@ $.on('ircChannelMessage', function(event) {
     var capsRatio = (caps*1.0)/message.length ();
     var i;
 	
-    if (capsRatio > 0.30 && message.length () > 70) {
+    if (capsRatio > 0.30 && message.length () > 70 && !$.isMod(sender)) {
         autoPurgeUser (username);
         $.say(chatName + " -> that was way too many caps! [Warning]");
     } else if (linkson == false) {
-        if (event.isLink() == true && !$.isMod(sender)) {
+        //Change the second parameter to true to fallback to the Java version instead
+        if ($.hasLinks(event, false) && !$.isMod(sender)) {
             var permitted = false;
             
             for (i = 0; i < permitList.length; i++) {

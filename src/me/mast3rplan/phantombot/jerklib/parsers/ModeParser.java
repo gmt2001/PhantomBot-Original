@@ -1,14 +1,13 @@
 package me.mast3rplan.phantombot.jerklib.parsers;
 
+import java.util.ArrayList;
+import java.util.List;
 import me.mast3rplan.phantombot.jerklib.ModeAdjustment;
 import me.mast3rplan.phantombot.jerklib.ModeAdjustment.Action;
 import me.mast3rplan.phantombot.jerklib.ServerInformation;
 import me.mast3rplan.phantombot.jerklib.ServerInformation.ModeType;
 import me.mast3rplan.phantombot.jerklib.events.IRCEvent;
 import me.mast3rplan.phantombot.jerklib.events.ModeEvent;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author mohadib

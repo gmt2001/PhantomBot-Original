@@ -1,4 +1,4 @@
-package me.mast3rplan.phantombot.store;
+package com.gmt2001;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;

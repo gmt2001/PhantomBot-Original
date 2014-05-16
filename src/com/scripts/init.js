@@ -38,15 +38,26 @@ for(var name in $api) {
     }
 }
 
+var connected = false;
+
 $.on('ircJoinComplete', function(event) {
+    connected = true;
     $.channel = event.getChannel();
+});
+
+$.on('ircChannelUserMode', function(event) {
+    if (connected) {
+        if (event.getChannel().getName().equalsIgnoreCase($.channel.getName())) {
+            if (event.getUser().equalsIgnoreCase($.botname) && event.getMode().equalsIgnoreCase("o") && event.getAdd() == true) {
+                var connectedMessage = $.inidb.get('settings', 'connectedMessage');
     
-    var connectedMessage = $.inidb.get('settings', 'connectedMessage');
-    
-    if (connectedMessage != null && !connectedMessage.isEmpty()) {
-        $.say(connectedMessage);
-    } else {
-        println("ready");
+                if (connectedMessage != null && !connectedMessage.isEmpty()) {
+                    $.say(connectedMessage);
+                } else {
+                    println("ready");
+                }
+            }
+        }
     }
 });
 
@@ -61,6 +72,7 @@ if ($.pointname == undefined || $.pointname == null || $.pointname.isEmpty()) {
 // [ ----------------------(Plugins enable/disable)------------------------ ]
 $.loadScript('./util/misc.js');
 $.loadScript('./util/commandList.js');
+$.loadScript('./util/linkDetector.js');
 
 $.loadScript('./systems/fileSystem.js');
 

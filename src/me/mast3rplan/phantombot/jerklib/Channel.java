@@ -30,6 +30,7 @@ public class Channel
     private TopicEvent topicEvent;
     private ConcurrentLinkedQueue<String> messages = new ConcurrentLinkedQueue();
     private Timer sayTimer = new Timer();
+    private Boolean allowSendMessages = false;
 
     class MessageTask extends TimerTask
     {
@@ -52,7 +53,11 @@ public class Channel
                 String msg = chan.messages.poll();
                 if (msg != null)
                 {
-                    chan.session.sayChannel(chan, msg);
+                    if (allowSendMessages)
+                    {
+                        chan.session.sayChannel(chan, msg);
+                    }
+                    
                     lastMessage = now;
                 }
             }
@@ -108,6 +113,11 @@ public class Channel
         this.session = session;
 
         sayTimer.schedule(new MessageTask(this), 300, 100);
+    }
+    
+    public void setAllowSendMessages(Boolean allow)
+    {
+        allowSendMessages = allow;
     }
 
     /**

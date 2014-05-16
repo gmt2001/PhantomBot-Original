@@ -57,6 +57,7 @@ public class ServerInformation {
         nickPrefixMap.put("@", "o");
         nickPrefixMap.put("%", "h");
         nickPrefixMap.put("+", "v");
+        modeMap.put("o", ModeType.GROUP_A);//XXX Twitch.tv Override
     }
     
     /*

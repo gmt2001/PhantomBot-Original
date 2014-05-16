@@ -121,7 +121,7 @@ $.setInterval(function() {
     var nicks = $.channel.getNicks();
     // if ($.channelStatus.equals("online")) {
     $.list.forEach(nicks, function(i, nick) {
-        var amount = $.inidb.get('settings', 'pointgain');
+        var amount = parseInt($.inidb.get('settings', 'pointgain'));
         
         if ($.hasGroupById(nick, 1)) amount = amount + 0.5;
         if ($.hasGroupById(nick, 2)) amount = amount + 0.5;
@@ -137,7 +137,7 @@ $.setInterval(function() {
             $.inidb.incr('points', nick, 2);
         });
     }  */
-}, 600000);
+}, 10 * 60 * 1000);
 
     /* $.setInterval(function() {
     var status = $.twitch.getStream("phantomindex");
