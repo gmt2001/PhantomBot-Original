@@ -227,6 +227,8 @@ public class IniStore implements ActionListener
             return null;
         }
 
+        key = key.replaceAll("=", "_eq_");
+        
         if (key.startsWith(";") || key.startsWith("["))
         {
             key = "_" + key;
@@ -244,6 +246,8 @@ public class IniStore implements ActionListener
     public void SetString(String fName, String section, String key, String value)
     {
         LoadFile(fName, false);
+        
+        key = key.replaceAll("=", "_eq_");
 
         if (key.startsWith(";") || key.startsWith("["))
         {

@@ -6,6 +6,11 @@ $.on('command', function(event) {
     var args = event.getArgs();
     
     if (command.equalsIgnoreCase("top10")) {
+        if (!$.moduleEnabled("./systems/pointSystem.js")) {
+            $.say("There is no top 10 because points are disabled!");
+            return;
+        }
+        
         var keys = $.inidb.GetKeyList("points", "");
         var top10 = new Array(new Array("Nobody", -1), new Array("Nobody", -2), new Array("Nobody", -3),
             new Array("Nobody", -4), new Array("Nobody", -5), new Array("Nobody", -6),
@@ -26,7 +31,7 @@ $.on('command', function(event) {
                             top10[k + 1] = top10[k];
                         }
                     
-                        top10[b] = new Array(keys[i], points);
+                        top10[b] = new Array($.username.resolve(keys[i]), points);
                         break;
                     }
                 }

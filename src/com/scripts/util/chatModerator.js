@@ -1,6 +1,10 @@
 var ircPrefix = ".";
 var autoBanPhrases = new Array();
 var permitList = new Array();
+var sinbin = new Array();
+var sinresettime = 10 * 60 * 1000;
+var maxsin = 2;
+var sinban = 10 * 60;
 
 function banUserFor (user, time) {
     $.bancache.addUser (user, time);
@@ -25,22 +29,48 @@ function kickUser (user) {
 
 function autoPurgeUser (user) {
     var ban = false;
-    var count = $.sinbin.get (user);
+    var idx = -1;
+    var count;
+    var lastincrease;
     
-    if (count != null) {
-        count = count.intValue ();
-        ban = count >= 2;
-        $.sinbin.put (user, count + 1);
+    for (var i = 0; i < sinbin.length; i++) {
+        if (user.equalsIgnoreCase(sinbin[i][0])) {
+            idx = i;
+        }
+    }
+    
+    if (idx == -1) {
+        count = 0;
+        lastincrease = System.currentTimeMillis();
     } else {
-        $.sinbin.put (user, 1);
+        count = sinbin[idx][1];
+        lastincrease = sinbin[idx][2];
+        
+        if (lastincrease + sinresettime < System.currentTimeMillis()) {
+            count = 0;
+        }
+        
+        lastincrease = System.currentTimeMillis();
+    }
+    
+    count++;
+    
+    if (count > maxsin) {
+        ban = true;
     }
     
     if (ban) {
-        $.sinbin.put (user, 0);
-        banUserFor (user, 10 * 60);
+        banUserFor (user, sinban);
         $.say(user + " was banned for 10 minutes for failing to heed auto-moderation warnings.");
     } else {
         timeoutUser (user, 2);
+    }
+    
+    if (idx == -1) {
+        sinbin.push(new Array(user.toLowerCase(), count, lastincrease));
+    } else {
+        sinbin[idx][1] = count;
+        sinbin[idx][2] = lastincrease;
     }
 }
  
@@ -59,7 +89,7 @@ $.on('command', function(event) {
     var args = event.getArgs ();
 	
     if (command.equalsIgnoreCase("chat") && username.equalsIgnoreCase($.botname)) {
-        $.say (args [0]);
+        $.say (argsString);
     } else if (command.equalsIgnoreCase("purge")) {
         if ($.isMod(sender)) {
             if (args.length == 1) {

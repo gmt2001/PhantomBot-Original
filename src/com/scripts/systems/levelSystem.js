@@ -15,6 +15,11 @@ $.on('command', function(event) {
     }
 
     if (command.equalsIgnoreCase("level")) {
+        if (!$.moduleEnabled("./systems/pointSystem.js")) {
+            $.say("You can not use !level becasue points are disabled!");
+            return;
+        }
+        
         if (args.length == 3) {
             if (!$.isAdmin(sender)) {
                 $.say("You must be a Administrator to use this command " + username + ".");
@@ -45,6 +50,11 @@ $.on('command', function(event) {
     }
 
     if (command.equalsIgnoreCase("exp")) {
+        if (!$.moduleEnabled("./systems/pointSystem.js")) {
+            $.say("You can not use !exp becasue points are disabled!");
+            return;
+        }
+        
         if (args.length == 3) {
             if (!$.isAdmin(sender)) {
                 $.say("You must be a Administrator to use this command " + username + ".");
@@ -104,6 +114,11 @@ $.on('command', function(event) {
     }
 
     if (command.equalsIgnoreCase("title")) {
+        if (!$.moduleEnabled("./systems/pointSystem.js")) {
+            $.say("You can not use !title becasue points are disabled!");
+            return;
+        }
+        
         if (args.length >= 1) {
             username = args[0];
             title = $.getTitle (username);

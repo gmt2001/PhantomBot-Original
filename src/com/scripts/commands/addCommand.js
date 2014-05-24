@@ -39,7 +39,7 @@ $.on('command', function(event) {
                 return;
             }
             
-            if (!$.isMod(sender)) {
+            if (!$.isMod(sender) && $.moduleEnabled("./systems/pointSystem.js")) {
                 points = $.inidb.get('points', sender);
                 if(points == null) points = 0;
                 else points = int(points);
@@ -114,6 +114,7 @@ $.on('command', function(event) {
     }
     
     var messageCommand = $.inidb.get('command', command.toLowerCase());
+    
     if (messageCommand) {
         for (var i = 0; i < args.length; i++) {
             while (messageCommand.contains('<' + (i + 1) + '>')) {

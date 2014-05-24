@@ -49,6 +49,9 @@ $.on('command', function(event) {
             }
 
             points = $.inidb.get('points', points_user);
+            
+            var timeString = "";
+            
             var time = $.inidb.get('time', points_user);
 
             if (points == null) points = 0;
@@ -58,12 +61,13 @@ $.on('command', function(event) {
             var minutes = int((time / 60) % 60);
             var hours = int(time / 3600);
 
-            var timeString = "";
+            timeString = " -- [";
             if (hours != 0) timeString += " " + hours + " Hrs";
             else if (minutes != 0) timeString += " " + minutes + " Mins";
             else timeString += " " + minutes + " Mins";
+            timeString += " ]";
 
-            $.say($.username.resolve(points_user) + " has " + int(points) + " " + $.pointname + " -- [" + timeString + " ]");
+            $.say($.username.resolve(points_user) + " has " + int(points) + " " + $.pointname + timeString);
         }
     }
     

@@ -9,6 +9,7 @@ import me.mast3rplan.phantombot.event.irc.channel.IrcChannelUserModeEvent;
 import me.mast3rplan.phantombot.event.irc.complete.IrcConnectCompleteEvent;
 import me.mast3rplan.phantombot.event.irc.complete.IrcJoinCompleteEvent;
 import me.mast3rplan.phantombot.event.irc.message.IrcChannelMessageEvent;
+import me.mast3rplan.phantombot.event.irc.message.IrcPrivateMessageEvent;
 import me.mast3rplan.phantombot.jerklib.Channel;
 import me.mast3rplan.phantombot.jerklib.ModeAdjustment;
 import me.mast3rplan.phantombot.jerklib.Session;
@@ -45,13 +46,21 @@ public class IrcEventHandler implements IRCEventListener
                 eventBus.post(new IrcChannelLeaveEvent(session, partEvent.getChannel(), partEvent.getNick(), partEvent.getPartMessage()));
                 break;
             case CHANNEL_MESSAGE:
-                MessageEvent messageEvent = (MessageEvent) event;
-                System.out.println("Message from Channel [" + messageEvent.getChannel().getName() + "] " + messageEvent.getNick());
-                Channel channel = messageEvent.getChannel();
-                String username = messageEvent.getNick();
-                String message = messageEvent.getMessage();
+                MessageEvent cmessageEvent = (MessageEvent) event;
+                System.out.println("Message from Channel [" + cmessageEvent.getChannel().getName() + "] " + cmessageEvent.getNick());
+                Channel cchannel = cmessageEvent.getChannel();
+                String cusername = cmessageEvent.getNick();
+                String cmessage = cmessageEvent.getMessage();
 
-                eventBus.post(new IrcChannelMessageEvent(session, username, message, channel));
+                eventBus.post(new IrcChannelMessageEvent(session, cusername, cmessage, cchannel));
+                break;
+            case PRIVATE_MESSAGE:
+                MessageEvent pmessageEvent = (MessageEvent) event;
+                System.out.println("Message from User " + pmessageEvent.getNick());
+                String pusername = pmessageEvent.getNick();
+                String pmessage = pmessageEvent.getMessage();
+
+                eventBus.post(new IrcPrivateMessageEvent(session, pusername, pmessage));
                 break;
             case MODE_EVENT:
                 ModeEvent modeEvent = (ModeEvent) event;

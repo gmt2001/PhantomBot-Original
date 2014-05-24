@@ -21,13 +21,21 @@ $.on('command', function(event) {
                     followers = " You must be following the channel to win!";
                 }
                 
-                if ($var.raffle_price > 0) {
+                if ($.moduleEnabled("./systems/pointSystem.js") && $var.raffle_price > 0) {
                     prices = " Entering costs " + $var.raffle_price + " " + $.pointname + "!";
                 }
                 
                 $.say("/me Time for a Raffle! Type '" + $var.raffle_keyword + "' to enter!." + followers + prices + " Type '!raffle end' to choose a winner");
             } else {
-                $.say("Usage: !raffle start [-followers] < price> <keyword> < points reward>, !raffle start [-followers] < price> <keyword> <custom reward (for game keys etc)>, !raffle end, !raffle repick");
+                prices = "";
+                followers = "";
+                
+                if ($.moduleEnabled("./systems/pointSystem.js")) {
+                    prices = "< price> ";
+                    followers = "!raffle start [-followers] " + prices + "<keyword> < points reward>, ";
+                }
+                
+                $.say("Usage: " + followers + "!raffle start [-followers] " + prices + "<keyword> <custom reward (for game keys etc)>, !raffle end, !raffle repick");
             }
             return;
         }
@@ -40,7 +48,8 @@ $.on('command', function(event) {
                 return;
             }
  
-            if ($var.raffle_running || args.length < 4) {
+            if ($var.raffle_running || (($.moduleEnabled("./systems/pointSystem.js") && args.length < 4)
+                || (!$.moduleEnabled("./systems/pointSystem.js") && args.length < 3))) {
                 return;
             }
             
@@ -55,7 +64,7 @@ $.on('command', function(event) {
                 i++;
             }
             
-            if (args[i] != null && args[i] != undefined && !isNaN(args[i])) {
+            if ($.moduleEnabled("./systems/pointSystem.js") && args[i] != null && args[i] != undefined && !isNaN(args[i])) {
                 price = parseInt(args[i]);
                 i++;
             }
@@ -70,8 +79,14 @@ $.on('command', function(event) {
                 i++;
             }
             
-            if (price <= -1 || keyword.isEmpty() || reward.isEmpty()) {
-                $.say("Invalid format. Usage: !raffle start [-followers] < price> <keyword> <reward>");
+            if (($.moduleEnabled("./systems/pointSystem.js") && price <= -1) || keyword.isEmpty() || reward.isEmpty()) {
+                prices = "";
+                
+                if ($.moduleEnabled("./systems/pointSystem.js")) {
+                    prices = "< price> ";
+                }
+                
+                $.say("Invalid format. Usage: !raffle start [-followers] " + prices + "<keyword> <reward>");
                 return;
             }
  
@@ -92,7 +107,7 @@ $.on('command', function(event) {
                 prices = " Entering costs " + $var.raffle_price + " " + $.pointname + "!";
             }
             
-            if (isNaN(reward)) {
+            if (!$.moduleEnabled("./systems/pointSystem.js") || isNaN(reward)) {
                 $var.raffle_mode = 1;
                 $var.raffle_win = reward;
                 
@@ -155,7 +170,12 @@ $.on('command', function(event) {
                 return;
             }
  
-            if ($var.raffle_running || $var.raffle_entrants.length == 0 || $var.raffle_mode == 0) {
+            if ($var.raffle_running || $var.raffle_entrants.length == 0) {
+                return;
+            }
+            
+            if ($var.raffle_mode == 0) {
+                $.say("You can not use repick on a points raffle!");
                 return;
             }
  
@@ -188,24 +208,26 @@ $.on('ircChannelMessage', function(event) {
     var message = event.getMessage();
     
     if ($var.raffle_running) {
-        if (!message.toLowerCase().contains($var.raffle_keyword.toLowerCase()) || $.array.contains($var.raffle_entrants, sender)) {
+        if (message.toLowerCase().indexOf($var.raffle_keyword.toLowerCase()) == -1 || $.array.contains($var.raffle_entrants, sender)) {
             return;
         }
+        
+        if ($var.raffle_price > 0) {
+            var points = $.inidb.get('points', sender);
             
-        var points = $.inidb.get('points', sender);
-            
-        if(points == null) {
-            points = 0;
-        } else {
-            points = int(points);
-        }
+            if (points == null) {
+                points = 0;
+            } else {
+                points = int(points);
+            }
            
-        if ($var.raffle_price > points) {
-            $.say("/me " + username + ", " + " you don't have enough " + $.pointname + " to enter!");
-            return;
-        }
+            if ($var.raffle_price > points) {
+                $.say("/me " + username + ", " + " you don't have enough " + $.pointname + " to enter!");
+                return;
+            }
  
-        $.inidb.decr('points', sender, price);
+            $.inidb.decr('points', sender, $var.raffle_price);
+        }
  
         $var.raffle_entrants.push(username);
     }

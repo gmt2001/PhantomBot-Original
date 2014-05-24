@@ -47,7 +47,6 @@ public class PhantomBot implements Listener
     private String channelStatus;
     private SecureRandom rng;
     private BannedCache bancache;
-    private TreeMap<String, Integer> sinbin;
     private TreeMap<String, Integer> pollResults;
     private TreeSet<String> voters;
     private Profile profile;
@@ -60,6 +59,7 @@ public class PhantomBot implements Listener
     private HTTPServer mhs;
     ConsoleInputListener cil;
     private static final boolean enableD = true;
+    private Thread t;
 
     public PhantomBot(String username, String oauth, String channel, String owner, boolean useTwitch)
     {
@@ -75,7 +75,6 @@ public class PhantomBot implements Listener
 
         rng = new SecureRandom();
         bancache = new BannedCache();
-        sinbin = new TreeMap();
         pollResults = new TreeMap();
         voters = new TreeSet();
 
@@ -120,7 +119,6 @@ public class PhantomBot implements Listener
 
         Script.global.defineProperty("db", DataStore.instance(), 0);
         Script.global.defineProperty("inidb", IniStore.instance(), 0);
-        Script.global.defineProperty("sinbin", sinbin, 0);
         Script.global.defineProperty("bancache", bancache, 0);
         Script.global.defineProperty("username", UsernameCache.instance(), 0);
         Script.global.defineProperty("twitch", TwitchAPI.instance(), 0);
@@ -136,6 +134,16 @@ public class PhantomBot implements Listener
         Script.global.defineProperty("pollVoters", voters, 0);
         Script.global.defineProperty("connmgr", connectionManager, 0);
         Script.global.defineProperty("hostname", hostname, 0);
+        
+        t = new Thread(new Runnable() {
+            @Override
+            public void run()
+            {
+                onExit();
+            }
+        });
+        
+        Runtime.getRuntime().addShutdownHook(t);
 
         try
         {
@@ -143,6 +151,11 @@ public class PhantomBot implements Listener
         } catch (IOException e)
         {
         }
+    }
+
+    public void onExit()
+    {
+        IniStore.instance().SaveAll(true);
     }
 
     @Subscribe
@@ -185,7 +198,7 @@ public class PhantomBot implements Listener
     public void onConsoleMessage(ConsoleInputEvent msg)
     {
         String message = msg.getMsg();
-        
+
         if (message.equals("save"))
         {
             IniStore.instance().SaveAll(true);
@@ -193,8 +206,6 @@ public class PhantomBot implements Listener
 
         if (message.equals("exit"))
         {
-            IniStore.instance().SaveAll(true);
-
             System.exit(0);
         }
 
@@ -364,7 +375,7 @@ public class PhantomBot implements Listener
     protected void finalize() throws Throwable
     {
         session.close("");
-        
+
         super.finalize();
     }
 }

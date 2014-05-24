@@ -58,4 +58,12 @@ public class ScriptApi {
     public void loadScript(Script script, String fileName) throws IOException {
         ScriptManager.loadScript(new File(new File("./scripts/"), fileName));
     }
+    
+    public Script loadScriptR(Script script, String fileName) throws IOException {
+        return ScriptManager.loadScriptR(new File(new File("./scripts/"), fileName));
+    }
+    
+    public Script getScript(Script script, String fileName) throws IOException {
+        return ScriptManager.getScript(new File(new File("./scripts/"), fileName));
+    }
 }

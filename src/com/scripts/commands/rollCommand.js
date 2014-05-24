@@ -29,7 +29,7 @@ $.on('command', function(event) {
             arrRollLimiter.push(new Array(username, System.currentTimeMillis() + (30 * 1000)));
         }
         
-        if (args.length == 0) {
+        if (args.length == 0 && $.moduleEnabled("./systems/pointSystem.js")) {
             var d1 = $.randRange(1, 6);
             var d2 = $.randRange(1, 6);
             var die1 = d1;
@@ -96,7 +96,7 @@ $.on('command', function(event) {
             } else {
                 $.say(username + " rolled a " + die1 + " & " + die2 + ". " + $.randElement(lost));
             }
-        } else if (args.length  == 1 && args[0].equalsIgnoreCase("help")) {
+        } else if ((args.length  == 1 && args[0].equalsIgnoreCase("help")) || !$.moduleEnabled("./systems/pointSystem.js")) {
             $.say("To do a DnD roll, say '!roll <dice definition>[ + <dice definition or number>]. For example: '!roll 2d6 + d20 + 2'. Limit 7 dice definitions or numbers per !roll command. A dice definition is [# to roll]d<number of sides>. Valid number of sides: 4, 6, 8, 10, 12, 20, 100");
         } else if (args.length < 14) {
             var result = "";

@@ -10,6 +10,11 @@ $.on('command', function(event) {
     var args = event.getArgs();
 
     if(command.equalsIgnoreCase("bet")) {
+        if (!$.moduleEnabled("./systems/pointSystem.js")) {
+            $.say("You can not use !bet because points are disabled!");
+            return;
+        }
+        
         if(args.length >= 2) {
             var action = args[0];	
 			
@@ -91,8 +96,6 @@ $.on('command', function(event) {
                     }
                 }
 				
-                $.say("Winnings >> " + totalwin + " " + $.pointname);
-				
                 var a = 0;
                 var winners = ""
                 var moneyWon = 0
@@ -121,16 +124,27 @@ $.on('command', function(event) {
                         $.inidb.incr('points', user, bet.amount);
                     }
                 } else {
-                    for(user in $var.bet_table) {
-                        bet = $var.bet_table[user];
-                        if(bet.option.equalsIgnoreCase(winning)) {
-                            moneyWon = int((bet.amount / totalwin) * pot);
-                            $.inidb.incr('points', user, moneyWon);
+                    if (pot == 0) {
+                        $.say("Everyone chose the winning option and got their " + $.pointname + " back!");
+                        
+                        for(user in $var.bet_table) {
+                            bet = $var.bet_table[user];
                             $.inidb.incr('points', user, bet.amount);
                         }
-                    }
+                    } else if(totalwin == 0) {
+                        $.say("Everyone lost!");
+                    } else {
+                        for(user in $var.bet_table) {
+                            bet = $var.bet_table[user];
+                            if(bet.option.equalsIgnoreCase(winning)) {
+                                moneyWon = int((bet.amount / totalwin) * pot);
+                                $.inidb.incr('points', user, moneyWon);
+                                $.inidb.incr('points', user, bet.amount);
+                            }
+                        }
                     
-                    $.say("Congratulations to the following viewers for each winning their fair share of the winnings! " + winners)
+                        $.say("Congratulations to the following viewers for each winning their fair share of the " + pot + " " + $.pointname + " pot! " + winners)
+                    }
                 }
                 $var.bet_running = false;
             } else {
@@ -165,12 +179,12 @@ $.on('command', function(event) {
                 $.inidb.decr('points', sender, amount);
 				
                 if(sender in $var.bet_table) {
-                    amount += $var.bet_table[sender].amount;
+                    amount += parseInt($var.bet_table[sender].amount);
                 }
 				 
                 $.say($.username.resolve(sender) + " wagers " + args[0] + " " + $.pointname + " on " + option);
                 $var.bet_table[sender] = {
-                    amount: amount, 
+                    amount: parseInt(amount),
                     option: option
                 };
             }

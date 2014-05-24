@@ -1,14 +1,14 @@
 package me.mast3rplan.phantombot.script;
 
 import com.google.common.collect.Lists;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.ScriptableObject;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
 
 public class Script {
     public static final NativeObject global = new NativeObject();
@@ -51,5 +51,9 @@ public class Script {
 
     public File getFile() {
         return file;
+    }
+    
+    public String getPath() {
+        return file.toPath().toString();
     }
 }
