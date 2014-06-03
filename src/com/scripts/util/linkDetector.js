@@ -45,12 +45,13 @@ $.hasLinks = function(event, fallback) {
         var m1 = Pattern.compile(linkPattern).matcher(event.getMessage().toLowerCase());
         var m2 = Pattern.compile(otherPattern).matcher(event.getMessage().toLowerCase());
         var s;
+        var time = new java.text.SimpleDateFormat().format(new java.util.Date());
 
         if (m1.find() == true) {
             s = m1.group();
 
             println(">>>>Matched link on linkPattern from " + event.getSender() + ": " + s);
-            $.writeToFile(">>>>Matched link on linkPattern from " + event.getSender() + ": " + s, "linkMatches.txt", true);
+            $.writeToFile(">>>>[" + time + "] Matched link on linkPattern from " + event.getSender() + ": " + s, "linkMatches.txt", true);
 
            return true;
         }
@@ -59,7 +60,7 @@ $.hasLinks = function(event, fallback) {
             s = m2.group();
             
             println(">>>>Matched link on otherPattern from " + event.getSender() + ": " + s);
-            $.writeToFile(">>>>Matched link on otherPattern from " + event.getSender() + ": " + s, "linkMatches.txt", true);
+            $.writeToFile(">>>>[" + time + "] Matched link on otherPattern from " + event.getSender() + ": " + s, "linkMatches.txt", true);
 
             return true;
         }

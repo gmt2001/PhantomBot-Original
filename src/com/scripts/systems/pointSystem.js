@@ -57,7 +57,6 @@ $.on('command', function(event) {
             if (points == null) points = 0;
             if (time == null) time = 0;
 
-            var seconds = int(time % 60);
             var minutes = int((time / 60) % 60);
             var hours = int(time / 3600);
 
@@ -81,68 +80,113 @@ $.on('command', function(event) {
             action = args[0];
             if (action.equalsIgnoreCase("set")) {
                 $.inidb.set('settings', 'pointgain', args[1]);
-                $.say("Set! Everyone will now earn " + $.inidb.get('settings', 'pointgain') + " " + $.pointname + " every 10 minutes.");
+                $.pointgain = parseInt(args[1]);
+                
+                $.say("Set! Everyone will now earn " + $.pointgain + " " + $.pointname + " every 10 minutes.");
             } 
 
         } else {
-            $.say("Current point gain for everyone is  " + $.inidb.get('settings', 'pointgain') + " " + $.pointname + " for every 10 minutes.");
+            $.say("Current point gain for everyone is  " + $.pointgain + " " + $.pointname + " for every 10 minutes. Change it with !pointgain set <amount>");
         }
     }
-});
+    
+    if (command.equalsIgnoreCase("pointbonus")) {
+        if (args.length >= 2) {
+            if (!$.isAdmin(sender)) {
+                $.say("You must be a Administrator to use this command " + username + ".");
+                return;
+            }
+            
+            action = args[0];
+            if (action.equalsIgnoreCase("set")) {
+                $.inidb.set('settings', 'pointbonus', args[1]);
+                $.pointbonus = parseInt(args[1]);
+                
+                $.say("Set! Everyone will now earn " + $.pointbonus + " " + $.pointname + " per group level.");
+            } 
 
-if ($.inidb.get('settings', 'pointgain') == null) {
-    $.inidb.set('settings', 'pointgain', 1);
-}
+        } else {
+            $.say("Current point bonus per group level is  " + $.pointbonus + " " + $.pointname + ". Change it with !pointbonus set <amount>");
+        }
+    }
+    
+    if (command.equalsIgnoreCase("pointinterval")) {
+        if (args.length >= 2) {
+            if (!$.isAdmin(sender)) {
+                $.say("You must be a Administrator to use this command " + username + ".");
+                return;
+            }
+            
+            action = args[0];
+            if (action.equalsIgnoreCase("set")) {
+                $.inidb.set('settings', 'pointinterval', args[1]);
+                $.pointinterval = parseInt(args[1]);
+                
+                $.say("Set! Interval for points gain is now " + $.pointinterval + " minutes.");
+            } 
+
+        } else {
+            $.say("Current interval for points gain is  " + $.pointinterval + " minutes. Change it with !pointinterval set <minutes>");
+        }
+    }
+    
+    if (command.equalsIgnoreCase("pointsname")) {
+        if(args.length >= 1) {
+            if (!$.isAdmin(sender)) {
+                $.say("You must be an Administrator to use this command " + username + ".");
+                return;
+            }
+            
+            var name = argsString;
+
+            $.inidb.set('settings', 'pointname', name);
+            $.say("Points renamed to '" + name + "'!");
+
+            $.pointname = name;
+        } else {
+            $.say("The current name for points is '" + $.pointname + "'!");
+        } 
+    }
+});
 
 $.registerChatCommand("points");
 $.registerChatCommand("points help");
 $.registerChatCommand("pointgain");
+$.registerChatCommand("pointbonus");
+$.registerChatCommand("pointinterval");
+$.registerChatCommand("pointsname");
 
 $.setInterval(function() {
-    var nicks = $.channel.getNicks();
-    $.list.forEach(nicks, function(i, nick) {
-        nick = nick.toLowerCase();
+    for (var i = 0; i < $.users.length; i++) {
+        var nick = $.users[i][0].toLowerCase();
+        
         $.inidb.incr('time', nick, 60);
-        if ($.hasGroupByName(nick, "Viewer") && $.inidb.get('time', nick) == 12600 * 10) {
-            $.setUserGroupByName(nick, "Regular");
-            $.say($.username.resolve(nick) + " leveled up to a Regular! Congratulations and thanks for staying with us!");
-            $.inidb.set("bool", nick + "_greeting_enabled", "true");
-            if (!$.inidb.exists("string", nick + "_greeting_prefix")) {
-                $.inidb.set("string", nick + "_greeting_prefix", "I welcome ");
-                $.inidb.set("string", nick + "_greeting_suffix", " to the channel!");
-            }
+        
+        if ($.hasGroupById(nick, 0) && parseInt($.inidb.get('time', nick)) >= 12600 * 10) {
+            $.setUserGroupById(nick, 1);
+            $.say($.username.resolve(nick) + " leveled up to a " + $.getGroupNameById(1) + "! Congratulations and thanks for staying with us!");
         }
-    });
-
+    }
 }, 1000 * 60);
 
 $.setInterval(function() {
-    var nicks = $.channel.getNicks();
-    // if ($.channelStatus.equals("online")) {
-    $.list.forEach(nicks, function(i, nick) {
-        var amount = parseInt($.inidb.get('settings', 'pointgain'));
+    if ($.lastpointinterval == null || $.lastpointinterval == undefined) {
+        $.lastpointinterval = System.currentTimeMillis();
+        return;
+    }
+    
+    if ($.lastpointinterval + ($.pointinterval * 60 * 1000) <= System.currentTimeMillis()) {
+        return;
+    }
+    
+    for (var i = 0; i < $.users.length; i++) {
+        var nick = $.users[i][0].toLowerCase();
+        var amount = $.pointgain;
         
-        if ($.hasGroupById(nick, 1)) amount = amount + 0.5;
-        if ($.hasGroupById(nick, 2)) amount = amount + 0.5;
-        if ($.hasGroupById(nick, 3)) amount = amount + 0.5;
-        if ($.hasGroupById(nick, 4)) amount = amount + 0.5;
-        if ($.hasGroupById(nick, 5)) amount = amount + 0.5;
+        amount = amount + ($.pointbonus * $.getUserGroupId(nick));
         
         $.inidb.incr('points', nick, amount);
-    });
-
-/* } else {
-        $.list.forEach(nicks, function(i, nick) {
-            $.inidb.incr('points', nick, 2);
-        });
-    }  */
-}, 10 * 60 * 1000);
-
-    /* $.setInterval(function() {
-    var status = $.twitch.getStream("phantomindex");
-    if (status.isNull("stream")) {
-        $.channelStatus = "offline";
-    } else {
-        $.channelStatus = "online";
     }
-}, 3600000); */
+    
+    $.lastpointinterval = System.currentTimeMillis();
+}, 1000);

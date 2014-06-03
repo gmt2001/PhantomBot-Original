@@ -1,25 +1,29 @@
 package me.mast3rplan.phantombot.jerklib;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Logger;
 import me.mast3rplan.phantombot.jerklib.Session.State;
 import me.mast3rplan.phantombot.jerklib.events.IRCEvent;
 import me.mast3rplan.phantombot.jerklib.events.IRCEvent.Type;
 import me.mast3rplan.phantombot.jerklib.listeners.WriteRequestListener;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.logging.Logger;
-
 /**
- * A class for reading and writing to an IRC connection.
- * This class will also handle PING/PONG.
+ * A class for reading and writing to an IRC connection. This class will also
+ * handle PING/PONG.
  *
  * @author mohadib
  */
-class Connection {
+class Connection
+{
+
     private Logger log = Logger.getLogger(this.getClass().getName());
 
     /* ConnectionManager for this Connection */
@@ -49,9 +53,10 @@ class Connection {
     /**
      * @param manager
      * @param socChannel - socket channel to read from
-     * @param session    - Session this Connection belongs to
+     * @param session - Session this Connection belongs to
      */
-    Connection(ConnectionManager manager, SocketChannel socChannel, Session session) {
+    Connection(ConnectionManager manager, SocketChannel socChannel, Session session)
+    {
         this.manager = manager;
         this.socChannel = socChannel;
         this.session = session;
@@ -62,7 +67,8 @@ class Connection {
      *
      * @return the Profile
      */
-    Profile getProfile() {
+    Profile getProfile()
+    {
         return session.getRequestedConnection().getProfile();
     }
 
@@ -71,7 +77,8 @@ class Connection {
      *
      * @param name
      */
-    void setHostName(String name) {
+    void setHostName(String name)
+    {
         actualHostName = name;
     }
 
@@ -80,7 +87,8 @@ class Connection {
      *
      * @return hostname
      */
-    String getHostName() {
+    String getHostName()
+    {
         return actualHostName;
     }
 
@@ -89,7 +97,8 @@ class Connection {
      *
      * @param request
      */
-    void addWriteRequest(WriteRequest request) {
+    void addWriteRequest(WriteRequest request)
+    {
         writeRequests.add(request);
     }
 
@@ -99,19 +108,22 @@ class Connection {
      * @return true if fincon is successfull
      * @throws java.io.IOException
      */
-    boolean finishConnect() throws IOException {
+    boolean finishConnect() throws IOException
+    {
         return socChannel.finishConnect();
     }
 
     /**
-     * Reads from connection and creates default IRCEvents that
-     * are added to the ConnectionManager for relaying
+     * Reads from connection and creates default IRCEvents that are added to the
+     * ConnectionManager for relaying
      *
      * @return bytes read
      */
-    int read() {
+    int read()
+    {
 
-        if (!socChannel.isConnected()) {
+        if (!socChannel.isConnected())
+        {
             log.severe("Read call while sochan.isConnected() == false");
             return -1;
         }
@@ -120,18 +132,22 @@ class Connection {
 
         int numRead = 0;
 
-        try {
+        try
+        {
             numRead = socChannel.read(readBuffer);
-        } catch (Exception e) {
+        } catch (Exception e)
+        {
             e.printStackTrace();
             session.disconnected(e);
         }
 
-        if (numRead == -1) {
+        if (numRead == -1)
+        {
             session.disconnected(new Exception("Numb read -1"));
         }
 
-        if (session.getState() == State.DISCONNECTED || numRead <= 0) {
+        if (session.getState() == State.DISCONNECTED || numRead <= 0)
+        {
             return 0;
         }
 
@@ -140,7 +156,8 @@ class Connection {
         String tmpStr = new String(readBuffer.array(), 0, numRead);
 
         // read did not contain a \r\n
-        if (tmpStr.indexOf("\r\n") == -1) {
+        if (tmpStr.indexOf("\r\n") == -1)
+        {
             // append whole thing to buffer and set fragment flag
             stringBuff.append(tmpStr);
             gotFragment = true;
@@ -150,7 +167,8 @@ class Connection {
 
         // this read had a \r\n in it
 
-        if (gotFragment) {
+        if (gotFragment)
+        {
             // prepend fragment to front of current message
             tmpStr = stringBuff.toString() + tmpStr;
             stringBuff.delete(0, stringBuff.length());
@@ -159,26 +177,27 @@ class Connection {
 
         String[] strSplit = tmpStr.split("\r\n");
 
-        for (int i = 0; i < (strSplit.length - 1); i++) {
+        for (int i = 0; i < (strSplit.length - 1); i++)
+        {
             manager.addToEventQueue(new IRCEvent(strSplit[i], session, Type.DEFAULT));
         }
 
         String last = strSplit[strSplit.length - 1];
 
-        if (!tmpStr.endsWith("\r\n")) {
+        if (!tmpStr.endsWith("\r\n"))
+        {
             // since string did not end with \r\n we need to
             // append the last element in strSplit to a stringbuffer
             // for next read and set flag to indicate we have a fragment waiting
             stringBuff.append(last);
             gotFragment = true;
-        } else {
+        } else
+        {
             manager.addToEventQueue(new IRCEvent(last, session, Type.DEFAULT));
         }
 
         return numRead;
     }
-
-
     /**
      * Writes all requests in queue to server
      *
@@ -189,31 +208,39 @@ class Connection {
     int maxBurst = 5;
     long nextWrite = -1;
     /*
-	 *  if lastwrite was less than a second ago:
-	 *  	if burst == limit return;
-	 *  	else burst++; write packet; recordtime;
-	 *  else
-	 *  	burst = 0;
-	 *  	write packet; record time;
-	 * 
-	 * 
-	 */
+     *  if lastwrite was less than a second ago:
+     *  	if burst == limit return;
+     *  	else burst++; write packet; recordtime;
+     *  else
+     *  	burst = 0;
+     *  	write packet; record time;
+     * 
+     * 
+     */
 
-    int doWrites() {
-        if (writeRequests.isEmpty()) {
+    int doWrites()
+    {
+        if (writeRequests.isEmpty())
+        {
             return 0;
         }
 
         WriteRequest req = null;
-        if (nextWrite > System.currentTimeMillis()) return 0;
-        if (System.currentTimeMillis() - lastWrite < 3000) {
-            if (bursts == maxBurst) {
+        if (nextWrite > System.currentTimeMillis())
+        {
+            return 0;
+        }
+        if (System.currentTimeMillis() - lastWrite < 3000)
+        {
+            if (bursts == maxBurst)
+            {
                 nextWrite = System.currentTimeMillis() + 8000;
                 bursts = 0;
                 return 0;
             }
             bursts++;
-        } else {
+        } else
+        {
             //bursts = Math.max(bursts-- , 0);
             bursts = 0;
             lastWrite = System.currentTimeMillis();
@@ -223,36 +250,48 @@ class Connection {
 
 
         String data;
-        if (req.getType() == WriteRequest.Type.CHANNEL_MSG) {
+        if (req.getType() == WriteRequest.Type.CHANNEL_MSG)
+        {
             data = "PRIVMSG " + req.getChannel().getName() + " :" + req.getMessage() + "\r\n";
-        } else if (req.getType() == WriteRequest.Type.PRIVATE_MSG) {
-            if (req.getMessage().length() > 255) {
+        } else if (req.getType() == WriteRequest.Type.PRIVATE_MSG)
+        {
+            if (req.getMessage().length() > 255)
+            {
                 writeRequests.add(0, new WriteRequest(req.getMessage().substring(100), req.getSession(), req.getNick()));
                 data = "PRIVMSG " + req.getNick() + " :" + req.getMessage().substring(0, 100) + "\r\n";
-            } else {
+            } else
+            {
                 data = "PRIVMSG " + req.getNick() + " :" + req.getMessage() + "\r\n";
             }
-        } else {
+        } else
+        {
             data = req.getMessage();
-            if (!data.endsWith("\r\n")) {
+            if (!data.endsWith("\r\n"))
+            {
                 data += "\r\n";
             }
         }
 
-        byte[] dataArray = data.getBytes();
-        ByteBuffer buff = ByteBuffer.allocate(dataArray.length);
-        buff.put(dataArray);
-        buff.flip();
-
         int amount = 0;
-        try {
+        try
+        {
+            Charset ch = Charset.forName("utf-8");
+            CharsetEncoder cr = ch.newEncoder();
+            ByteBuffer bf = cr.encode(CharBuffer.wrap(data));
+            ByteBuffer buff = ByteBuffer.allocate(bf.capacity());
+
+            buff.put(bf);
+            buff.flip();
+
             amount = socChannel.write(buff);
-        } catch (IOException e) {
+        } catch (IOException e)
+        {
             e.printStackTrace();
             session.disconnected(e);
         }
 
-        if (session.getState() == State.DISCONNECTED) {
+        if (session.getState() == State.DISCONNECTED)
+        {
             return amount;
         }
 
@@ -262,69 +301,68 @@ class Connection {
 
         return amount;
     }
-	
-	
-	/*
-	int doWrites()
-	{
-		int amount = 0;
 
-		List<WriteRequest> tmpReqs = new ArrayList<WriteRequest>();
-		synchronized (writeRequests)
-		{
-			tmpReqs.addAll(writeRequests);
-			writeRequests.clear();
-		}
+    /*
+     int doWrites()
+     {
+     int amount = 0;
 
-		for (WriteRequest request : tmpReqs)
-		{
-			String data;
+     List<WriteRequest> tmpReqs = new ArrayList<WriteRequest>();
+     synchronized (writeRequests)
+     {
+     tmpReqs.addAll(writeRequests);
+     writeRequests.clear();
+     }
 
-			if (request.getType() == WriteRequest.Type.CHANNEL_MSG)
-			{
-				data = "PRIVMSG " + request.getChannel().getName() + " :" + request.getMessage() + "\r\n";
-			}
-			else if (request.getType() == WriteRequest.Type.PRIVATE_MSG)
-			{
-				data = "PRIVMSG " + request.getNick() + " :" + request.getMessage() + "\r\n";
-			}
-			else
-			{
-				data = request.getMessage();
-				if (!data.endsWith("\r\n"))
-				{
-					data += "\r\n";
-				}
-			}
+     for (WriteRequest request : tmpReqs)
+     {
+     String data;
 
-			byte[] dataArray = data.getBytes();
-			ByteBuffer buff = ByteBuffer.allocate(dataArray.length);
-			buff.put(dataArray);
-			buff.flip();
+     if (request.getType() == WriteRequest.Type.CHANNEL_MSG)
+     {
+     data = "PRIVMSG " + request.getChannel().getName() + " :" + request.getMessage() + "\r\n";
+     }
+     else if (request.getType() == WriteRequest.Type.PRIVATE_MSG)
+     {
+     data = "PRIVMSG " + request.getNick() + " :" + request.getMessage() + "\r\n";
+     }
+     else
+     {
+     data = request.getMessage();
+     if (!data.endsWith("\r\n"))
+     {
+     data += "\r\n";
+     }
+     }
 
-			try
-			{
-				amount += socChannel.write(buff);
-			}
-			catch (IOException e)
-			{
-				e.printStackTrace();
-				session.disconnected();
-			}
+     byte[] dataArray = data.getBytes();
+     ByteBuffer buff = ByteBuffer.allocate(dataArray.length);
+     buff.put(dataArray);
+     buff.flip();
 
-			if (session.getState() == State.DISCONNECTED) { return amount; }
+     try
+     {
+     amount += socChannel.write(buff);
+     }
+     catch (IOException e)
+     {
+     e.printStackTrace();
+     session.disconnected();
+     }
 
-			fireWriteEvent(request);
-		}
+     if (session.getState() == State.DISCONNECTED) { return amount; }
 
-		return amount;
-	}
-*/
+     fireWriteEvent(request);
+     }
 
+     return amount;
+     }
+     */
     /**
      * Send a ping
      */
-    void ping() {
+    void ping()
+    {
         writeRequests.add(new WriteRequest("PING " + actualHostName + "\r\n", session));
         session.pingSent();
     }
@@ -334,7 +372,8 @@ class Connection {
      *
      * @param event , the Ping event
      */
-    void pong(IRCEvent event) {
+    void pong(IRCEvent event)
+    {
         session.gotResponse();
         String data = event.getRawEventData().substring(event.getRawEventData().lastIndexOf(":") + 1);
         writeRequests.add(new WriteRequest("PONG " + data + "\r\n", session));
@@ -343,7 +382,8 @@ class Connection {
     /**
      * Alert connection a pong was received
      */
-    void gotPong() {
+    void gotPong()
+    {
         session.gotResponse();
     }
 
@@ -352,15 +392,21 @@ class Connection {
      *
      * @param quitMessage
      */
-    void quit(String quitMessage) {
-        try {
-            if (quitMessage == null) quitMessage = "";
+    void quit(String quitMessage)
+    {
+        try
+        {
+            if (quitMessage == null)
+            {
+                quitMessage = "";
+            }
             WriteRequest request = new WriteRequest("QUIT :" + quitMessage + "\r\n", session);
             writeRequests.add(request);
             // clear out write queue
             doWrites();
             socChannel.close();
-        } catch (IOException e) {
+        } catch (IOException e)
+        {
             e.printStackTrace();
         }
     }
@@ -370,8 +416,10 @@ class Connection {
      *
      * @param request
      */
-    void fireWriteEvent(WriteRequest request) {
-        for (WriteRequestListener listener : manager.getWriteListeners()) {
+    void fireWriteEvent(WriteRequest request)
+    {
+        for (WriteRequestListener listener : manager.getWriteListeners())
+        {
             listener.receiveEvent(request);
         }
     }

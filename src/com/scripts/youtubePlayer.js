@@ -1,28 +1,7 @@
-var init = $.readFile("songs.txt");
-/*var stolenSongs = $.readFile("stolenSongs.txt");
-for (var i = 0; i < stolenSongs.length; ++i) {
-    if (stolenSongs[i] != "")
-        init[init.length] = stolenSongs[i];
-}
-*/
-function initPools() {
-    if ($var.songpool == null) {
-        $var.songpool = [];
-        for (var t in init) {
-            var s = new Song(init[t]);
-            if (s.id != null) {
-                s.addToPool()
-            } else {
-                println("Failed to queue '" + init[t] + "', search returned no results");
-            }
-        }
-    }
-    if ($var.songqueue == null)
-        $var.songqueue = [];
-    if ($var.requestusers == null)
-        $var.requestusers = {};
-}
-//initPools();
+$var.defaultplaylist = $.readFile("./playlist.txt");
+$var.defaultplaylistpos = 0;
+$var.songqueue = [];
+$var.requestusers = {};
 
 var musicplayer = $.musicplayer;
 
@@ -37,18 +16,13 @@ function Song(name) {
         this.name = "";
         this.length = 0;
     }
+    
+    this.getid = function () {
+        return this.id;
+    }
 
     this.cue = function () {
         musicplayer.cue(this.id);
-    }
-
-    this.addToPool = function () {
-        if (this == null || this.id == null) return;
-        for (var i in $var.songpool) {
-            if (this.id + "" === $var.songpool[i].id + "") return;
-        }
-        initPools();
-        $var.songpool.push(this);
     }
 
     this.getName = function () {
@@ -64,7 +38,6 @@ function RequestedSong(song, user) {
         if (!this.canRequest()) return;
 
         $var.songqueue.push(this);
-        song.addToPool();
 
         if ($var.requestusers[user] != null) {
             $var.requestusers[user]++;
@@ -96,47 +69,73 @@ function RequestedSong(song, user) {
     }
 }
 
-function next() {
-    initPools();
+function nextDefault() {
     var name = "";
-    var user = "DJ " + $.botname
+    var user = "";
+    var s = new Song(null);
+    if ($var.defaultplaylist.length > 0) {
+        s = new Song($var.defaultplaylist[$var.defaultplaylistpos]);
+        s = new RequestedSong(s, "DJ " + $.username.resolve($.botname));
+        $var.defaultplaylistpos++;
+        
+        if ($var.defaultplaylistpos >= $var.defaultplaylist.length) {
+            $var.defaultplaylistpos = 0;
+        }
+        
+        s.play();
+        name = s.song.getName();
+        user = s.user;
+
+        $var.prevSong = $.currSong;
+        $var.currSong = s;
+    } else {
+        $var.currSong = null;
+    }
+
+    if ($var.currSong == null) {
+        return;
+    }
+    
+    $.say("Now Playing >> \u266B~" + name + "~\u266B requested by " + user);
+}
+
+function next() {
+    var name = "";
+    var user = "";
     var s = new Song(null);
     if ($var.songqueue.length > 0) {
         s = $var.songqueue.shift();
         s.play();
         name = s.song.getName();
         user = s.user;
+
+        $var.prevSong = $.currSong;
+        $var.currSong = s;
     } else {
-        if ($var.currSong != null) {
-            do {
-                s = $.randElement($var.songpool);
-            } while (s.id + "" === $var.currSong.id + "");
-        } else {
-            s = $.randElement($var.songpool);
-        }
-        //for (var i in $var.songpool) {
-        //    println($var.songpool[i]);    
-        //}
-        s.cue();
-        name = s.getName();
+        $var.currSong = null;
     }
 
-    $var.prevSong = $.currSong;
-    $var.currSong = s;
-    $.say("Coming up >> ♫~" + name + "~♫ requested by " + user);
-    
-    var nextMsg = "If no one chooses the next song, PhantomBot will choose for you!";
-    if ($var.songqueue.length > 0) {
-        nextMsg = "Next song >> ♫~" + $var.songqueue[0].song.getName() + "~♫ requested by " + $var.songqueue[0].user;
+    if ($var.currSong == null) {
+        $.say("The song request queue is empty! Request a new song with !addsong <youtube link>");
+        nextDefault();
+        return;
     }
     
-    printNameToFile(" Now Playing >> ♫~" + name + "~♫ requested by " + user);
+    $.say("Now Playing >> \u266B~" + name + "~\u266B requested by " + user);
+    
+    var nextMsg = "The song request queue is empty! Request a new song with !addsong <youtube link>";
+    if ($var.songqueue.length > 0) {
+        nextMsg = "Next song >> \u266B~" + $var.songqueue[0].song.getName() + "~\u266B requested by " + $var.songqueue[0].user;
+    }
+    
+    $.say(nextMsg);
 }
 
 $.on('musicPlayerState', function (event) {
-    //println(event.getState());
     if (event.getStateId() == -2) {
-        initPools();
+        $var.songqueue = [];
+        $var.requestusers = {};
+        
         next();
     }
     
@@ -154,7 +153,6 @@ var musicPlayerConnected = false;
 
 $.on('musicPlayerConnect', function (event) {
     println("MusicClient connected!");
-    $.say("Songrequests enabled! >> Loading up a random song.");
     musicPlayerConnected = true;
 });
 
@@ -181,14 +179,13 @@ $.on('command', function (event) {
         args = argsString.split(" ");
     }
 
-   
-    if (command.equalsIgnoreCase("songrequest")) {
+    if (command.equalsIgnoreCase("addsong")) {
         if (args.length == 0) {
-            $.say("Type >> '!songrequest <youtubelink>' to add a song to the playlist.")
+            $.say("Type >> '!addsong <youtube link>' to add a song to the playlist.")
             return;
         }
+        
         if (args.length >= 1) {
-
             if (!musicPlayerConnected) {
                 $.say("Songrequests is currently disabled!");
                 return;
@@ -229,9 +226,13 @@ $.on('command', function (event) {
 
             $.say("Song >> " + video.name + " was added to the queue by " + username + ".");
             song.request();
+            
+            if ($var.currSong == null) {
+                next();
+            }
         }
         
-        if (command.equalsIgnoreCase("songremove")) {
+        if (command.equalsIgnoreCase("removesong")) {
             if (!musicPlayerConnected) {
                 $.say("Songrequests is currently disabled!");
                 return;
@@ -276,6 +277,11 @@ $.on('command', function (event) {
     
     if (command.equalsIgnoreCase("skipsong")) {
         song = $.musicplayer.currentId();
+        
+        if (isMod(sender)) {
+            next();
+            return;
+        }
 
         if ($var.skipSong) {
             if ($.pollVoters.contains(sender)) {
@@ -300,7 +306,7 @@ $.on('command', function (event) {
                 $.say("Failed to skip the song.");
             }
 
-        }, ['yes', 'nope'], 35 * 3000, "phantombot")) {
+        }, ['yes', 'nope'], 35 * 3000, $.botname)) {
             $.say("2 more votes are required to skip this song, to vote use '!vote yes'");
             
             if (makeVote('yes')) {
@@ -312,26 +318,6 @@ $.on('command', function (event) {
         }
     }
     
-    if (command.equalsIgnoreCase("stealsong")) {
-        if ($.isMod(sender)) {
-            if (!musicPlayerConnected) {
-                $.say("Songrequests is currently disabled!");
-                return;
-            }
-            id = $var.currSong.id;
-            for (i = 0; i < init.length; ++i) {
-                if (init[i] == id) {
-                    $.say("'" + $var.currSong.name + "' is already in the queue.");
-                    return;
-                }
-            }
-            $.writeToFile(id, "stolensongs.txt", true);
-            init[init.length] = id;
-        } else {
-            $.say($.username.resolve(sender) + ", " + $.getUserGroupName(username) + "s aren't allowed to use this command! Moderators only.");
-        }
-    }
-    
     if (command.equalsIgnoreCase("vetosong")) {
         if (!$.isMod(sender)) {
             var points = $.inidb.get('points', sender);
@@ -339,37 +325,41 @@ $.on('command', function (event) {
             if (points == null) points = 0;
             else points = int(points);
 
-            if (50 > points) {
-                $.say(sender + ", " + " You need 50 " + $.pointname + " to skip this song!");
+            if (100 > points) {
+                $.say(sender + ", " + " You need 100 " + $.pointname + " to skip this song!");
                 return;
             }
 
-            $.inidb.decr('points', sender, 50);
+            $.inidb.decr('points', sender, 100);
 
-            $.say(username + ", paid 50 " + $.pointname + " to skip the current song!");
+            $.say(username + ", paid 100 " + $.pointname + " to skip the current song!");
         }
         
         next();
     }
     
     if (command.equalsIgnoreCase("currentsong")) {
-        $.say("Currently playing >> ♫~" + $var.currSong.name + "~♫");
+        if ($var.currSong == null) {
+            $.say("There is no song playing! Request one with !addsong <youtube link>");
+            return;
+        }
+        
+        $.say("Currently playing >> \u266B~" + $var.currSong.name + "~\u266B");
     }
     
     if (command.equalsIgnoreCase("nextsong")) {
         if ($var.songqueue.length > 0) {
-            $.say("Next song >> ♫~" + $var.songqueue[0].song.getName() + "~♫ requested by " + $var.songqueue[0].user);
+            $.say("Next song >> \u266B~" + $var.songqueue[0].song.getName() + "~\u266B requested by " + $var.songqueue[0].user);
         } else {
             $.say("There are no more songs in the queue!");
         }
     }
 });
 
-$.registerChatCommand("songrequest");
-$.registerChatCommand("songremove");
+$.registerChatCommand("addsong");
+$.registerChatCommand("removesong");
 $.registerChatCommand("volume");
 $.registerChatCommand("skipsong");
-$.registerChatCommand("stealsong");
 $.registerChatCommand("vetosong");
 $.registerChatCommand("currentsong");
 $.registerChatCommand("nextsong");
@@ -377,9 +367,3 @@ $.registerChatCommand("nextsong");
 $.on('musicPlayerCurrentVolume', function (event) {
     $.say("Music volume is currently: " + parseInt(event.getVolume()) + "%, dood!");
 });
-
-function printNameToFile(name) {
-    var pw = new java.io.PrintWriter("currentsong.txt", "UTF-8");
-    pw.println(name);
-    pw.close();
-}

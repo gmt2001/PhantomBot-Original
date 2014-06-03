@@ -20,9 +20,10 @@ public class IniStore implements ActionListener
 {
 
     private HashMap<String, IniFile> files = new HashMap<>();
-    private HashMap<String, Boolean> changed = new HashMap<>();
+    private HashMap<String, Date> changed = new HashMap<>();
     private Date nextSave = new Date(0);
     private Timer t;
+    private Timer t2;
     private static long saveInterval = 5 * 60 * 1000;
     private static final IniStore instance = new IniStore();
 
@@ -34,6 +35,7 @@ public class IniStore implements ActionListener
     private IniStore()
     {
         t = new Timer((int) saveInterval, this);
+        t2 = new Timer(1, this);
 
         t.start();
     }
@@ -114,7 +116,8 @@ public class IniStore implements ActionListener
             }
 
             FileUtils.writeStringToFile(new File("./inistore/" + fName + ".ini"), wdata);
-            changed.put(fName, Boolean.FALSE);
+            
+            changed.remove(fName);
         } catch (IOException ex)
         {
         }
@@ -123,6 +126,7 @@ public class IniStore implements ActionListener
     @Override
     public void actionPerformed(ActionEvent e)
     {
+        t2.stop();
         SaveAll(false);
     }
 
@@ -137,16 +141,20 @@ public class IniStore implements ActionListener
         if (!nextSave.after(new Date()) || force)
         {
             Object[] n = changed.keySet().toArray();
+            
+            System.out.println(">>>Saving " + n.length + " files");
 
             for (int i = 0; i < n.length; i++)
             {
-                if (changed.get((String) n[i]) == Boolean.TRUE)
+                if (changed.get((String) n[i]).after(nextSave) || changed.get((String) n[i]).equals(nextSave))
                 {
                     SaveFile((String) n[i], files.get((String) n[i]));
                 }
             }
 
             nextSave.setTime(new Date().getTime() + saveInterval);
+            
+            System.out.println(">>>Save complete");
         }
     }
 
@@ -261,9 +269,9 @@ public class IniStore implements ActionListener
 
         files.get(fName).data.get(section).put(key, value);
 
-        changed.put(fName, Boolean.TRUE);
+        changed.put(fName, new Date());
 
-        SaveAll(false);
+        t2.start();
     }
 
     public int GetInteger(String fName, String section, String key)
@@ -366,6 +374,20 @@ public class IniStore implements ActionListener
         files.get(fName).data.remove(section);
 
         SaveFile(fName, files.get(fName));
+    }
+    
+    public void RemoveFile(String fName)
+    {
+        File f = new File("./inistore/" + fName + ".ini");
+        
+        f.delete();
+    }
+    
+    public boolean FileExists(String fName)
+    {
+        File f = new File("./inistore/" + fName + ".ini");
+        
+        return f.exists();
     }
 
     public boolean HasKey(String fName, String section, String key)

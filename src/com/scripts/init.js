@@ -1,11 +1,13 @@
 var Objects = java.util.Objects;
 var System = java.lang.System;
+var out = java.io.PrintStream(System.out, true, "UTF-8");
 
 var enableRedis2IniConversion = false;
 
 $.tostring = Objects.toString;
 $.println = function(o) {
-    System.out.println(tostring(o));
+    
+    out.println(tostring(o));
 };
 
 var blackList = ["getClass", "equals", "notify", "class", "hashCode", "toString", "wait", "notifyAll"];
@@ -28,7 +30,6 @@ function generateTrampoline(obj, name) {
     };
 }
 
-// register api methods
 for(var name in $api) {
     if(isJavaProperty(name)) continue;
     if(typeof $api[name] == "function") {
@@ -39,6 +40,7 @@ for(var name in $api) {
 }
 
 var connected = false;
+var modeo = false;
 
 $api.on($script, 'ircJoinComplete', function(event) {
     connected = true;
@@ -48,13 +50,21 @@ $api.on($script, 'ircJoinComplete', function(event) {
 $api.on($script, 'ircChannelUserMode', function(event) {
     if (connected) {
         if (event.getChannel().getName().equalsIgnoreCase($.channel.getName())) {
-            if (event.getUser().equalsIgnoreCase($.botname) && event.getMode().equalsIgnoreCase("o") && event.getAdd() == true) {
-                var connectedMessage = $.inidb.get('settings', 'connectedMessage');
+            if (event.getUser().equalsIgnoreCase($.botname) && event.getMode().equalsIgnoreCase("o")) {
+                if (event.getAdd() == true) {
+                    if (!modeo) {
+                        var connectedMessage = $.inidb.get('settings', 'connectedMessage');
     
-                if (connectedMessage != null && !connectedMessage.isEmpty()) {
-                    $.say(connectedMessage);
+                        if (connectedMessage != null && !connectedMessage.isEmpty()) {
+                            $.say(connectedMessage);
+                        } else {
+                            println("ready");
+                        }
+                    }
+                    
+                    modeo = true;
                 } else {
-                    println("ready");
+                    modeo = false;
                 }
             }
         }
@@ -233,13 +243,42 @@ $api.on($script, 'musicPlayerState', function(event) {
 
 $.botname = $.botName;
 $.botowner = $.ownerName;
-$.pointname = $.inidb.get('settings','pointname');
+$.pointname = $.inidb.get('settings', 'pointname');
+$.pointgain = parseInt($.inidb.get('settings', 'pointgain'));
+$.pointbonus = parseInt($.inidb.get('settings', 'pointbonus'));
+$.pointinterval = parseInt($.inidb.get('settings', 'pointinterval'));
+$.rollbonus = parseInt($.inidb.get('settings', 'rollbonus'));
+$.announceinterval = parseInt($.inidb.get('announcements', 'interval'));
+$.announcemessages = parseInt($.inidb.get('announcements', 'reqmessages'));
 
 if ($.pointname == undefined || $.pointname == null || $.pointname.isEmpty()) {
     $.pointname = "Points";
 }
 
-// [ ----------------------(Plugins enable/disable)------------------------ ]
+if ($.pointgain == undefined || $.pointgain == null || isNaN($.pointgain) || $.pointgain < 0) {
+    $.pointgain = 1;
+}
+
+if ($.pointbonus == undefined || $.pointbonus == null || isNaN($.pointbonus) || $.pointbonus < 0) {
+    $.pointbonus = 0.5;
+}
+
+if ($.pointinterval == undefined || $.pointinterval == null || isNaN($.pointinterval) || $.pointinterval < 0) {
+    $.pointinterval = 10;
+}
+
+if ($.rollbonus == undefined || $.rollbonus == null || isNaN($.rollbonus) || $.rollbonus < 0) {
+    $.rollbonus = 2;
+}
+
+if ($.announceinterval == undefined || $.announceinterval == null || $.announceinterval < 2) {
+    $.announceinterval = 10;
+}
+
+if ($.announcemessages == undefined || $.announcemessages == null || $.announcemessages < 5) {
+    $.announcemessages = 25;
+}
+
 $.loadScript('./util/misc.js');
 $.loadScript('./util/commandList.js');
 $.loadScript('./util/linkDetector.js');
@@ -251,14 +290,19 @@ if ($.inidb.GetBoolean("init", "initialsettings", "loaded") == false
     $.loadScript('./util/initialsettings.js');
 }
 
+$.upgrade_version = 1;
+if ($.inidb.GetInteger("init", "upgrade", "version") < $.upgrade_version) {
+    $.loadScript('./util/upgrade.js');
+}
+
 $.loadScript('./util/permissions.js');
 $.loadScript('./util/chatModerator.js');
 
-$.loadScript('./events.js');
+$.loadScript('./announcements.js');
 
 $.loadScript('./followHandler.js');
 $.loadScript('./kappaTrigger.js'); 
-//$.loadScript('./youtubePlayer.js');
+$.loadScript('./youtubePlayer.js');
 
 $.loadScript('./systems/pointSystem.js');
 $.loadScript('./systems/timeSystem.js');

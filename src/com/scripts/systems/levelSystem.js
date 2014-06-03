@@ -92,11 +92,10 @@ $.on('command', function(event) {
         if (args.length == 2) {
             action = args[0];
             exp = int(args[1]);
-            var amount = int(args[1]);
+            var amount = Math.max(0, int(args[1]));
             var points = $.inidb.get('points', sender);
 
             if (action.equalsIgnoreCase("buy")) {
-
                 if (points == null) points = 0;
                 else points = int(points);
                 

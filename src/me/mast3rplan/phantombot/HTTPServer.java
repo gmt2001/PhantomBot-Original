@@ -24,6 +24,8 @@ import org.apache.commons.io.IOUtils;
 public class HTTPServer extends Thread {
     
     int port;
+    ServerSocket socket;
+    Boolean dorun = true;
     
     HTTPServer (int p) {
         port = p;
@@ -31,9 +33,7 @@ public class HTTPServer extends Thread {
     
     @Override
     public void run () {
-        
         String webhome = "./web";
-        ServerSocket socket;
         
         try {
             socket = new ServerSocket(port);
@@ -44,8 +44,7 @@ public class HTTPServer extends Thread {
         
         System.out.println("HTTP server accepting connections on port " + port);
         
-        while (true) {
-            
+        while (dorun) {
             try {
                 
                 Socket conn = socket.accept ();
@@ -99,14 +98,26 @@ public class HTTPServer extends Thread {
                 
                 out.flush ();
                 if (conn != null)
+                {
                     conn.close ();
+                }
                 
             } catch (IOException ex) {
                 Logger.getLogger(HTTPServer.class.getName()).log(Level.SEVERE, null, ex);
             }
             
         }
-        
+    }
+    
+    public void dispose() {
+        try
+        {
+            dorun = false;
+            socket.close();
+        } catch (IOException ex)
+        {
+            Logger.getLogger(HTTPServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     private static String inferContentType (String path) {

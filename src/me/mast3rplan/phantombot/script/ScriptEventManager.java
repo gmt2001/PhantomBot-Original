@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 import java.util.Iterator;
 import java.util.List;
+import me.mast3rplan.phantombot.PhantomBot;
 import me.mast3rplan.phantombot.event.Event;
 import me.mast3rplan.phantombot.event.Listener;
 import org.apache.commons.lang3.text.WordUtils;
@@ -46,12 +47,24 @@ public class ScriptEventManager implements Listener
     @Subscribe
     public void onEvent(Event event)
     {
-        for (EventHandlerEntry entry : entries)
+        try
         {
-            if (event.getClass().isAssignableFrom(entry.eventClass))
+            for (EventHandlerEntry entry : entries)
             {
-                entry.handler.handle(event);
+                if (event.getClass().isAssignableFrom(entry.eventClass))
+                {
+                    if (PhantomBot.enableDebugging)
+                    {
+                        System.out.println(">>>[DEBUG] Dispatching event " + entry.eventClass.getName());
+                    }
+
+                    entry.handler.handle(event);
+                }
             }
+        } catch (Exception e)
+        {
+            System.out.println(">>>[DEBUG] Failed to dispatch event " + event.getClass().getName());
+            e.printStackTrace();
         }
     }
 

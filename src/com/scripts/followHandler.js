@@ -1,15 +1,12 @@
-var announceFollows = false;
-
 $.on('twitchFollow', function(event) {
     var follower = event.getFollower().toLowerCase();
     var username = $.username.resolve(follower);
-
     var followed = $.inidb.get('followed', follower);
     
     if (followed == null || followed == undefined || followed.isEmpty()) {
         $.inidb.set('followed', follower, 1);
         
-        if (announceFollows) {
+        if ($.announceFollows) {
             var s = $.inidb.get('settings', 'followmessage');
             
             if (s == null || s == undefined || s.length() == 0) {
@@ -19,21 +16,22 @@ $.on('twitchFollow', function(event) {
                     s = "Thanks for the follow <name>!";
                 }
             }
-            
-            while (s.indexOf("<name>") != -1) {
-                s.replace("<name>", username);
+            while (s.indexOf('<name>') != -1) {
+                s = s.replace('<name>', username);
             }
             
             if ($.moduleEnabled("./systems/pointSystem.js")) {
-                while (s.indexOf("<pointname>") != -1) {
-                    s.replace("<pointname>", username);
+                while (s.indexOf('<pointname>') != -1) {
+                    s = s.replace('<pointname>', $.pointname);
                 }
             }
-            
-            $.say("Thanks for the follow " + username + "! +100 " + $.pointname + "!");
+
+            $.say(s);
         }
         
-        $.inidb.incr('points', follower, 100);
+        if ($.moduleEnabled("./systems/pointSystem.js")) {
+            $.inidb.incr('points', follower, 100);
+        }
     } else if (followed.equalsIgnoreCase("0")) {
         $.inidb.set('followed', follower, 1);
     }
@@ -55,7 +53,9 @@ $.on('twitchUnfollow', function(event) {
 });
 
 $.on('twitchFollowsInitialized', function(event) {
-    announceFollows = true;
+    println(">>Enabling new follower announcements");
+    
+    $.announceFollows = true;
 });
 
 $.on('command', function(event) {

@@ -1,2 +1,2 @@
 @echo off
-java -jar PhantomBot.jar
+java -Dfile.encoding=UTF-8 -jar PhantomBot.jar

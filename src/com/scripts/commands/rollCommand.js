@@ -1,4 +1,6 @@
 var arrRollLimiter = new Array();
+$var.lastRandomWin = "";
+$var.lastRandomLost = "";
 
 $.on('command', function(event) {
     var sender = event.getSender();
@@ -6,6 +8,7 @@ $.on('command', function(event) {
     var command = event.getCommand();
     var argsString = event.getArguments().trim();
     var args = event.getArgs();
+    var s;
 
     if(command.equalsIgnoreCase("roll")) {
         var found = false;
@@ -36,54 +39,54 @@ $.on('command', function(event) {
             var die2 = d2;
 
             var lost = new Array (0)
-            lost[0] = "Better luck next time!"
-            lost[1] = "Man you suck at this!"
-            lost[2] = "You had one job!"
-            lost[3] = "Congra- oh wait.. that's a loss, pfft."
-            lost[4] = "This is sad."
-            lost[5] = "Can you like.. win? please?"
-            lost[6] = "You're making me sad."
-            lost[7] = "Don't lose your way!"
-            lost[8] = "You just weren't good enough."
-            lost[9] = "Will " + username + " finally win? Find out on the next episode of DragonBall Z!"
-            lost[10] = "Still losing!"
-            lost[11] = "You're great at losing."
+            lost.push("Better luck next time!");
+            lost.push("Man you suck at this!");
+            lost.push("You had one job!");
+            lost.push("Congra- oh wait.. that's a loss, pfft.");
+            lost.push("This is sad.");
+            lost.push("Can you like.. win? please?");
+            lost.push("You're making me sad.");
+            lost.push("Don't lose your way!");
+            lost.push("You just weren't good enough.");
+            lost.push("Will <sender> finally win? Find out on the next episode of DragonBall Z!");
+            lost.push("Still losing!");
+            lost.push("You're great at losing.");
     
             if (username.equalsIgnoreCase("gmt2001")) {
-                lost[12] = "You re-programmed me and you still failed!"
-                lost[13] = "You re-programmed me and you still failed!"
-                lost[14] = "You re-programmed me and you still failed!"
+                lost.push("You re-programmed me and you still failed!");
+                lost.push("You re-programmed me and you still failed!");
+                lost.push("You re-programmed me and you still failed!");
             }
     
             if (username.equalsIgnoreCase("brutalmind1984")) {
-                lost[12] = "That was a brutal beating you took!"
-                lost[13] = "That was a brutal beating you took!"
-                lost[14] = "That was a brutal beating you took!"
+                lost.push("That was a brutal beating you took!");
+                lost.push("That was a brutal beating you took!");
+                lost.push("That was a brutal beating you took!");
             }
     
             var win = new Array (0)
-            win[0] = "Congratulations!"
-            win[1] = "Damn you won.."
-            win[2] = "Was hoping you'd lose there."
-            win[3] = "You got lucky."
-            win[4] = "This shit is rigged!"
-            win[5] = "GOOOOOOOOOOOOAAAAAAAAAAAAAAL!"
-            win[6] = "Oh my you did it! HNNG!"
-            win[7] = "Your balls finally dropped!"
-            win[8] = "X GON GIVE IT TO YA!"
+            win.push("Congratulations!");
+            win.push("Damn you won..");
+            win.push("Was hoping you'd lose there.");
+            win.push("You got lucky.");
+            win.push("This shit is rigged!");
+            win.push("GOOOOOOOOOOOOAAAAAAAAAAAAAAL!");
+            win.push("Oh my you did it! HNNG!");
+            win.push("Your balls finally dropped!");
+            win.push("X GON GIVE IT TO YA!");
     
             if (username.equalsIgnoreCase("gmt2001")) {
-                win[9] = "HAX!"
-                win[10] = "HAX!"
-                win[11] = "HAX!"
-                win[12] = "HAX!"
+                win.push("HAX!");
+                win.push("HAX!");
+                win.push("HAX!");
+                win.push("HAX!");
             }
     
             if (username.equalsIgnoreCase("theradicalninja")) {
-                win[9] = "The ninja strikes!"
-                win[10] = "The ninja strikes!"
-                win[11] = "The ninja strikes!"
-                win[12] = "The ninja strikes!"
+                win.push("The ninja strikes!");
+                win.push("The ninja strikes!");
+                win.push("The ninja strikes!");
+                win.push("The ninja strikes!");
             }
             
             if (username.equalsIgnoreCase("acavedo")) {
@@ -91,10 +94,18 @@ $.on('command', function(event) {
             }
             
             if(d1 == d2) {
-                $.say(username + " rolled Doubles >> " + die1 + " & " + die2 + "! " + "You won " + (die1+die2 * 2) + " " + $.pointname + "!" + " " +$.randElement(win));
-                $.inidb.incr('points', sender, die1+die2 * 2); 
+                do {
+                    s = $.randElement(win);
+                } while (s.equalsIgnoreCase($var.lastRandomWin) && win.length > 1);
+                
+                $.say(username + " rolled Doubles >> " + die1 + " & " + die2 + "! " + "You won " + (die1 + (die2 * $.rollbonus)) + " " + $.pointname + "!" + " " + s.replace("<sender>", username));
+                $.inidb.incr('points', sender, die1 + (die2 * $.rollbonus)); 
             } else {
-                $.say(username + " rolled a " + die1 + " & " + die2 + ". " + $.randElement(lost));
+                do {
+                    s = $.randElement(lost);
+                } while (s.equalsIgnoreCase($var.lastRandomLost) && lost.length > 1);
+                
+                $.say(username + " rolled a " + die1 + " & " + die2 + ". " + s.replace("<sender>", username));
             }
         } else if ((args.length  == 1 && args[0].equalsIgnoreCase("help")) || !$.moduleEnabled("./systems/pointSystem.js")) {
             $.say("To do a DnD roll, say '!roll <dice definition>[ + <dice definition or number>]. For example: '!roll 2d6 + d20 + 2'. Limit 7 dice definitions or numbers per !roll command. A dice definition is [# to roll]d<number of sides>. Valid number of sides: 4, 6, 8, 10, 12, 20, 100");
@@ -107,10 +118,8 @@ $.on('command', function(event) {
             var dstr = new Array();
             var lookd = true;
             var Pattern = java.util.regex.Pattern;
-            var Matcher = java.util.regex.Matcher;
             var p = Pattern.compile("[0-9]*d{1}(4|6|8|10|12|20|100){1}");
             var m;
-            var s;
             var pos;
             var valid = true;
             
@@ -184,4 +193,28 @@ $.on('command', function(event) {
             $.say("Dont spam rolls, " + username + "!");
         }
     }
+    
+    if (command.equalsIgnoreCase("rollbonus")) {
+        if (args.length > 0) {
+            if (!$.isAdmin(sender)) {
+                $.say("You must be an Administrator to use that command, " + username + "!");
+                return;
+            }
+            
+            if (!isNaN(args[0]) && parseInt(args[0]) >= 0) {
+                $.inidb.set('settings', 'rollbonus', args[0]);
+                $.rollbonus = parseInt(args[0]);
+                
+                $.say("The reward for rolling doubles has been set to <die value> + (<die value> * " + $.rollbonus + ")!");
+            } else {
+                $.say("Please select a valid amount, " + username + "!");
+            }
+        } else {
+            $.say("The reward for rolling doubles is currently <die value> + (<die value> * " + $.rollbonus + "). You can change it with !rollbonus <newbonus>");
+        }
+    }
 });
+
+$.registerChatCommand("roll");
+$.registerChatCommand("roll help");
+$.registerChatCommand("rollbonus");

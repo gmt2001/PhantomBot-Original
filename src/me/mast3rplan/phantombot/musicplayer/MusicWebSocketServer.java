@@ -1,15 +1,16 @@
 package me.mast3rplan.phantombot.musicplayer;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import me.mast3rplan.phantombot.event.EventBus;
 import me.mast3rplan.phantombot.event.musicplayer.*;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
-
-import java.net.InetSocketAddress;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.regex.Pattern;
 
 public class MusicWebSocketServer extends WebSocketServer {
     public MusicWebSocketServer(int port) {
@@ -50,6 +51,16 @@ public class MusicWebSocketServer extends WebSocketServer {
     @Override
     public void onError(WebSocket webSocket, Exception e) {
         e.printStackTrace();
+    }
+    
+    public void dispose() {
+        try
+        {
+            this.stop(2000);
+        } catch (IOException | InterruptedException ex)
+        {
+            Logger.getLogger(MusicWebSocketServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public void sendToAll(String text) {
@@ -105,5 +116,25 @@ public class MusicWebSocketServer extends WebSocketServer {
 
     public void currentVolume() {
         sendToAll("currentvolume");
+    }
+
+    public void onWebsocketClosing(WebSocket ws, int code, String reason, boolean remote)
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void onWebsocketCloseInitiated(WebSocket ws, int code, String reason)
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public InetSocketAddress getLocalSocketAddress(WebSocket conn)
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public InetSocketAddress getRemoteSocketAddress(WebSocket conn)
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

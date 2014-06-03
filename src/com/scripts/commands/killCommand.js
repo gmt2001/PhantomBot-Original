@@ -1,46 +1,45 @@
+$var.lastrandom = "";
+
 $.on('command', function(event) {
     var sender = event.getSender().toLowerCase();
-    var username = $.username.resolve(sender).toLowerCase();
+    var username = $.username.resolve(sender);
     var command = event.getCommand();
     var argsString = event.getArguments().trim();
-    var args;
-
-
-    if(argsString.isEmpty()) {
-        args = [];
-    } else {
-        args = argsString.split(" ");
-    }
+    var s;
 
     if(command.equalsIgnoreCase("kill")) {
-        if(args.length == 1) {
-            username = args[0].toLowerCase();
-
-            var killuser = new Array(0)
-
-            if (username.equalsIgnoreCase($.botname)) {
-                killuser[0] = $.username.resolve(username) + " counters " + $.username.resolve(sender) + "'s attempt to kill it with a flamethrower";
-                killuser[1] = $.username.resolve(username) + " kicked " + $.username.resolve(sender) + " in the balls in self defense";
-                killuser[2] = $.username.resolve(username) + " throws a shuriken at " + $.username.resolve(sender);
+        var killmessages = new Array();
+        
+        if(argsString.length() > 0) {
+            if (argsString.equalsIgnoreCase($.botname)) {
+                killmessages.push("<target> counters <sender>'s attempt to kill it with a flamethrower");
+                killmessages.push("<target> kicked <sender> in the balls in self defense");
+                killmessages.push("<target> throws a shuriken at <sender>");
             } else {
-                killuser[0] = $.username.resolve(sender) + " murdered " + $.username.resolve(username) + " with a unicorn's horn!"
-                killuser[1] = $.username.resolve(sender) + " covered " + $.username.resolve(username) + " in meat sauce and threw them in a cage with a starved tiger."
-                killuser[2] = $.username.resolve(sender) + " genetically modified a Venus fly trap so it grows really big and trapped " + $.username.resolve(username) + " in a room with it." 
-                killuser[3] = $.username.resolve(sender) + " shanked " + $.username.resolve(username) + "'s butt, over and over again."
-                killuser[4] = $.username.resolve(sender) + " just wrote " + $.username.resolve(username) + "'s name in his DeathNote."
-                killuser[5] = $.username.resolve(sender) + " attacked " + $.username.resolve(username) + " with a rusty spoon as the weapon...and managed to kill him."
+                killmessages.push("<sender> murdered <target> with a unicorn's horn!");
+                killmessages.push("<sender> covered <target> in meat sauce and threw them in a cage with a starved tiger.");
+                killmessages.push("<sender> genetically modified a Venus fly trap so it grows really big and trapped <target> in a room with it.");
+                killmessages.push("<sender> shanked <target>'s butt, over and over again.");
+                killmessages.push("<sender> just wrote <target>'s name in his DeathNote.");
+                killmessages.push("<sender> attacked <target> with a rusty spoon as the weapon...and managed to kill him.");
             }
-         
-            $.say($.randElement(killuser));
         } else {
-            var killself = new Array(0)
-
-            killself[0] = $.username.resolve(sender) + " has somehow managed to kill himself."  
-            killself[1] = $.username.resolve(sender) + " exploded."
-            killself[2] = $.username.resolve(sender) + " imploded."
-
-            $.say($.randElement(killself));
+            killmessages.push("<sender> has somehow managed to kill himself.");
+            killmessages.push("<sender> exploded.");
+            killmessages.push("<sender> imploded.");
         }
+        
+        do {
+            s = $.randElement(killmessages);
+        } while(s.equalsIgnoreCase($var.lastrandom) && killmessages.length > 1);
+        
+        s = s.replace("<sender>", username);
+        
+        if (argsString.length > 0) {
+            s = s.replace("<target>", $.username.resolve(argsString));
+        }
+        
+        $.say(s);
     }
 });
 

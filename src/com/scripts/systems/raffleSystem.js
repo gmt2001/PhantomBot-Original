@@ -230,6 +230,7 @@ $.on('ircChannelMessage', function(event) {
         }
  
         $var.raffle_entrants.push(username);
+        $.say(username + " has entered the raffle!");
     }
 });
 

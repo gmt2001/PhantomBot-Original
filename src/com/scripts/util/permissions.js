@@ -1,4 +1,17 @@
-var modeOUsers = new Array();
+var usergonetime = 10 * 60 * 1000;
+var usercheckinterval = 3 * 60 * 1000;
+
+if ($.modeOUsers == null || $.modeOUsers == undefined) {
+    $.modeOUsers = new Array();
+}
+
+if ($.users == null || $.users == undefined) {
+    $.users = new Array();
+}
+
+if ($.lastjoinpart == null || $.lastjoinpart == undefined) {
+    $.lastjoinpart = System.currentTimeMillis();
+}
 
 $.isBot = function (user) {
     return user.equalsIgnoreCase($.botname);
@@ -17,7 +30,7 @@ $.isMod = function (user) {
 }
 
 $.hasModeO = function (user) {
-    return $.array.contains(modeOUsers, user.toLowerCase());
+    return $.array.contains($.modeOUsers, user.toLowerCase());
 }
 
 $.hasGroupById = function(user, id) {
@@ -118,7 +131,6 @@ $.on('command', function(event) {
     var args;
     var name;
     var i;
-    var it;
     var s;
     var allowed = true;
     
@@ -146,16 +158,17 @@ $.on('command', function(event) {
             }
         }
     }
-    if (command.equalsIgnoreCase("rank")) {
+    
+    if (command.equalsIgnoreCase("group")) {
         if (args.length >= 1) {
             username = args[0];
-            $.say($.username.resolve(username) + " is currently in the " + $.getUserGroupName(username) + " rank.");
+            $.say($.username.resolve(username) + " is currently in the " + $.getUserGroupName(username) + " group.");
         } else {
-            $.say($.username.resolve(sender) + ", you're in the " + $.getUserGroupName(username) + " rank, dood.");
+            $.say($.username.resolve(sender) + ", you're in the " + $.getUserGroupName(username) + " group.");
         }
     }
     
-    if (command.equalsIgnoreCase("rankname")) {
+    if (command.equalsIgnoreCase("groupname")) {
         if (!$.isAdmin(sender)) {
             $.say(username + ", " + $.getUserGroupName(username) + "s aren't allowed access to this command! Administrators only.");
             return;
@@ -174,9 +187,9 @@ $.on('command', function(event) {
                     ranks = ranks + i + " = " + groups[i];
                 }
                 
-                $.say("Ranks: " + ranks);
+                $.say("Groups: " + ranks);
             } else {
-                $.say("Usage: !rankname <id> <new name>, !rankname list")
+                $.say("Usage: !groupname <id> <new name>, !groupname list")
             }
         } else {
             if (parseInt(args[0]) >= groups.length || parseInt(args[0]) < 0) {
@@ -193,7 +206,7 @@ $.on('command', function(event) {
                 }
                 
                 if (!allowed) {
-                    $.say("You cant change the name of the 'Administrator' rank without first changing another rank to 'Administrator'!");
+                    $.say("You cant change the name of the 'Administrator' group without first changing another group to 'Administrator'!");
                 }
             }
             
@@ -207,7 +220,7 @@ $.on('command', function(event) {
                 }
                 
                 if (!allowed) {
-                    $.say("You cant change the name of the 'Moderator' rank without first changing another rank to 'Moderator'!");
+                    $.say("You cant change the name of the 'Moderator' group without first changing another group to 'Moderator'!");
                 }
             }
             
@@ -219,19 +232,18 @@ $.on('command', function(event) {
                 var oldname = groups[parseInt(args[0])];
                 groups[parseInt(args[0])] = name;
                 
-                $.say("Changed rank '" + oldname + "' to '" + name + "'!")
+                $.say("Changed group '" + oldname + "' to '" + name + "'!")
             }
         }
     }
 
     if (command.equalsIgnoreCase("users")) {
-        it = $.channel.getNicks().iterator();
         s = "Users in channel: ";
         
-        while (it.hasNext() == true) {
-            name = it.next();
+        for (i = 0; i < $.users.length; i++) {
+            name = users[i][0];
             
-            if (s.length() > 18) {
+            if (s.length > 18) {
                 s += ", ";
             }
                 
@@ -242,14 +254,13 @@ $.on('command', function(event) {
     }
     
     if (command.equalsIgnoreCase("mods")) {
-        it = $.channel.getNicks().iterator();
         s = "Mods in channel: ";
         
-        while (it.hasNext() == true) {
-            name = it.next();
+        for (i = 0; i < $.users.length; i++) {
+            name = users[i][0];
             
             if ($.isMod(name.toLowerCase())) {
-                if (s.length() > 17) {
+                if (s.length > 17) {
                     s += ", ";
                 }
                 
@@ -261,14 +272,13 @@ $.on('command', function(event) {
     }
     
     if (command.equalsIgnoreCase("admins")) {
-        it = $.channel.getNicks().iterator();
         s = "Admins in channel: ";
         
-        while (it.hasNext() == true) {
-            name = it.next();
+        for (i = 0; i < $.users.length; i++) {
+            name = users[i][0];
             
             if ($.isAdmin(name.toLowerCase())) {
-                if (s.length() > 17) {
+                if (s.length > 19) {
                     s += ", ";
                 }
                 
@@ -280,14 +290,54 @@ $.on('command', function(event) {
     }
 });
 
+$.on('ircChannelMessage', function(event) {
+    var sender = event.getSender().toLowerCase();
+    
+    if ($.array.contains($.users, username)) {
+        for (var i = 0; i < $.users.length; i++) {
+            if ($.users[i][0].equalsIgnoreCase(username)) {
+                $.users[i][1] = System.currentTimeMillis();
+                break;
+            }
+        }
+    } else {
+        $.users.push(new Array(username, System.currentTimeMillis()));
+    }
+});
+
+$.on('ircChannelJoin', function(event) {
+    var u = $.username.resolve(event.getUser());
+    var username = u.toLowerCase();
+    var i;
+    
+    $.lastjoinpart = System.currentTimeMillis();
+    
+    if (!$.array.contains($.users, username)) {
+        $.users.push(new Array(username, System.currentTimeMillis()));
+    }
+});
+
 $.on('ircChannelLeave', function(event) {
     var u = $.username.resolve(event.getUser());
     var username = u.toLowerCase();
+    var i;
     
-    if ($.array.contains(modeOUsers, username)) {
-        for (var i = 0; i < modeOUsers.length; i++) {
-            if (modeOUsers[i].equalsIgnoreCase(username)) {
-                modeOUsers.splice(i, 1);
+    $.lastjoinpart = System.currentTimeMillis();
+    
+    if ($.array.contains($.modeOUsers, username)) {
+        for (i = 0; i < $.modeOUsers.length; i++) {
+            if ($.modeOUsers[i].equalsIgnoreCase(username)) {
+                $.modeOUsers.splice(i, 1);
+                break;
+            }
+        }
+    }
+    
+    if ($.array.contains($.users, username)) {
+        for (i = 0; i < $.users.length; i++) {
+            if ($.users[i][0].equalsIgnoreCase(username)) {
+                $.users.splice(i, 1);
+                break;
             }
         }
     }
@@ -296,22 +346,36 @@ $.on('ircChannelLeave', function(event) {
 $.on('ircChannelUserMode', function(event) {
     if (event.getMode().equalsIgnoreCase("o")) {
         if (event.getAdd()) {
-            if (!$.array.contains(modeOUsers, event.getUser().toLowerCase())) {
-                modeOUsers.push(event.getUser().toLowerCase());
+            if (!$.array.contains($.modeOUsers, event.getUser().toLowerCase())) {
+                $.modeOUsers.push(event.getUser().toLowerCase());
             }
         } else {
-            for (var i = 0; i < modeOUsers.length; i++) {
-                if (modeOUsers[i].equalsIgnoreCase(event.getUser().toLowerCase())) {
-                    modeOUsers.splice(i, 1);
+            for (var i = 0; i < $.modeOUsers.length; i++) {
+                if ($.modeOUsers[i].equalsIgnoreCase(event.getUser().toLowerCase())) {
+                    $.modeOUsers.splice(i, 1);
+                    break;
                 }
             }
         }
     }
 });
 
+$.setInterval(function() {
+    var curtime = System.currentTimeMillis();
+    
+    if ($.lastjoinpart + usergonetime < curtime) {
+        for (var i = 0; i < $.users.length; i++) {
+            if ($.users[i][1] + usergonetime < curtime) {
+                $.users.splice(i, 1);
+                i--;
+            }
+        }
+    }
+}, usercheckinterval);
+
 $.registerChatCommand("perm set");
-$.registerChatCommand("rank");
-$.registerChatCommand("rankname");
+$.registerChatCommand("group");
+$.registerChatCommand("groupname");
 $.registerChatCommand("users");
 $.registerChatCommand("mods");
 $.registerChatCommand("admins");

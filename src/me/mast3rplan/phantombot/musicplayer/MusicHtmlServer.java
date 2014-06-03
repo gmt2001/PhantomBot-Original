@@ -27,24 +27,38 @@ public class MusicHtmlServer extends Thread {
 
     private static String guessContentType(String path) {
         if (path.endsWith(".html") || path.endsWith(".htm"))
+        {
             return "text/html";
+        }
         else if (path.endsWith(".txt") || path.endsWith(".java"))
+        {
             return "text/plain";
+        }
         else if (path.endsWith(".gif"))
+        {
             return "image/gif";
+        }
         else if (path.endsWith(".class"))
+        {
             return "application/octet-stream";
+        }
         else if (path.endsWith(".jpg") || path.endsWith(".jpeg"))
+        {
             return "image/jpeg";
+        }
         else
+        {
             return "text/plain";
+        }
     }
 
     private static void sendFile(InputStream file, OutputStream out) {
         try {
             byte[] buffer = new byte[1000];
             while (file.available() > 0)
+            {
                 out.write(buffer, 0, file.read(buffer));
+            }
         } catch (IOException e) {
             System.err.println(e);
         }
@@ -144,7 +158,10 @@ public class MusicHtmlServer extends Thread {
                 System.err.println(e);
             }
             try {
-                if (connection != null) connection.close();
+                if (connection != null)
+                {
+                    connection.close();
+                }
             } catch (IOException e) {
                 System.err.println(e);
             }

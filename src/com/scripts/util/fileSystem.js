@@ -1,12 +1,6 @@
-/*
- * Usage: var array = $.readFile ("path/to/file.txt");
- * 
- * This function returns an array of strings, one per line of text in the file.
- * 
- */
-
-$.readFile = function (path) {
+$.readFile = function(path) {
     var lines = [];
+    
     try {
         var fis = new java.io.FileInputStream (path);
         var scan = new java.util.Scanner (fis);
@@ -15,19 +9,13 @@ $.readFile = function (path) {
         }
         fis.close ();
     } catch (e) {
-        println ("Failed to open '" + path + "'");
+        println ("Failed to open '" + path + "': " + e);
     }
+    
     return lines;
 }
 
-/*
- * Usage: $saveArray (["array", "of", "strings"], "path/to/file.txt")
- * 
- * This function writes an array of strings to a file, one per line
- * 
- */
-
-$.saveArray = function (array, path) {
+$.saveArray = function(array, path) {
     try {
         var fos = new java.io.FileOutputStream (path);
         var ps = new java.io.PrintStream (fos);
@@ -37,46 +25,35 @@ $.saveArray = function (array, path) {
         }
         fos.close ();
     } catch (e) {
-        println ("Failed to write to '" + path + "'");
+        println ("Failed to write to '" + path + "': " + e);
     }
 }
 
-$.writeToFile = function (string, path, append) {
+$.writeToFile = function(string, path, append) {
     try {
         var fos = new java.io.FileOutputStream (path, append);
         var ps = new java.io.PrintStream (fos);
         ps.println (string);
         fos.close ();
     } catch (e) {
-        println ("Failed to write to '" + path + "'");
+        println ("Failed to write to '" + path + "': " + e);
     }
 }
 
-$.touchFile = function (path) {
+$.touchFile = function(path) {
     try {
-        var fos = new java.io.FileOutputStream (path, true);
+        var fos = new java.io.FileOutputStream(path, true);
         fos.close ();
     } catch (e) {
-        println ("Failed to touch '" + path + "'");
+        println ("Failed to touch '" + path + "': " + e);
     }
 }
 
-
-// Deprecated
-$.printToFile = function (string, file) {
-    println ("Warning '$.printToFile (string, file)' is deprecated, please use '$.writeToFile (string, file, append)'");
-    $.saveArray ([string], file);
+$.deleteFile = function(path) {
+    try {
+    var f = new java.io.File(path);
+    f.deleteOnExit();
+    } catch (e) {
+        println("Failed to delete '" + path + "': " + e)
+    }
 }
-
-/*
-setTimeout (function () {
-        var arr = $.readFile ("test.txt");
-        var l=arr.length;
-        for (var i=0; i<l; ++i) {
-                println (arr [i]);
-        }
-        $.saveArray (["line", " ", "more\ntext"], "out.txt");
-        $.printToFile ("test string", "file1");
-        $.printToFile ("test string\nnewline\n\n", "file2");
-        $.printToFile (null, "file3");
-}, 10000); */
