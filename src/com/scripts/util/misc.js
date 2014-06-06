@@ -10,7 +10,10 @@ $.ssay = function(s) {
     var str = String(s);
     
     println(str);
-    $.channel.say(str);
+    
+    if ($.connected) {
+        $.channel.say(str);
+    }
 }
 
 $.list = { };

@@ -73,6 +73,37 @@ function nextDefault() {
     var name = "";
     var user = "";
     var s = new Song(null);
+    
+    if ($var.currSong != null) {
+        return;
+    }
+    
+    if ($var.defaultplaylist == null || $var.defaultplaylist == undefined) {
+        if ($var.defaultplaylistretry == null || $var.defaultplaylistretry == undefined) {
+            $var.defaultplaylistretry = 0;
+        }
+        
+        if ($var.defaultplaylistretry < 3) {
+            $var.defaultplaylistretry++;
+            
+            setTimeout(function() {
+                if ($.fileExists("./playlist.txt")) {
+                    $var.defaultplaylist = $.readFile("./playlist.txt");
+                } else if ($.fileExists("../playlist.txt")) {
+                    $var.defaultplaylist = $.readFile("../playlist.txt");
+                }
+                
+                $var.defaultplaylistpos = 0;
+            }, 1);
+            
+            setTimeout(function() {
+                nextDefault();
+            }, 3000);
+        }
+        
+        return;
+    }
+    
     if ($var.defaultplaylist.length > 0) {
         s = new Song($var.defaultplaylist[$var.defaultplaylistpos]);
         s = new RequestedSong(s, "DJ " + $.username.resolve($.botname));
@@ -103,6 +134,7 @@ function next() {
     var name = "";
     var user = "";
     var s = new Song(null);
+    
     if ($var.songqueue.length > 0) {
         s = $var.songqueue.shift();
         s.play();
@@ -344,14 +376,14 @@ $.on('command', function (event) {
             return;
         }
         
-        $.say("Currently playing >> \u266B~" + $var.currSong.name + "~\u266B");
+        $.say("Currently playing >> \u266B~" + $var.currSong.song.getName() + "~\u266B requested by " + $var.currSong.user);
     }
     
     if (command.equalsIgnoreCase("nextsong")) {
         if ($var.songqueue.length > 0) {
             $.say("Next song >> \u266B~" + $var.songqueue[0].song.getName() + "~\u266B requested by " + $var.songqueue[0].user);
         } else {
-            $.say("There are no more songs in the queue!");
+            $.say("There are no more songs in the queue! Request one with !addsong <youtube link>");
         }
     }
 });

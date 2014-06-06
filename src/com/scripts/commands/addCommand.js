@@ -132,3 +132,14 @@ $.registerChatCommand("addcom");
 $.registerChatCommand("delcom");
 $.registerChatCommand("modcom");
 $.registerChatCommand("helpcom");
+
+var commands = $.inidb.GetKeyList("command", "");
+
+if ($.array.contains(commands, "commands")) {
+    $.inidb.del("command", "commands");
+    commands = $.inidb.GetKeyList("command", "");
+}
+
+for (var i = 0; i < commands.length; i++) {
+    $.registerCustomChatCommand(commands[i]);
+}

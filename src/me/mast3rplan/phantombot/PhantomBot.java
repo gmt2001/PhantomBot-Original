@@ -218,6 +218,21 @@ public class PhantomBot implements Listener
         {
             PhantomBot.setDebugging(false);
         }
+        
+        if (message.startsWith("inidb.get"))
+        {
+            String spl[] = message.split(" ", 4);
+            
+            System.out.println(IniStore.instance().GetString(spl[1], spl[2], spl[3]));
+        }
+        
+        if (message.startsWith("inidb.set"))
+        {
+            String spl[] = message.split(" ", 5);
+            
+            IniStore.instance().SetString(spl[1], spl[2], spl[3], spl[4]);
+            System.out.println(IniStore.instance().GetString(spl[1], spl[2], spl[3]));
+        }
 
         if (message.equals("save"))
         {
@@ -317,6 +332,8 @@ public class PhantomBot implements Listener
         boolean useTwitch = false;
 
         boolean changed = false;
+        
+        System.out.println("The working directory is: " + System.getProperty("user.dir"));
 
         try
         {

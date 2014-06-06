@@ -1,54 +1,116 @@
-$.commandList = new Array();
-$.customCommandList = new Array();
+if ($.commandList == null || $.commandList == undefined) {
+    $.commandList = new Array();
+}
+
+if ($.customCommandList == null || $.customCommandList == undefined) {
+    $.customCommandList = new Array();
+}
+
 $.commandsPerPage = 20;
 
 $.registerChatCommand = function(command) {
-    if (!$.array.contains($.commandList, command)) {
-        $.commandList.push(command);
+    var scriptFile = $script.getPath().replace("\\", "/").replace("./scripts/", "");
+    var i;
+    
+    for (i = 0; i < $.commandList.length; i++)
+    {
+        if ($.commandList[i][1].equalsIgnoreCase(command)) {
+            if (!$.commandList[i][0].equalsIgnoreCase(scriptFile)) {
+                throw "Command already registered";
+            }
+            
+            return;
+        }
     }
+    
+    for (i = 0; i < $.customCmmandList.length; i++)
+    {
+        if ($.customCommandList[i][1].equalsIgnoreCase(command)) {
+            if (!$.customCommandList[i][0].equalsIgnoreCase(scriptFile)) {
+                throw "Command already registered";
+            }
+            
+            return;
+        }
+    }
+        
+    $.commandList.push(new Array(scriptFile, command));
 }
 
 $.unregisterChatCommand = function(command) {
-    if ($.array.contains($.commandList, command)) {
-        for (var i = 0; i < $.commandList.length; i++) {
-            if ($.commandList[i].equalsIgnoreCase(command)) {
-                commandList.splice(i, 1);
-                break;
-            }
+    for (var i = 0; i < $.commandList.length; i++) {
+        if ($.commandList[i][1].equalsIgnoreCase(command)) {
+            commandList.splice(i, 1);
+            break;
         }
     }
 }
 
 $.registerCustomChatCommand = function(command) {
-    if (!$.array.contains($.customCommandList, command)) {
-        $.customCommandList.push(command);
+    var scriptFile = $script.getPath().replace("\\", "/").replace("./scripts/", "");
+    var i;
+    
+    for (i = 0; i < $.commandList.length; i++)
+    {
+        if ($.commandList[i][1].equalsIgnoreCase(command)) {
+            if (!$.commandList[i][0].equalsIgnoreCase(scriptFile)) {
+                throw "Command already registered";
+            }
+            
+            return;
+        }
     }
+    
+    for (i = 0; i < $.customCommandList.length; i++)
+    {
+        if ($.customCommandList[i][1].equalsIgnoreCase(command)) {
+            if (!$.customCommandList[i][0].equalsIgnoreCase(scriptFile)) {
+                throw "Command already registered";
+            }
+            
+            return;
+        }
+    }
+        
+    $.customCommandList.push(new Array(scriptFile, command));
 }
 
 $.unregisterCustomChatCommand = function(command) {
-    if ($.array.contains($.customCommandList, command)) {
-        for (var i = 0; i < $.customCommandList.length; i++) {
-            if ($.customCommandList[i].equalsIgnoreCase(command)) {
-                customCommandList.splice(i, 1);
-                break;
-            }
+    for (var i = 0; i < $.customCommandList.length; i++) {
+        if ($.customCommandList[i][1].equalsIgnoreCase(command)) {
+            customCommandList.splice(i, 1);
+            break;
         }
     }
 }
 
 $.on('command', function(event) {
+    var sender = event.getSender().toLowerCase();
     var command = event.getCommand();
     var args = event.getArgs();
     
     if (command.equalsIgnoreCase("commands")) {
         var cmdList = "";
-        var length = $.commandList.length + $.customCommandList.length;
+        var length = 0;
         var start = 0;
-        var end = length;
+        var num = length;
         var page = "";
         var numPages = 1;
         var more = ""
         var commandsPerPage = $.commandsPerPage;
+        var i;
+        
+        for (i = 0; i < $.commandList.length + $.customCommandList.length; i++) {
+            if (i < $.commandList.length) {
+                if ($.moduleEnabled($.commandList[i][0])) {
+                    length++;
+                }
+            } else {
+                if ($.moduleEnabled($.customCommandList[i - $.commandList.length][0])) {
+                    length++;
+                }
+            }
+        }
         
         if (commandsPerPage == null) {
             commandsPerPage = 20;
@@ -65,28 +127,60 @@ $.on('command', function(event) {
                 page = " page 1 of " + numPages + " ";
             }
             
-            end = Math.min(start + commandsPerPage, length);
+            num = Math.min(commandsPerPage, length - start);
             
             more = " >> Type '!commands < page #>' for more"
         }
         
-        for (var i = start; i < end; i++) {
+        if (parseInt(args[0]) > numPages) {
+            return;
+        }
+        
+        for (i = 0; i < $.commandList.length + $.customCommandList.length; i++) {
+            if (i > start) {
+                break;
+            }
+            
+            if (i < $.commandList.length) {
+                if (!$.moduleEnabled($.commandList[i][0])) {
+                    start++;
+                }
+            } else {
+                if (!$.moduleEnabled($.customCommandList[i - $.commandList.length][0])) {
+                    start++;
+                }
+            }
+        }
+        
+        for (i = start; num > 0; i++) {
+            if (i < $.commandList.length) {
+                if (!$.moduleEnabled($.commandList[i][0])) {
+                    continue;
+                }
+            } else {
+                if (!$.moduleEnabled($.customCommandList[i - $.commandList.length][0])) {
+                    continue;
+                }
+            }
+            
             if (cmdList.length > 0) {
                 cmdList = cmdList + " - ";
             }
             
             if (i < $.commandList.length) {
-                cmdList = cmdList + "!" + $.commandList[i];
+                cmdList = cmdList + "!" + $.commandList[i][1];
             } else {
-                cmdList = cmdList + "!" + $.customCommandList[i - $.commandList.length];
+                cmdList = cmdList + "!" + $.customCommandList[i - $.commandList.length][1];
             }
+            
+            num--;
         }
         
         $.say("Commands" + page + ": " + cmdList + more);
     }
     
     if (command.equalsIgnoreCase("commandsperpage")) {
-        if (args.length > 0 && !isNaN(parseInt(args[0])) && parseInt(args[0]) >= 10) {
+        if (args.length > 0 && !isNaN(parseInt(args[0])) && parseInt(args[0]) >= 10 && isAdmin(sender)) {
             $.commandsPerPage = parseInt(args[0]);
             $.inidb.set("commands", "_commandsPerPage", args[0]);
             
@@ -97,18 +191,8 @@ $.on('command', function(event) {
     }
 });
 
-var commands = $.inidb.GetKeyList("command", "");
 var commandsPerPage = $.inidb.get("command", "_commandsPerPage");
 
 if (commandsPerPage != null && !isNaN(parseInt(commandsPerPage)) && parseInt(commandsPerPage) >= 10) {
     $.commandsPerPage = commandsPerPage;
-}
-
-if ($.array.contains(commands, "commands")) {
-    $.inidb.del("command", "commands");
-    commands = $.inidb.GetKeyList("command", "");
-}
-
-for (var i = 0; i < commands.length; i++) {
-    $.registerCustomChatCommand(commands[i]);
 }

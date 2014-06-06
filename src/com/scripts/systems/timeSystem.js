@@ -57,7 +57,6 @@ $.on('command', function(event) {
             var seconds = time2.getTime () / 1000;
             var minutes = int((time / 60) % 60);
             var hours = int(time / 3600);
-            var fixedseconds = (seconds % 60).toFixed (0);
 
             var timeString = "";
             if(hours != 0) timeString += " " + hours + " Hrs";
@@ -71,3 +70,22 @@ $.on('command', function(event) {
 
 $.registerChatCommand("time");
 $.registerChatCommand("time help");
+
+
+
+$.setInterval(function() {
+    if (!$.moduleEnabled("./systems/timeSystem.js")) {
+        return;
+    }
+    
+    for (var i = 0; i < $.users.length; i++) {
+        var nick = $.users[i][0].toLowerCase();
+        
+        $.inidb.incr('time', nick, 60);
+        
+        if ($.hasGroupById(nick, 0) && parseInt($.inidb.get('time', nick)) >= 12600 * 10) {
+            $.setUserGroupById(nick, 1);
+            $.say($.username.resolve(nick) + " leveled up to a " + $.getGroupNameById(1) + "! Congratulations and thanks for staying with us!");
+        }
+    }
+}, 1000 * 60);

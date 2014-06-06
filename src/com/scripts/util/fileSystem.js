@@ -51,9 +51,20 @@ $.touchFile = function(path) {
 
 $.deleteFile = function(path) {
     try {
-    var f = new java.io.File(path);
-    f.deleteOnExit();
+        var f = new java.io.File(path);
+        f.deleteOnExit();
     } catch (e) {
         println("Failed to delete '" + path + "': " + e)
     }
+}
+
+$.fileExists = function(path) {
+    try {
+        var f = new java.io.File(path);
+        return f.exists();
+    } catch (e) {
+        println("Failed to delete '" + path + "': " + e)
+    }
+    
+    return false;
 }

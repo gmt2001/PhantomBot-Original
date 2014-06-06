@@ -116,7 +116,7 @@ public class IniStore implements ActionListener
             }
 
             FileUtils.writeStringToFile(new File("./inistore/" + fName + ".ini"), wdata);
-            
+
             changed.remove(fName);
         } catch (IOException ex)
         {
@@ -141,19 +141,24 @@ public class IniStore implements ActionListener
         if (!nextSave.after(new Date()) || force)
         {
             Object[] n = changed.keySet().toArray();
+
+            if (force)
+            {
+                n = files.keySet().toArray();
+            }
             
             System.out.println(">>>Saving " + n.length + " files");
 
             for (int i = 0; i < n.length; i++)
             {
-                if (changed.get((String) n[i]).after(nextSave) || changed.get((String) n[i]).equals(nextSave))
+                if (force || changed.get((String) n[i]).after(nextSave) || changed.get((String) n[i]).equals(nextSave))
                 {
                     SaveFile((String) n[i], files.get((String) n[i]));
                 }
             }
 
             nextSave.setTime(new Date().getTime() + saveInterval);
-            
+
             System.out.println(">>>Save complete");
         }
     }
@@ -162,7 +167,7 @@ public class IniStore implements ActionListener
     {
         LoadFile(fName, true);
     }
-    
+
     public String[] GetFileList()
     {
         Collection<File> f = FileUtils.listFiles(new File("./inistore/"), null, false);
@@ -236,7 +241,7 @@ public class IniStore implements ActionListener
         }
 
         key = key.replaceAll("=", "_eq_");
-        
+
         if (key.startsWith(";") || key.startsWith("["))
         {
             key = "_" + key;
@@ -254,7 +259,7 @@ public class IniStore implements ActionListener
     public void SetString(String fName, String section, String key, String value)
     {
         LoadFile(fName, false);
-        
+
         key = key.replaceAll("=", "_eq_");
 
         if (key.startsWith(";") || key.startsWith("["))
@@ -375,18 +380,18 @@ public class IniStore implements ActionListener
 
         SaveFile(fName, files.get(fName));
     }
-    
+
     public void RemoveFile(String fName)
     {
         File f = new File("./inistore/" + fName + ".ini");
-        
+
         f.delete();
     }
-    
+
     public boolean FileExists(String fName)
     {
         File f = new File("./inistore/" + fName + ".ini");
-        
+
         return f.exists();
     }
 

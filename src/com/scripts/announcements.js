@@ -154,6 +154,10 @@ $.on('ircChannelMessage', function(event) {
 })
 
 $.setInterval(function() {
+    if (!$.moduleEnabled("./announcements.js")) {
+        return;
+    }
+    
     if (messageCount >= $.announcemessages && messageTime + ($.announceinterval * 60 * 1000) < System.currentTimeMillis()){
         messageCount = 0;
         

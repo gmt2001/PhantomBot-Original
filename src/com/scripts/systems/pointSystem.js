@@ -157,19 +157,10 @@ $.registerChatCommand("pointinterval");
 $.registerChatCommand("pointsname");
 
 $.setInterval(function() {
-    for (var i = 0; i < $.users.length; i++) {
-        var nick = $.users[i][0].toLowerCase();
-        
-        $.inidb.incr('time', nick, 60);
-        
-        if ($.hasGroupById(nick, 0) && parseInt($.inidb.get('time', nick)) >= 12600 * 10) {
-            $.setUserGroupById(nick, 1);
-            $.say($.username.resolve(nick) + " leveled up to a " + $.getGroupNameById(1) + "! Congratulations and thanks for staying with us!");
-        }
+    if (!$.moduleEnabled("./systems/pointSystem.js")) {
+        return;
     }
-}, 1000 * 60);
-
-$.setInterval(function() {
+    
     if ($.lastpointinterval == null || $.lastpointinterval == undefined) {
         $.lastpointinterval = System.currentTimeMillis();
         return;

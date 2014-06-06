@@ -39,20 +39,20 @@ for(var name in $api) {
     }
 }
 
-var connected = false;
-var modeo = false;
+$.connected = false;
+$.modeo = false;
 
 $api.on($script, 'ircJoinComplete', function(event) {
-    connected = true;
+    $.connected = true;
     $.channel = event.getChannel();
 });
 
 $api.on($script, 'ircChannelUserMode', function(event) {
-    if (connected) {
+    if ($.connected) {
         if (event.getChannel().getName().equalsIgnoreCase($.channel.getName())) {
             if (event.getUser().equalsIgnoreCase($.botname) && event.getMode().equalsIgnoreCase("o")) {
                 if (event.getAdd() == true) {
-                    if (!modeo) {
+                    if (!$.modeo) {
                         var connectedMessage = $.inidb.get('settings', 'connectedMessage');
     
                         if (connectedMessage != null && !connectedMessage.isEmpty()) {
@@ -62,9 +62,9 @@ $api.on($script, 'ircChannelUserMode', function(event) {
                         }
                     }
                     
-                    modeo = true;
+                    $.modeo = true;
                 } else {
-                    modeo = false;
+                    $.modeo = false;
                 }
             }
         }
