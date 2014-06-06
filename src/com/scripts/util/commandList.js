@@ -23,7 +23,7 @@ $.registerChatCommand = function(command) {
         }
     }
     
-    for (i = 0; i < $.customCmmandList.length; i++)
+    for (i = 0; i < $.customCommandList.length; i++)
     {
         if ($.customCommandList[i][1].equalsIgnoreCase(command)) {
             if (!$.customCommandList[i][0].equalsIgnoreCase(scriptFile)) {
