@@ -166,7 +166,7 @@ $.setInterval(function() {
         return;
     }
     
-    if ($.lastpointinterval + ($.pointinterval * 60 * 1000) <= System.currentTimeMillis()) {
+    if ($.lastpointinterval + ($.pointinterval * 60 * 1000) >= System.currentTimeMillis()) {
         return;
     }
     
