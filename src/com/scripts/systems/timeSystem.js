@@ -82,7 +82,7 @@ $.setInterval(function() {
         
         $.inidb.incr('time', nick, 60);
         
-        if ($.hasGroupById(nick, 0) && parseInt($.inidb.get('time', nick)) >= 12600 * 10) {
+        if ($.getUserGroupId(nick) == 0 && parseInt($.inidb.get('time', nick)) >= 12600 * 10) {
             $.setUserGroupById(nick, 1);
             $.say($.username.resolve(nick) + " leveled up to a " + $.getGroupNameById(1) + "! Congratulations and thanks for staying with us!");
         }
