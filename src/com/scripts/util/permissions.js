@@ -292,53 +292,81 @@ $.on('command', function(event) {
 
 $.on('ircChannelMessage', function(event) {
     var sender = event.getSender().toLowerCase();
+    var found = false;
     
-    if ($.array.contains($.users, username)) {
+    for (var i = 0; i < $.users.length; i++) {
+        if ($.users[i][0].equalsIgnoreCase(sender)) {
+            $.users[i][1] = System.currentTimeMillis();
+            found = true;
+            break;
+        }
+    }
+        
+    if (!found) {
+        $.users.push(new Array(sender, System.currentTimeMillis()));
+    }
+});
+
+$.on('ircJoinComplete', function(event) {
+    var channel = event.getChannel();
+    var it = channel.getNicks().iterator();
+    var name;
+    var found = false;
+    
+    $.lastjoinpart = System.currentTimeMillis();
+    
+    while(it.hasNext() == true) {
+        name = it.next();
+        
         for (var i = 0; i < $.users.length; i++) {
-            if ($.users[i][0].equalsIgnoreCase(username)) {
-                $.users[i][1] = System.currentTimeMillis();
+            if ($.users[i][0].equalsIgnoreCase(name)) {
+                found = true;
                 break;
             }
         }
-    } else {
-        $.users.push(new Array(username, System.currentTimeMillis()));
+        
+        if (!found) {
+            $.users.push(new Array(name, System.currentTimeMillis()));
+        }
     }
 });
 
 $.on('ircChannelJoin', function(event) {
-    var u = $.username.resolve(event.getUser());
-    var username = u.toLowerCase();
-    var i;
+    var username = event.getUser().toLowerCase();
+    var found = false;
     
     $.lastjoinpart = System.currentTimeMillis();
     
-    if (!$.array.contains($.users, username)) {
+    for (var i = 0; i < $.users.length; i++) {
+        if ($.users[i][0].equalsIgnoreCase(username)) {
+            found = true;
+            break;
+        }
+    }
+        
+    if (!found) {
         $.users.push(new Array(username, System.currentTimeMillis()));
     }
 });
 
 $.on('ircChannelLeave', function(event) {
-    var u = $.username.resolve(event.getUser());
-    var username = u.toLowerCase();
+    var username = event.getUser().toLowerCase();
     var i;
+    var found = false;
     
     $.lastjoinpart = System.currentTimeMillis();
     
-    if ($.array.contains($.modeOUsers, username)) {
-        for (i = 0; i < $.modeOUsers.length; i++) {
-            if ($.modeOUsers[i].equalsIgnoreCase(username)) {
-                $.modeOUsers.splice(i, 1);
-                break;
-            }
+    for (i = 0; i < $.modeOUsers.length; i++) {
+        if ($.modeOUsers[i].equalsIgnoreCase(username)) {
+            $.modeOUsers.splice(i, 1);
+            break;
         }
     }
     
-    if ($.array.contains($.users, username)) {
-        for (i = 0; i < $.users.length; i++) {
-            if ($.users[i][0].equalsIgnoreCase(username)) {
-                $.users.splice(i, 1);
-                break;
-            }
+    for (i = 0; i < $.users.length; i++) {
+        if ($.users[i][0].equalsIgnoreCase(username)) {
+            $.users.splice(i, 1);
+            break;
         }
     }
 });

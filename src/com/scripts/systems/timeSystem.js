@@ -54,7 +54,6 @@ $.on('command', function(event) {
             if(time == null) time = 0;
 			
             var time2 = new Date; 
-            var seconds = time2.getTime () / 1000;
             var minutes = int((time / 60) % 60);
             var hours = int(time / 3600);
 
