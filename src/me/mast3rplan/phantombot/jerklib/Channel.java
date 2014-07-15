@@ -53,7 +53,8 @@ public class Channel
                 String msg = chan.messages.poll();
                 if (msg != null)
                 {
-                    if (allowSendMessages)
+                    if (allowSendMessages || msg.startsWith(".timeout ") || msg.startsWith(".ban ")
+                            || msg.startsWith(".unban ") || msg.equals(".clear") || msg.equals(".mods"))
                     {
                         chan.session.sayChannel(chan, msg);
                     }

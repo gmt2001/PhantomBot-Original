@@ -84,14 +84,23 @@ public class HTTPServer extends Thread {
                                     target = new File (webhome + "/" + request [1] + "/" + "index.html");
                                 }
                             }
-                            String content = IOUtils.toString (new FileInputStream (target));
+                            
+                            FileInputStream fis = new FileInputStream (target);
+                            int length = fis.available();
+                            
                             out.print ("HTTP/1.0 200 OK\n" +
                                     "ContentType: " + inferContentType (target.getPath ()) + "\n" +
                                     "Date: " + new Date () + "\n" +
                                     "Server: basic HTTP server\n" +
-                                    "Content-Length: " + content.length () + "\n" +
-                                    "\n" +
-                                    content + "\n");
+                                    "Content-Length: " + length + "\n" +
+                                    "\n");
+                            
+                            byte[] b = new byte[length + 1];
+                            fis.read(b);
+                            
+                            out.write(b, 0, length);
+                            
+                            out.print("\n");
                         }
                     }
                 }
@@ -125,6 +134,8 @@ public class HTTPServer extends Thread {
             return "text/html";
         } else if (path.endsWith (".css")) {
             return "text/css";
+        } else if (path.endsWith (".png")) {
+            return "image/png";
         }
         return "text/text";
     }

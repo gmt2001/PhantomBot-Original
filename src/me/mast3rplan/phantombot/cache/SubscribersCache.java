@@ -6,23 +6,24 @@ import com.google.common.collect.Maps;
 import java.util.List;
 import java.util.Map;
 import me.mast3rplan.phantombot.event.EventBus;
-import me.mast3rplan.phantombot.event.twitch.follower.TwitchFollowEvent;
-import me.mast3rplan.phantombot.event.twitch.follower.TwitchFollowsInitializedEvent;
-import me.mast3rplan.phantombot.event.twitch.follower.TwitchUnfollowEvent;
+import me.mast3rplan.phantombot.event.twitch.subscriber.TwitchSubscribeEvent;
+import me.mast3rplan.phantombot.event.twitch.subscriber.TwitchSubscribesInitializedEvent;
+import me.mast3rplan.phantombot.event.twitch.subscriber.TwitchUnsubscribeEvent;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class FollowersCache implements Runnable
+public class SubscribersCache implements Runnable
 {
 
-    private static final Map<String, FollowersCache> instances = Maps.newHashMap();
+    private static final Map<String, SubscribersCache> instances = Maps.newHashMap();
+    private boolean run = false;
 
-    public static FollowersCache instance(String channel)
+    public static SubscribersCache instance(String channel)
     {
-        FollowersCache instance = instances.get(channel);
+        SubscribersCache instance = instances.get(channel);
         if (instance == null)
         {
-            instance = new FollowersCache(channel);
+            instance = new SubscribersCache(channel);
 
             instances.put(channel, instance);
             return instance;
@@ -36,7 +37,7 @@ public class FollowersCache implements Runnable
     private Thread updateThread;
     private boolean firstUpdate = true;
 
-    public FollowersCache(String channel)
+    public SubscribersCache(String channel)
     {
         this.channel = channel;
         this.updateThread = new Thread(this);
@@ -45,7 +46,7 @@ public class FollowersCache implements Runnable
 
     public int getCount(String channel) throws Exception
     {
-        JSONObject j = TwitchAPIv3.instance().GetChannelFollows(channel, 1, (int) (1000000 + (System.currentTimeMillis() % 1000000)), false);
+        JSONObject j = TwitchAPIv3.instance().GetChannelSubscriptions(channel, 1, 0, false);
 
         if (j.getBoolean("_success"))
         {
@@ -57,8 +58,8 @@ public class FollowersCache implements Runnable
             } else
             {
                 throw new Exception("[HTTPErrorException] HTTP " + j.getInt("status") + " " + j.getString("error") + ". req="
-                        + j.getString("_type") + " " + j.getString("_url") + " " + j.getString("_post") + "   message="
-                        + j.getString("message"));
+                        + j.getString("_type") + " " + j.getString("_url") + " " + j.getString("_post") + "   content="
+                        + j.getString("_content"));
             }
         } else
         {
@@ -75,6 +76,11 @@ public class FollowersCache implements Runnable
     {
         return cache.get(username);
     }
+    
+    public void doRun(boolean run)
+    {
+        this.run = run;
+    }
 
     @Override
     public void run()
@@ -84,22 +90,25 @@ public class FollowersCache implements Runnable
             Thread.sleep(30 * 1000);
         } catch (InterruptedException e)
         {
-            System.out.println("FollowersCache.run>>Failed to initial sleep: [InterruptedException] " + e.getMessage());
+            System.out.println("SubscribersCache.run>>Failed to initial sleep: [InterruptedException] " + e.getMessage());
         }
 
         while (true)
         {
             try
             {
-                int newCount = getCount(channel);
-
-                if (newCount != count)
+                if (run && TwitchAPIv3.instance().HasOAuth())
                 {
-                    this.updateCache(newCount);
+                    int newCount = getCount(channel);
+
+                    if (newCount != count)
+                    {
+                        this.updateCache(newCount);
+                    }
                 }
             } catch (Exception e)
             {
-                System.out.println("FollowersCache.run>>Failed to update followers: " + e.getMessage());
+                System.out.println("SubscribersCache.run>>Failed to update subscribers: " + e.getMessage());
             }
 
             try
@@ -107,7 +116,7 @@ public class FollowersCache implements Runnable
                 Thread.sleep(30 * 1000);
             } catch (InterruptedException e)
             {
-                System.out.println("FollowersCache.run>>Failed to sleep: [InterruptedException] " + e.getMessage());
+                System.out.println("SubscribersCache.run>>Failed to sleep: [InterruptedException] " + e.getMessage());
             }
         }
     }
@@ -127,7 +136,7 @@ public class FollowersCache implements Runnable
                 @Override
                 public void run()
                 {
-                    JSONObject j = TwitchAPIv3.instance().GetChannelFollows(channel, 100, offset, true);
+                    JSONObject j = TwitchAPIv3.instance().GetChannelSubscriptions(channel, 100, offset, true);
 
                     if (j.getBoolean("_success"))
                     {
@@ -144,7 +153,7 @@ public class FollowersCache implements Runnable
                                         + j.getString("message"));
                             } catch (Exception e)
                             {
-                                System.out.println("FollowersCache.updateCache>>Failed to update followers: " + e.getMessage());
+                                System.out.println("SubscribersCache.updateCache>>Failed to update subscribers: " + e.getMessage());
                             }
                         }
                     } else
@@ -154,7 +163,7 @@ public class FollowersCache implements Runnable
                             throw new Exception("[" + j.getString("_exception") + "] " + j.getString("_exceptionMessage"));
                         } catch (Exception e)
                         {
-                            System.out.println("FollowersCache.updateCache>>Failed to update followers: " + e.getMessage());
+                            System.out.println("SubscribersCache.updateCache>>Failed to update subscribers: " + e.getMessage());
                         }
                     }
                 }
@@ -170,28 +179,28 @@ public class FollowersCache implements Runnable
 
         for (JSONObject response : responses)
         {
-            JSONArray followers = response.getJSONArray("follows");
+            JSONArray subscribers = response.getJSONArray("subscriptions");
 
-            if (followers.length() == 0)
+            if (subscribers.length() == 0)
             {
                 break;
             }
 
-            for (int j = 0; j < followers.length(); j++)
+            for (int j = 0; j < subscribers.length(); j++)
             {
-                JSONObject follower = followers.getJSONObject(j);
-                newCache.put(follower.getJSONObject("user").getString("name"), follower);
+                JSONObject subscriber = subscribers.getJSONObject(j);
+                newCache.put(subscriber.getJSONObject("user").getString("name"), subscriber);
             }
         }
 
-        List<String> followers = Lists.newArrayList();
-        List<String> unfollowers = Lists.newArrayList();
+        List<String> subscribers = Lists.newArrayList();
+        List<String> unsubscribers = Lists.newArrayList();
 
         for (String key : newCache.keySet())
         {
             if (cache == null || !cache.containsKey(key))
             {
-                followers.add(key);
+                subscribers.add(key);
             }
         }
 
@@ -201,7 +210,7 @@ public class FollowersCache implements Runnable
             {
                 if (!newCache.containsKey(key))
                 {
-                    unfollowers.add(key);
+                    unsubscribers.add(key);
                 }
             }
         }
@@ -209,20 +218,20 @@ public class FollowersCache implements Runnable
         this.cache = newCache;
         this.count = newCache.size();
 
-        for (String follower : followers)
+        for (String subscriber : subscribers)
         {
-            EventBus.instance().post(new TwitchFollowEvent(follower));
+            EventBus.instance().post(new TwitchSubscribeEvent(subscriber));
         }
 
-        for (String follower : unfollowers)
+        for (String subscriber : unsubscribers)
         {
-            EventBus.instance().post(new TwitchUnfollowEvent(follower));
+            EventBus.instance().post(new TwitchUnsubscribeEvent(subscriber));
         }
-        
+
         if (firstUpdate)
         {
             firstUpdate = false;
-            EventBus.instance().post(new TwitchFollowsInitializedEvent());
+            EventBus.instance().post(new TwitchSubscribesInitializedEvent());
         }
     }
 

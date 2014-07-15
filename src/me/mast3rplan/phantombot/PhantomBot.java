@@ -1,6 +1,7 @@
 package me.mast3rplan.phantombot;
 
 import com.gmt2001.IniStore;
+import com.gmt2001.TwitchAPIv3;
 import com.google.common.eventbus.Subscribe;
 import java.io.File;
 import java.io.IOException;
@@ -12,6 +13,7 @@ import java.util.TreeSet;
 import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 import me.mast3rplan.phantombot.cache.BannedCache;
 import me.mast3rplan.phantombot.cache.FollowersCache;
+import me.mast3rplan.phantombot.cache.SubscribersCache;
 import me.mast3rplan.phantombot.cache.UsernameCache;
 import me.mast3rplan.phantombot.console.ConsoleInputListener;
 import me.mast3rplan.phantombot.event.EventBus;
@@ -23,6 +25,7 @@ import me.mast3rplan.phantombot.event.irc.complete.IrcConnectCompleteEvent;
 import me.mast3rplan.phantombot.event.irc.complete.IrcJoinCompleteEvent;
 import me.mast3rplan.phantombot.event.irc.message.IrcChannelMessageEvent;
 import me.mast3rplan.phantombot.event.irc.message.IrcMessageEvent;
+import me.mast3rplan.phantombot.event.irc.message.IrcPrivateMessageEvent;
 import me.mast3rplan.phantombot.jerklib.Channel;
 import me.mast3rplan.phantombot.jerklib.ConnectionManager;
 import me.mast3rplan.phantombot.jerklib.Profile;
@@ -32,7 +35,6 @@ import me.mast3rplan.phantombot.script.Script;
 import me.mast3rplan.phantombot.script.ScriptEventManager;
 import me.mast3rplan.phantombot.script.ScriptManager;
 import me.mast3rplan.phantombot.store.DataStore;
-import me.mast3rplan.phantombot.twitch.TwitchAPI;
 import me.mast3rplan.phantombot.youtube.YoutubeAPI;
 import org.apache.commons.io.FileUtils;
 
@@ -41,6 +43,7 @@ public class PhantomBot implements Listener
 
     private final String username;
     private final String oauth;
+    private String apioauth;
     private final String channelName;
     private final String ownerName;
     private final String hostname;
@@ -54,6 +57,7 @@ public class PhantomBot implements Listener
     private Session session;
     private Channel channel;
     private FollowersCache followersCache;
+    private SubscribersCache subscribersCache;
     private MusicWebSocketServer mws;
     //private MusicHtmlServer mhs;
     private HTTPServer mhs;
@@ -63,10 +67,17 @@ public class PhantomBot implements Listener
     public static boolean enableDebugging = false;
     private Thread t;
 
-    public PhantomBot(String username, String oauth, String channel, String owner, boolean useTwitch)
+    public PhantomBot(String username, String oauth, String apioauth, String channel, String owner, boolean useTwitch)
     {
+        System.out.println();
+        System.out.println("PhantomBot Core build July 13, 2014");
+        System.out.println("by mast3rplan");
+        System.out.println("updated and improved by gmt2001");
+        System.out.println();
+        
         this.username = username;
         this.oauth = oauth;
+        this.apioauth = apioauth;
         this.channelName = channel;
         this.ownerName = owner;
 
@@ -74,6 +85,7 @@ public class PhantomBot implements Listener
         this.connectionManager = new ConnectionManager(profile);
 
         this.followersCache = FollowersCache.instance(channel.toLowerCase());
+        this.subscribersCache = SubscribersCache.instance(channel.toLowerCase());
 
         rng = new SecureRandom();
         bancache = new BannedCache();
@@ -104,6 +116,9 @@ public class PhantomBot implements Listener
             this.session = connectionManager.requestConnection("irc.twitch.tv", 6667, oauth);
         }
 
+        TwitchAPIv3.instance().SetClientID("fno0eqq3t8ivzr2c9vnwveu8nxgwh27");
+        TwitchAPIv3.instance().SetOAuth(apioauth);
+        
         this.session.addIRCEventListener(new IrcEventHandler());
     }
     
@@ -128,8 +143,9 @@ public class PhantomBot implements Listener
         Script.global.defineProperty("inidb", IniStore.instance(), 0);
         Script.global.defineProperty("bancache", bancache, 0);
         Script.global.defineProperty("username", UsernameCache.instance(), 0);
-        Script.global.defineProperty("twitch", TwitchAPI.instance(), 0);
+        Script.global.defineProperty("twitch", TwitchAPIv3.instance(), 0);
         Script.global.defineProperty("followers", followersCache, 0);
+        Script.global.defineProperty("subscribers", subscribersCache, 0);
         Script.global.defineProperty("botName", username, 0);
         Script.global.defineProperty("channelName", channelName, 0);
         Script.global.defineProperty("ownerName", ownerName, 0);
@@ -171,6 +187,8 @@ public class PhantomBot implements Listener
     @Subscribe
     public void onIRCConnectComplete(IrcConnectCompleteEvent event)
     {
+        session.sayRaw("JTVCLIENT");
+        
         session.join("#" + channelName.toLowerCase());
         System.out.println("Connected to server\nJoining channel #" + channelName.toLowerCase());
     }
@@ -180,6 +198,29 @@ public class PhantomBot implements Listener
     {
         this.channel = event.getChannel();
         System.out.println("Joined channel: " + event.getChannel().getName());
+        
+        session.sayChannel(this.channel, ".mods");
+    }
+    
+    @Subscribe
+    public void onIRCPrivateMessage(IrcPrivateMessageEvent event)
+    {
+        if (event.getSender().equalsIgnoreCase("jtv"))
+        {
+            String message = event.getMessage().toLowerCase();
+            
+            if (message.startsWith("the moderators of this room are: "))
+            {
+                String[] spl = message.substring(33).split(", ");
+                
+                for(int i = 0; i < spl.length; i++)
+                {
+                    if (spl[i].equalsIgnoreCase(this.username)) {
+                        channel.setAllowSendMessages(true);
+                    }
+                }
+            }
+        }
     }
 
     @Subscribe
@@ -200,6 +241,11 @@ public class PhantomBot implements Listener
         if (event.getUser().equalsIgnoreCase(username) && event.getMode().equalsIgnoreCase("o")
                 && event.getChannel().getName().equalsIgnoreCase(channel.getName()))
         {
+            if (!event.getAdd())
+            {
+                session.sayChannel(this.channel, ".mods");
+            }
+            
             channel.setAllowSendMessages(event.getAdd());
         }
     }
@@ -233,6 +279,29 @@ public class PhantomBot implements Listener
             IniStore.instance().SetString(spl[1], spl[2], spl[3], spl[4]);
             System.out.println(IniStore.instance().GetString(spl[1], spl[2], spl[3]));
         }
+        
+        if (message.equals("apioauth"))
+        {
+            try
+            {
+                System.out.print("Please enter the bot owner's api oauth string: ");
+                String newoauth = System.console().readLine().trim();
+                
+                TwitchAPIv3.instance().SetOAuth(newoauth);
+                apioauth = newoauth;
+                
+                String data = "";
+                data += "user=" + username + "\r\n";
+                data += "oauth=" + oauth + "\r\n";
+                data += "apioauth=" + apioauth + "\r\n";
+                data += "channel=" + channel.getName().replace("#", "") + "\r\n";
+                data += "owner=" + ownerName;
+
+                FileUtils.writeStringToFile(new File("./botlogin"), data);
+            } catch (IOException ex)
+            {
+            }
+        }
 
         if (message.equals("save"))
         {
@@ -260,6 +329,11 @@ public class PhantomBot implements Listener
         {
             command = commandString.substring(0, split);
             arguments = commandString.substring(split + 1);
+        }
+        
+        if (command.equalsIgnoreCase("save"))
+        {
+            IniStore.instance().SaveAll(true);
         }
 
         try
@@ -327,6 +401,7 @@ public class PhantomBot implements Listener
     {
         String user = "";
         String oauth = "";
+        String apioauth = "";
         String channel = "";
         String owner = "";
         boolean useTwitch = false;
@@ -350,6 +425,11 @@ public class PhantomBot implements Listener
                 if (lines[i].startsWith("oauth=") && lines[i].length() > 9)
                 {
                     oauth = lines[i].substring(6);
+                }
+
+                if (lines[i].startsWith("apioauth=") && lines[i].length() > 12)
+                {
+                    apioauth = lines[i].substring(9);
                 }
 
                 if (lines[i].startsWith("channel=") && lines[i].length() > 11)
@@ -403,6 +483,7 @@ public class PhantomBot implements Listener
             String data = "";
             data += "user=" + user + "\r\n";
             data += "oauth=" + oauth + "\r\n";
+            data += "apioauth=" + apioauth + "\r\n";
             data += "channel=" + channel + "\r\n";
             data += "owner=" + owner;
 
@@ -413,6 +494,7 @@ public class PhantomBot implements Listener
         {
             System.out.println("user='" + user + "'");
             System.out.println("oauth='" + oauth + "'");
+            System.out.println("apioauth='" + apioauth + "'");
             System.out.println("channel='" + channel + "'");
             System.out.println("owner='" + owner + "'");
         }
@@ -422,7 +504,7 @@ public class PhantomBot implements Listener
             useTwitch = true;
         }
 
-        PhantomBot phantomBot = new PhantomBot(user, oauth, channel, owner, useTwitch);
+        PhantomBot phantomBot = new PhantomBot(user, oauth, apioauth, channel, owner, useTwitch);
     }
 
     public static boolean isLink(String message)

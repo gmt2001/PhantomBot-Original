@@ -98,7 +98,7 @@ $.on('command', function(event) {
                 if (args.length < 2) {
                     $.say("Sets the interval between announcements. The current interval is " + $.announceinterval + " minutes. Must be at least 2. Set it with !announcement timer <new time in minutes>")
                 } else {
-                    if (!isNan(message) && parseInt(message) >= 2) {
+                    if (!isNaN(message) && parseInt(message) >= 2) {
                         $.inidb.set('announcements', 'interval', message);
                         $.announceinterval = parseInt(message);
                         
@@ -111,7 +111,7 @@ $.on('command', function(event) {
                 if (args.length < 2) {
                     $.say("Sets the minimum number of other chat messages required between announcements. Must be at least 5. The current amount is " + $.announcemessages + " minutes. Set it with !announcement reqmessages <new amount>")
                 } else {
-                    if (!isNan(message) && parseInt(message) >= 5) {
+                    if (!isNaN(message) && parseInt(message) >= 0) {
                         $.inidb.set('announcements', 'reqmessages', message);
                         $.announcemessages = parseInt(message);
                         

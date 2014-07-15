@@ -1,15 +1,21 @@
 package com.gmt2001;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.net.URLEncoder;
 import javax.net.ssl.HttpsURLConnection;
 import org.apache.commons.io.IOUtils;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
  * Communicates with Twitch Kraken server using the version 3 API
+ *
  * @author gmt2001
  */
 public class TwitchAPIv3
@@ -20,6 +26,7 @@ public class TwitchAPIv3
     private static final String header_accept = "application/vnd.twitchtv.v3+json";
     private static final int timeout = 5 * 1000;
     private String clientid = "";
+    private String oauth = "";
 
     private enum request_type
     {
@@ -32,35 +39,43 @@ public class TwitchAPIv3
         return instance;
     }
 
-    private JSONObject GetData(request_type type, String url)
+    private JSONObject GetData(request_type type, String url, boolean isJson)
     {
-        return GetData(type, url, "");
+        return GetData(type, url, "", isJson);
     }
 
-    private JSONObject GetData(request_type type, String url, String post)
+    private JSONObject GetData(request_type type, String url, String post, boolean isJson)
     {
-        return GetData(type, url, post, "");
+        return GetData(type, url, post, "", isJson);
     }
 
-    private JSONObject GetData(request_type type, String url, String post, String oauth)
+    private JSONObject GetData(request_type type, String url, String post, String oauth, boolean isJson)
     {
         JSONObject j = new JSONObject();
+        InputStream i = null;
 
         try
         {
             if (url.contains("?"))
             {
                 url += "&utcnow=" + System.currentTimeMillis();
-            }
-            else
+            } else
             {
                 url += "?utcnow=" + System.currentTimeMillis();
             }
-            
+
             URL u = new URL(url);
             HttpsURLConnection c = (HttpsURLConnection) u.openConnection();
 
             c.addRequestProperty("Accept", header_accept);
+
+            if (isJson)
+            {
+                c.addRequestProperty("Content-Type", "application/json");
+            } else
+            {
+                c.addRequestProperty("Content-Type", "application/x-www-form-urlencoded ");
+            }
 
             if (!clientid.isEmpty())
             {
@@ -78,20 +93,36 @@ public class TwitchAPIv3
             c.setDefaultUseCaches(false);
             c.setConnectTimeout(timeout);
 
+            if (!post.isEmpty())
+            {
+                c.setDoOutput(true);
+            }
+
             c.connect();
 
             if (!post.isEmpty())
             {
-                IOUtils.write(post, c.getOutputStream());
+                OutputStream o = c.getOutputStream();
+                IOUtils.write(post, o);
+                o.close();
             }
 
             String content;
-            
+
             if (c.getResponseCode() == 200)
             {
-                content = IOUtils.toString(c.getInputStream(), c.getContentEncoding());
-            } else {
-                content = IOUtils.toString(c.getErrorStream(), c.getContentEncoding());
+                i = c.getInputStream();
+            } else
+            {
+                i = c.getErrorStream();
+            }
+
+            if (c.getResponseCode() == 204 || i == null || i.available() == 0)
+            {
+                content = "{}";
+            } else
+            {
+                content = IOUtils.toString(i, c.getContentEncoding());
             }
 
             j = new JSONObject(content);
@@ -102,6 +133,10 @@ public class TwitchAPIv3
             j.put("_http", c.getResponseCode());
             j.put("_exception", "");
             j.put("_exceptionMessage", "");
+            j.put("_content", content);
+        } catch (NullPointerException ex)
+        {
+            ex.printStackTrace();
         } catch (MalformedURLException ex)
         {
             j.put("_success", false);
@@ -111,6 +146,7 @@ public class TwitchAPIv3
             j.put("_http", 0);
             j.put("_exception", "MalformedURLException");
             j.put("_exceptionMessage", ex.getMessage());
+            j.put("_content", "");
         } catch (SocketTimeoutException ex)
         {
             j.put("_success", false);
@@ -120,6 +156,7 @@ public class TwitchAPIv3
             j.put("_http", 0);
             j.put("_exception", "SocketTimeoutException");
             j.put("_exceptionMessage", ex.getMessage());
+            j.put("_content", "");
         } catch (IOException ex)
         {
             j.put("_success", false);
@@ -129,6 +166,7 @@ public class TwitchAPIv3
             j.put("_http", 0);
             j.put("_exception", "IOException");
             j.put("_exceptionMessage", ex.getMessage());
+            j.put("_content", "");
         } catch (Exception ex)
         {
             j.put("_success", false);
@@ -138,18 +176,53 @@ public class TwitchAPIv3
             j.put("_http", 0);
             j.put("_exception", "Exception [" + ex.getClass().getName() + "]");
             j.put("_exceptionMessage", ex.getMessage());
+            j.put("_content", "");
+        }
+
+        if (i != null)
+        {
+            try
+            {
+                i.close();
+            } catch (IOException ex)
+            {
+                j.put("_success", false);
+                j.put("_type", type.name());
+                j.put("_url", url);
+                j.put("_post", post);
+                j.put("_http", 0);
+                j.put("_exception", "IOException");
+                j.put("_exceptionMessage", ex.getMessage());
+                j.put("_content", "");
+            }
         }
 
         return j;
     }
-    
+
     /**
      * Sets the Twitch API Client-ID header
-     * @param clientid 
+     *
+     * @param clientid
      */
     public void SetClientID(String clientid)
     {
         this.clientid = clientid;
+    }
+
+    /**
+     * Sets the Twitch API OAuth header
+     *
+     * @param clientid
+     */
+    public void SetOAuth(String oauth)
+    {
+        this.oauth = oauth.replace("oauth:", "");
+    }
+
+    public boolean HasOAuth()
+    {
+        return !this.oauth.isEmpty();
     }
 
     /**
@@ -160,7 +233,48 @@ public class TwitchAPIv3
      */
     public JSONObject GetChannel(String channel)
     {
-        return GetData(request_type.GET, base_url + "/channels/" + channel);
+        return GetData(request_type.GET, base_url + "/channels/" + channel, false);
+    }
+
+    /**
+     * Updates the status and game of a channel
+     *
+     * @param channel
+     * @param status
+     * @param game
+     * @param delay -1 to not update
+     * @return
+     */
+    public JSONObject UpdateChannel(String channel, String status, String game, int delay)
+    {
+        return UpdateChannel(channel, this.oauth, status, game, delay);
+    }
+
+    /**
+     * Updates the status and game of a channel
+     *
+     * @param channel
+     * @param oauth
+     * @param status
+     * @param game
+     * @return
+     */
+    public JSONObject UpdateChannel(String channel, String oauth, String status, String game)
+    {
+        return UpdateChannel(channel, oauth, status, game, -1);
+    }
+
+    /**
+     * Updates the status and game of a channel
+     *
+     * @param channel
+     * @param status
+     * @param game
+     * @return
+     */
+    public JSONObject UpdateChannel(String channel, String status, String game)
+    {
+        return UpdateChannel(channel, this.oauth, status, game, -1);
     }
 
     /**
@@ -185,7 +299,25 @@ public class TwitchAPIv3
 
         if (!game.isEmpty())
         {
-            c.put("game", game);
+            JSONObject g = SearchGame(game);
+            String gn = game;
+
+            if (g.getBoolean("_success"))
+            {
+                if (g.getInt("_http") == 200)
+                {
+                    JSONArray a = g.getJSONArray("games");
+
+                    if (a.length() > 0)
+                    {
+                        JSONObject o = a.getJSONObject(0);
+
+                        gn = o.getString("name");
+                    }
+                }
+            }
+
+            c.put("game", gn);
         }
 
         if (delay >= 0)
@@ -195,7 +327,29 @@ public class TwitchAPIv3
 
         j.put("channel", c);
 
-        return GetData(request_type.PUT, base_url + "/channels/" + channel, j.toString(), oauth);
+        return GetData(request_type.PUT, base_url + "/channels/" + channel, j.toString(), oauth, true);
+    }
+
+    public JSONObject SearchGame(String game)
+    {
+        try
+        {
+            return GetData(request_type.GET, base_url + "/search/games?q=" + URLEncoder.encode(game, "UTF-8") + "&type=suggest", false);
+        } catch (UnsupportedEncodingException ex)
+        {
+            JSONObject j = new JSONObject();
+
+            j.put("_success", false);
+            j.put("_type", "");
+            j.put("_url", "");
+            j.put("_post", "");
+            j.put("_http", 0);
+            j.put("_exception", "Exception [" + ex.getClass().getName() + "]");
+            j.put("_exceptionMessage", ex.getMessage());
+            j.put("_content", "");
+
+            return j;
+        }
     }
 
     /**
@@ -211,15 +365,54 @@ public class TwitchAPIv3
     {
         limit = Math.max(0, Math.min(limit, 100));
         offset = Math.max(0, offset);
-        
+
         String dir = "desc";
-        
+
         if (ascending)
         {
             dir = "asc";
         }
 
-        return GetData(request_type.GET, base_url + "/channels/" + channel + "/follows?limit=" + limit + "&offset=" + offset + "&direction=" + dir);
+        return GetData(request_type.GET, base_url + "/channels/" + channel + "/follows?limit=" + limit + "&offset=" + offset + "&direction=" + dir, false);
+    }
+
+    /**
+     * Gets an object listing the users subscribing to a channel
+     *
+     * @param channel
+     * @param limit between 1 and 100
+     * @param offset
+     * @param ascending
+     * @return
+     */
+    public JSONObject GetChannelSubscriptions(String channel, int limit, int offset, boolean ascending)
+    {
+        return GetChannelSubscriptions(channel, limit, offset, ascending, this.oauth);
+    }
+
+    /**
+     * Gets an object listing the users subscribing to a channel
+     *
+     * @param channel
+     * @param limit between 1 and 100
+     * @param offset
+     * @param ascending
+     * @param oauth
+     * @return
+     */
+    public JSONObject GetChannelSubscriptions(String channel, int limit, int offset, boolean ascending, String oauth)
+    {
+        limit = Math.max(0, Math.min(limit, 100));
+        offset = Math.max(0, offset);
+
+        String dir = "desc";
+
+        if (ascending)
+        {
+            dir = "asc";
+        }
+
+        return GetData(request_type.GET, base_url + "/channels/" + channel + "/subscriptions?limit=" + limit + "&offset=" + offset + "&direction=" + dir, oauth, false);
     }
 
     /**
@@ -230,7 +423,7 @@ public class TwitchAPIv3
      */
     public JSONObject GetStream(String channel)
     {
-        return GetData(request_type.GET, base_url + "/streams/" + channel);
+        return GetData(request_type.GET, base_url + "/streams/" + channel, false);
     }
 
     /**
@@ -241,6 +434,31 @@ public class TwitchAPIv3
      */
     public JSONObject GetUser(String user)
     {
-        return GetData(request_type.GET, base_url + "/users/" + user);
+        return GetData(request_type.GET, base_url + "/users/" + user, false);
+    }
+
+    /**
+     * Runs a commercial
+     *
+     * @param channel
+     * @param length (30, 60, 90)
+     * @return
+     */
+    public JSONObject RunCommercial(String channel, int length)
+    {
+        return RunCommercial(channel, length, this.oauth);
+    }
+
+    /**
+     * Runs a commercial
+     *
+     * @param channel
+     * @param length (30, 60, 90)
+     * @param oauth
+     * @return
+     */
+    public JSONObject RunCommercial(String channel, int length, String oauth)
+    {
+        return GetData(request_type.POST, base_url + "/channels/" + channel + "/commercial", "length=" + length, oauth, false);
     }
 }

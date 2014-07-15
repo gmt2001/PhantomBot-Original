@@ -290,7 +290,7 @@ if ($.inidb.GetBoolean("init", "initialsettings", "loaded") == false
     $.loadScript('./util/initialsettings.js');
 }
 
-$.upgrade_version = 1;
+$.upgrade_version = 2;
 if ($.inidb.GetInteger("init", "upgrade", "version") < $.upgrade_version) {
     $.loadScript('./util/upgrade.js');
 }
@@ -301,6 +301,7 @@ $.loadScript('./util/chatModerator.js');
 $.loadScript('./announcements.js');
 
 $.loadScript('./followHandler.js');
+$.loadScript('./subscribeHandler.js');
 $.loadScript('./kappaTrigger.js'); 
 $.loadScript('./youtubePlayer.js');
 
@@ -317,11 +318,20 @@ $.loadScript('./commands/quoteCommand.js');
 $.loadScript('./commands/randomCommand.js');
 $.loadScript('./commands/rollCommand.js');
 $.loadScript('./commands/killCommand.js');
+$.loadScript('./commands/streamCommands.js');
 $.loadScript('./commands/top10Command.js');
 
 if (enableRedis2IniConversion && $.inidb.GetBoolean("init", "redis2ini", "converted") == false) {
     $.loadScript('./util/redis2inidb.js'); 
 }
+
+$api.on($script, 'ircChannelMessage', function(event) {
+    var sender = event.getSender();
+    var username = $.username.resolve(sender);
+    var message = event.getMessage();
+
+    println(username + ": " + message);
+});
 
 $api.on($script, 'command', function(event) {
     var sender = event.getSender();

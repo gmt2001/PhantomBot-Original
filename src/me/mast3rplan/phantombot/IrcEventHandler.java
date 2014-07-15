@@ -56,7 +56,6 @@ public class IrcEventHandler implements IRCEventListener
                 break;
             case PRIVATE_MESSAGE:
                 MessageEvent pmessageEvent = (MessageEvent) event;
-                System.out.println("Message from User " + pmessageEvent.getNick());
                 String pusername = pmessageEvent.getNick();
                 String pmessage = pmessageEvent.getMessage();
 

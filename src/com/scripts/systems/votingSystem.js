@@ -18,7 +18,7 @@ $.endPoll = function () {
         var high = 0;
         var options = $var.pollOptions;
         for (var i=0; i<options.length; ++i) {
-            var count = $.pollResults.get (options[i]).intValue();
+            var count = $.pollResults.get (options[i].toLowerCase()).intValue();
             if (high < count) {
                 high = count;
                 results = [options[i]];
@@ -46,7 +46,7 @@ $.runPoll = function (callback, options, time, pollMaster) {
         
     for (var i=0; i<options.length; ++i) {
         var option = options [i];
-        $.pollResults.put (options [i], 0);
+        $.pollResults.put (option.toLowerCase(), 0);
     }
     $var.pollOptions = options;
     $var.pollMaster = pollMaster;
@@ -91,7 +91,7 @@ $.on('command', function(event) {
         if ($.pollVoters.contains (sender)) {
             $.say (username + ", you have already voted");
         }
-        if (!makeVote (args [0])) {
+        if (!makeVote (args [0].toLowerCase())) {
             $.say ("'" + args [0] + "' is not a valid option");
         } else {
             $.pollVoters.add (sender);

@@ -33,6 +33,10 @@ $.hasModeO = function (user) {
     return $.array.contains($.modeOUsers, user.toLowerCase());
 }
 
+$.isCaster = function (user) {
+    return $.hasGroupByName(user, "Caster") || $.isMod(user);
+}
+
 $.hasGroupById = function(user, id) {
     return $.getUserGroupId(user) >= id;
 }
@@ -94,11 +98,15 @@ if (groups[5] == undefined || groups[5] == null) {
 }
 
 if (groups[6] == undefined || groups[6] == null) {
-    groups[6] = "Moderator";
+    groups[6] = "Caster";
 }
 
 if (groups[7] == undefined || groups[7] == null) {
-    groups[7] = "Administrator";
+    groups[7] = "Moderator";
+}
+
+if (groups[8] == undefined || groups[8] == null) {
+    groups[8] = "Administrator";
 }
  
 $.getGroupNameById = function(id) {
@@ -221,6 +229,20 @@ $.on('command', function(event) {
                 
                 if (!allowed) {
                     $.say("You cant change the name of the 'Moderator' group without first changing another group to 'Moderator'!");
+                }
+            }
+            
+            if ($.getGroupNameById(parseInt(args[0])).equals("Caster")) {
+                allowed = false;
+                
+                for (i = 0; i < groups.length; i++) {
+                    if (groups[i].equals("Caster") && i != parseInt(args[0])) {
+                        allowed = true;
+                    }
+                }
+                
+                if (!allowed) {
+                    $.say("You cant change the name of the 'Caster' group without first changing another group to 'Caster'!");
                 }
             }
             

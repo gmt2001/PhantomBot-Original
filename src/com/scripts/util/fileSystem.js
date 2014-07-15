@@ -15,9 +15,9 @@ $.readFile = function(path) {
     return lines;
 }
 
-$.saveArray = function(array, path) {
+$.saveArray = function(array, path, append) {
     try {
-        var fos = new java.io.FileOutputStream (path);
+        var fos = new java.io.FileOutputStream (path, append);
         var ps = new java.io.PrintStream (fos);
         var l=array.length;
         for (var i=0; i<l; ++i) {

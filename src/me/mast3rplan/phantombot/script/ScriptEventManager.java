@@ -23,6 +23,7 @@ public class ScriptEventManager implements Listener
         "me.mast3rplan.phantombot.event.command",
         "me.mast3rplan.phantombot.event.console",
         "me.mast3rplan.phantombot.event.twitch.follower",
+        "me.mast3rplan.phantombot.event.twitch.subscriber",
         "me.mast3rplan.phantombot.event.irc",
         "me.mast3rplan.phantombot.event.irc.channel",
         "me.mast3rplan.phantombot.event.irc.complete",

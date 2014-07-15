@@ -36,6 +36,7 @@ tldPattern += "y(e|t)|";
 tldPattern += "z(a|m|one|w)";
 tldPattern += otherTlds + ")";
 var linkPattern = "(http://|https://|ftp://)?(www\\.)?(\\w+\\.)+" + tldPattern + "(\\.\\w{1,4})?(:[0-9]{1,5})?((/|\\?)|(?![\\x20-\\x7E]))[\\x20-\\x7E]*";
+var emailPattern = "(mailto:)?[\\w\\.]+\\x40(\\w+\\.)+" + tldPattern + "((\\.\\w{1,4})?(?![\\x20-\\x7E]))";
 var otherPattern = "(magnet:|mailto:|ed2k://|irc://|ircs://|skype:|ymsgr:|xfire:|steam:|aim:|spotify:)[\\x20-\\x7E]*";
 
 $.hasLinks = function(event, fallback) {
@@ -43,7 +44,8 @@ $.hasLinks = function(event, fallback) {
         return event.isLink() == true;
     } else {
         var m1 = Pattern.compile(linkPattern).matcher(event.getMessage().toLowerCase());
-        var m2 = Pattern.compile(otherPattern).matcher(event.getMessage().toLowerCase());
+        var m2 = Pattern.compile(emailPattern).matcher(event.getMessage().toLowerCase());
+        var m3 = Pattern.compile(otherPattern).matcher(event.getMessage().toLowerCase());
         var s;
         var time = new java.text.SimpleDateFormat().format(new java.util.Date());
 
@@ -55,9 +57,18 @@ $.hasLinks = function(event, fallback) {
 
            return true;
         }
-
+        
         if (m2.find() == true) {
             s = m2.group();
+            
+            println(">>>>Matched link on emailPattern from " + event.getSender() + ": " + s);
+            $.writeToFile(">>>>[" + time + "] Matched link on emailPattern from " + event.getSender() + ": " + s, "linkMatches.txt", true);
+
+            return true;
+        }
+
+        if (m3.find() == true) {
+            s = m3.group();
             
             println(">>>>Matched link on otherPattern from " + event.getSender() + ": " + s);
             $.writeToFile(">>>>[" + time + "] Matched link on otherPattern from " + event.getSender() + ": " + s, "linkMatches.txt", true);

@@ -112,9 +112,9 @@ $.on('command', function(event) {
         } 
     }
 
-    if (command.equalsIgnoreCase("title")) {
+    if (command.equalsIgnoreCase("mytitle")) {
         if (!$.moduleEnabled("./systems/pointSystem.js")) {
-            $.say("You can not use !title becasue points are disabled!");
+            $.say("You can not use !mytitle because points are disabled!");
             return;
         }
         
@@ -134,7 +134,7 @@ $.on('command', function(event) {
 $.registerChatCommand("level");
 $.registerChatCommand("exp");
 $.registerChatCommand("exp help");
-$.registerChatCommand("title");
+$.registerChatCommand("mytitle");
 
 $.getTitle = function (username) {
     var exp = $.inidb.get('exp', username);
