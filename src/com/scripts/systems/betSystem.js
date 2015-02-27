@@ -38,10 +38,12 @@ $.on('command', function(event) {
                     
                     optionString = optionString + "'" + boptions[i].trim().toLowerCase() + "'";
                 }
+                
+                $.logEvent("betSystem.js", 42, username + " opened a betting session with options " + optionString);
 
                 $var.bet_table = { };
                 $var.bet_running = true;
-                $.say(" Bets are open for " + optionString + " >> Awaiting players to wager their points with '!bet <amount> <option>'");
+                $.say(" Bets are open for " + optionString + " >> Awaiting players to wager their points with '!bet <wager> <option>'");
                 $var.bet_optionsString = optionString;
 
                 $var.bet_id = System.currentTimeMillis();
@@ -63,6 +65,8 @@ $.on('command', function(event) {
                 }
                 
                 if (parseInt(args[1]) >= 60) {
+                    $.logEvent("betSystem.js", 68, username + " set the betting session timer to " + args[1] + " seconds");
+                    
                     betlength = parseInt(args[1]) * 1000;
                     
                     $.say("The betting time is now set to " + args[1] + " seconds!")
@@ -84,6 +88,8 @@ $.on('command', function(event) {
                     $.say($.username.resolve(sender) + ", " + winning + " doesn't match any of the options.");
                     return;
                 }
+                
+                $.logEvent("betSystem.js", 92, username + " closed the betting session and declared the winning option to be " + winning);
 
                 var pot = 0;
                 var totalwin = 0;
@@ -193,13 +199,13 @@ $.on('command', function(event) {
                 if (betstart + betlength < System.currentTimeMillis()) {
                     $.say("[BET CLOSED] >> Type '!bet close <option>' to declare a winner! Options are: " + $var.bet_optionsString + "");
                 } else {
-                    $.say("[BET IN PROGRESS] >> Type '!bet <option> <#>' to participate, Options are: " + $var.bet_optionsString + "");
+                    $.say("[BET IN PROGRESS] >> Type '!bet <wager> <option>' to participate, Options are: " + $var.bet_optionsString + "");
                 }
             } else {
-                $.say("Bet Commands >> '!bet open <option1...> <...optionN>' -- '!bet time <time in seconds>' -- '!bet close <option>' -- '!bet <amount> <option>'");
+                $.say("Bet Commands >> '!bet open <option1...> <...optionN>' -- '!bet time <time in seconds>' -- '!bet close <option>' -- '!bet <wager> <option>'");
             }
         }
     }
 });
 
-$.registerChatCommand("bet");
+$.registerChatCommand("./systems/betSystem.js", "bet");

@@ -23,6 +23,7 @@ public class ScriptEventManager implements Listener
         "me.mast3rplan.phantombot.event.command",
         "me.mast3rplan.phantombot.event.console",
         "me.mast3rplan.phantombot.event.twitch.follower",
+        "me.mast3rplan.phantombot.event.twitch.host",
         "me.mast3rplan.phantombot.event.twitch.subscriber",
         "me.mast3rplan.phantombot.event.irc",
         "me.mast3rplan.phantombot.event.irc.channel",
@@ -30,6 +31,11 @@ public class ScriptEventManager implements Listener
         "me.mast3rplan.phantombot.event.irc.message",
         "me.mast3rplan.phantombot.event.musicplayer"
     };
+    
+    private ScriptEventManager()
+    {
+        Thread.setDefaultUncaughtExceptionHandler(com.gmt2001.UncaughtExceptionHandler.instance());
+    }
 
     private static class EventHandlerEntry
     {
@@ -56,7 +62,7 @@ public class ScriptEventManager implements Listener
                 {
                     if (PhantomBot.enableDebugging)
                     {
-                        System.out.println(">>>[DEBUG] Dispatching event " + entry.eventClass.getName());
+                        com.gmt2001.Console.out.println(">>>[DEBUG] Dispatching event " + entry.eventClass.getName());
                     }
 
                     entry.handler.handle(event);
@@ -64,8 +70,8 @@ public class ScriptEventManager implements Listener
             }
         } catch (Exception e)
         {
-            System.out.println(">>>[DEBUG] Failed to dispatch event " + event.getClass().getName());
-            e.printStackTrace();
+            com.gmt2001.Console.out.println(">>>[DEBUG] Failed to dispatch event " + event.getClass().getName());
+            com.gmt2001.Console.err.printStackTrace(e);
         }
     }
 

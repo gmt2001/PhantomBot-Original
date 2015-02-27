@@ -3,6 +3,8 @@ package com.gmt2001;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map.Entry;
 import javax.net.ssl.HttpsURLConnection;
 import org.apache.commons.io.IOUtils;
 
@@ -23,16 +25,18 @@ public class HttpRequest
 
     private HttpRequest()
     {
+        Thread.setDefaultUncaughtExceptionHandler(com.gmt2001.UncaughtExceptionHandler.instance());
     }
 
-    public static HttpResponse getData(RequestType type, String url, String post)
+    public static HttpResponse getData(RequestType type, String url, String post, HashMap<String, String> headers)
     {
         HttpResponse r = new HttpResponse();
         boolean isHttps = url.startsWith("https");
-        
+
         r.type = type;
         r.url = url;
         r.post = post;
+        r.headers = headers;
 
         try
         {
@@ -42,10 +46,20 @@ public class HttpRequest
             {
                 HttpsURLConnection h = ((HttpsURLConnection) u.openConnection());
 
+                for (Entry<String, String> e : headers.entrySet())
+                {
+                    h.addRequestProperty(e.getKey(), e.getValue());
+                }
+                
                 h.setRequestMethod(type.name());
                 h.setUseCaches(false);
                 h.setDefaultUseCaches(false);
                 h.setConnectTimeout(timeout);
+
+                if (!post.isEmpty())
+                {
+                    h.setDoOutput(true);
+                }
 
                 h.connect();
 
@@ -69,10 +83,20 @@ public class HttpRequest
             {
                 HttpURLConnection h = ((HttpURLConnection) u.openConnection());
 
+                for (Entry<String, String> e : headers.entrySet())
+                {
+                    h.addRequestProperty(e.getKey(), e.getValue());
+                }
+
                 h.setRequestMethod(type.name());
                 h.setUseCaches(false);
                 h.setDefaultUseCaches(false);
                 h.setConnectTimeout(timeout);
+
+                if (!post.isEmpty())
+                {
+                    h.setDoOutput(true);
+                }
 
                 h.connect();
 
@@ -96,8 +120,10 @@ public class HttpRequest
         } catch (IOException ex)
         {
             r.success = false;
-            
-            ex.printStackTrace();
+            r.httpCode = 0;
+            r.exception = ex.getMessage();
+
+            com.gmt2001.Console.err.printStackTrace(ex);
         }
 
         return r;

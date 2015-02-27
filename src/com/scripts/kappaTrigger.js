@@ -8,48 +8,6 @@ $.on('ircChannelMessage', function(event) {
     if (message.indexOf(emote) != -1) {
         $.say(emote);
     }
-    
-    emote = "im back";
-
-    if (message.indexOf(emote) != -1) {
-        $.say("im front");
-    }
-    
-    emote = "im bak";
-
-    if (message.indexOf(emote) != -1) {
-        $.say("im front");
-    }
-    
-    emote = "i'm back";
-
-    if (message.indexOf(emote) != -1) {
-        $.say("im front");
-    }
-    
-    emote = "i'm bak";
-
-    if (message.indexOf(emote) != -1) {
-        $.say("im front");
-    }
-    
-    emote = "I'm back";
-
-    if (message.indexOf(emote) != -1) {
-        $.say("im front");
-    }
-    
-    emote = "back"
-    
-    if (message.toLowerCase().startsWith(emote)) {
-        $.say("front")
-    }
-    
-    emote = "bak"
-    
-    if (message.toLowerCase().startsWith(emote)) {
-        $.say("front")
-    }
 
     var helix = "Helix";
     var messages = new Array (0);

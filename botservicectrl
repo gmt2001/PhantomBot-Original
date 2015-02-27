@@ -1,0 +1,111 @@
+#!/bin/bash
+#
+# [botname] Starts/stops [botname]
+#
+# chkconfig: 345 90 20
+# description: Starts/stops [botname]
+# processname: [botname]
+
+. /etc/rc.d/init.d/functions
+
+botname=[botname]
+botuser=[botuser]
+runlevel=$(set -- $(runlevel); eval "echo \$$#" )
+folder=[botfolder]
+pidfile=/var/run/PhantomBotJ.${botuser}.pid
+
+stop()
+{
+	echo -n $"Stopping ${botname}: "
+
+	if [ -e ${pidfile} ]; then
+		pid=$(cat ${pidfile})
+		kill ${pid}
+
+		counter=0
+		while [[ $( kill -0 ${pid} 2>/dev/null ) && $counter -lt 20 ]]; do
+			sleep 0.5
+			counter=$[counter + 1]
+		done
+
+		if [[ $( kill -0 ${pid} 2>/dev/null ) ]]; then
+			kill -9 ${pid}
+
+			sleep 2
+
+			rm -f ${pidfile} 2>/dev/null
+
+			if ( kill -0 ${pid} 2>/dev/null ); then
+       			    failure
+	       		else
+		       	    warning
+			fi
+		else
+			success
+		fi
+	else
+		echo $"no pid file"
+	fi
+
+	echo
+}
+
+start()
+{
+	echo -n $"Starting ${botname}: "
+
+	rm -f ${pidfile} 2>/dev/null
+	${folder}/launch.sh &
+
+	counter=0
+	while [[ ! -e ${pidfile} && $counter -lt 20 ]]; do
+		sleep 0.5
+		counter=$[counter + 1]
+	done
+
+
+	if [ -e ${pidfile} ]; then
+		success
+	else
+		failure
+	fi
+
+	echo
+}
+
+status()
+{
+	if [ -e ${pidfile} ]; then
+		if ( kill -0 $(cat ${pidfile}) 2>/dev/null ); then
+			echo -n $"${botname} is running ("
+			echo -n $(cat ${pidfile})
+			echo $")"
+		else
+			echo -n $"${botname} has been killed ("
+			echo -n $(cat ${pidfile})
+			echo $")"
+		fi
+	else
+		echo $"${botname} is not running"
+	fi
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		$0 stop && $0 start || exit 1
+		;;
+	status)
+		status
+		;;
+	*)
+		echo $"Usage: $0 {start|stop|restart|status}"
+		exit 2
+esac
+
+exit 0

@@ -15,9 +15,11 @@ import org.java_websocket.server.WebSocketServer;
 public class MusicWebSocketServer extends WebSocketServer {
     public MusicWebSocketServer(int port) {
         super(new InetSocketAddress(port));
+        
+        Thread.setDefaultUncaughtExceptionHandler(com.gmt2001.UncaughtExceptionHandler.instance());
 
         this.start();
-        System.out.println("MusicSockServer accepting connections on port " + port);
+        com.gmt2001.Console.out.println("MusicSockServer accepting connections on port " + port);
     }
 
     @Override
@@ -50,7 +52,7 @@ public class MusicWebSocketServer extends WebSocketServer {
 
     @Override
     public void onError(WebSocket webSocket, Exception e) {
-        e.printStackTrace();
+        com.gmt2001.Console.err.printStackTrace(e);
     }
     
     public void dispose() {

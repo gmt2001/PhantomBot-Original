@@ -36,6 +36,8 @@ public class IniStore implements ActionListener
     {
         t = new Timer((int) saveInterval, this);
         t2 = new Timer(1, this);
+        
+        Thread.setDefaultUncaughtExceptionHandler(com.gmt2001.UncaughtExceptionHandler.instance());
 
         t.start();
     }
@@ -147,7 +149,7 @@ public class IniStore implements ActionListener
                 n = files.keySet().toArray();
             }
             
-            System.out.println(">>>Saving " + n.length + " files");
+            com.gmt2001.Console.out.println(">>>Saving " + n.length + " files");
 
             for (int i = 0; i < n.length; i++)
             {
@@ -159,7 +161,7 @@ public class IniStore implements ActionListener
 
             nextSave.setTime(new Date().getTime() + saveInterval);
 
-            System.out.println(">>>Save complete");
+            com.gmt2001.Console.out.println(">>>Save complete");
         }
     }
 

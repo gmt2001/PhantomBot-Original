@@ -1,13 +1,13 @@
 $.on('command', function(event) {
     var sender = event.getSender();
+    var username = $.username.resolve(sender);
     var command = event.getCommand();
     var argsString = event.getArguments().trim();
     var num_quotes = parseInt($.inidb.get("quotes", "num_quotes"));
-    var quote;
     var num;
     
     if(command.equalsIgnoreCase("quote")) {
-         if (argsString.length() > 0) {
+         if ($.strlen(argsString) > 0) {
                 num = parseInt(argsString);
         } else {
                 num = $.rand(num_quotes);
@@ -36,6 +36,8 @@ $.on('command', function(event) {
             num_quotes = 0;
         }
         
+        $.logEvent("quoteCommand.js", 39, username + " added a quote (#" + num_quotes + "): " + argsString);
+        
         $.inidb.incr("quotes", "num_quotes", 1);
         $.inidb.set("quotes", "quote_" + num_quotes, argsString);
         
@@ -53,10 +55,12 @@ $.on('command', function(event) {
             return;
         }
         
-        if (!argsString.isEmpty()) {
-            $.say("Usage: !delquote <id>");
+        if (isNaN(argsString)) {
+            $.say("There are currently " + num_quotes + " quotes. Usage: !delquote <id>");
             return;
         }
+        
+        $.logEvent("quoteCommand.js", 63, username + " deleted quote (#" + argsString + "): " + $.inidb.get('quotes', 'quote_' + argsString));
         
         if (num_quotes > 1) {
             for (i = 0; i < num_quotes; i++) {
@@ -74,6 +78,6 @@ $.on('command', function(event) {
     }
 });
 
-$.registerChatCommand("quote");
-$.registerChatCommand("addquote");
-$.registerChatCommand("delquote");
+$.registerChatCommand("./commands/quoteCommand.js", "quote");
+$.registerChatCommand("./commands/quoteCommand.js", "addquote", "mod");
+$.registerChatCommand("./commands/quoteCommand.js", "delquote", "mod");

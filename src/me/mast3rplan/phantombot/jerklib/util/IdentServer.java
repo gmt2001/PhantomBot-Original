@@ -35,7 +35,7 @@ public class IdentServer implements Runnable {
             try {
                 t.join(1);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                com.gmt2001.Console.err.printStackTrace(e);
             }
         }
         t = null;

@@ -3,7 +3,6 @@ package me.mast3rplan.phantombot.script;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.mozilla.javascript.Context;
@@ -22,6 +21,8 @@ public class Script {
     public Script(File file) {
         this.fileWatcher = new ScriptFileWatcher(this);
         this.file = file;
+        
+        Thread.setDefaultUncaughtExceptionHandler(com.gmt2001.UncaughtExceptionHandler.instance());
 
         new Thread(fileWatcher).start();
     }

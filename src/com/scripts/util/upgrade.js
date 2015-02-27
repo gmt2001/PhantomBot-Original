@@ -82,7 +82,7 @@ if ($.inidb.GetInteger("init", "upgrade", "version") < 1) {
     
     $.inidb.RemoveFile("events");
     
-    $.deleteFile("./scripts/events.js");
+    $.deleteFile("./scripts/events.js", false);
     
     println("   End version 1 upgrades...");
 }
@@ -97,7 +97,7 @@ if ($.inidb.GetInteger("init", "upgrade", "version") < 2) {
     }
     
     if (!$.inidb.exists("settings", "timeouttype")) {
-        $.inidb.set("settings", "timeouttype", "ban");
+        $.inidb.set("settings", "timeouttype", "timeout");
     }
     
     if (!$.inidb.exists("settings", "autopurgemessage")) {
@@ -140,6 +140,10 @@ if ($.inidb.GetInteger("init", "upgrade", "version") < 2) {
     
     if (!$.inidb.exists("settings", "youtubeallowed")) {
         $.inidb.set("settings", "youtubeallowed", "0");
+    }
+    
+    if (!$.inidb.exists("settings", "casterallowed")) {
+        $.inidb.set("settings", "casterallowed", "0");
     }
     
     if (!$.inidb.exists("settings", "linksmessage")) {
@@ -270,10 +274,118 @@ if ($.inidb.GetInteger("init", "upgrade", "version") < 2) {
     
     if ($.inidb.exists("settings", "caps_limit")) {
         println("         [ERROR] Unable to convert caps limit to caps ratio/length. Deleting...");
-        $.inidb.get("settings", "caps_limit");
+        $.inidb.del("settings", "caps_limit");
     }
     
     println("   End version 2 upgrades...");
+}
+
+if ($.inidb.GetInteger("init", "upgrade", "version") < 3) {
+    println("   Starting version 3 upgrades...");
+    
+    println("     Populating new chat moderation values");
+    
+    if (!$.inidb.exists("settings", "spamallowed")) {
+        $.inidb.set("settings", "spamallowed", "0");
+    }
+    
+    if (!$.inidb.exists("settings", "spamlimit")) {
+        $.inidb.set("settings", "spamlimit", "8");
+    }
+    
+    if (!$.inidb.exists("settings", "spammessage")) {
+        $.inidb.set("settings", "spammessage", "dont spam chat!");
+    }
+    
+    if (!$.inidb.exists("settings", "casterallowed")) {
+        $.inidb.set("settings", "casterallowed", "0");
+    }
+    
+    println("   End version 3 upgrades...");
+}
+
+if ($.inidb.GetInteger("init", "upgrade", "version") < 4) {
+    println("   Starting version 4 upgrades...");
+    
+    println("     Populating new chat moderation values");
+    
+    if (!$.inidb.exists("settings", "symbolsallowed")) {
+        $.inidb.set("settings", "symbolsallowed", "0");
+    }
+    
+    if (!$.inidb.exists("settings", "symbolslimit")) {
+        $.inidb.set("settings", "symbolslimit", "16");
+    }
+    
+    if (!$.inidb.exists("settings", "symbolsrepeatlimit")) {
+        $.inidb.set("settings", "symbolsrepeatlimit", "14");
+    }
+    
+    if (!$.inidb.exists("settings", "symbolsmessage")) {
+        $.inidb.set("settings", "symbolsmessage", "dont spam symbols!");
+    }
+    
+    if (!$.inidb.exists("settings", "repeatallowed")) {
+        $.inidb.set("settings", "repeatallowed", "0");
+    }
+    
+    if (!$.inidb.exists("settings", "repeatlimit")) {
+        $.inidb.set("settings", "repeatlimit", "14");
+    }
+    
+    if (!$.inidb.exists("settings", "repeatmessage")) {
+        $.inidb.set("settings", "repeatmessage", "dont spam repeating characters!");
+    }
+    
+    if (!$.inidb.exists("settings", "graphemeallowed")) {
+        $.inidb.set("settings", "graphemeallowed", "0");
+    }
+    
+    if (!$.inidb.exists("settings", "graphemelimit")) {
+        $.inidb.set("settings", "graphemelimit", "6");
+    }
+    
+    if (!$.inidb.exists("settings", "graphememessage")) {
+        $.inidb.set("settings", "graphememessage", "dont post grapheme clusters!");
+    }
+    
+    println("   End version 4 upgrades...");
+}
+
+if ($.inidb.GetInteger("init", "upgrade", "version") < 5) {
+    println("   Starting version 5 upgrades...");
+    
+    println("     Populating twitch/twitter command values");
+    
+    if (!$.inidb.exists("twitchtwitter", "perm")) {
+        $.inidb.set("twitchtwitter", "perm", "mod");
+    }
+    
+    if (!$.inidb.exists("twitchtwitter", "list")) {
+        $.inidb.set("twitchtwitter", "list", "");
+    }
+    
+    if (!$.inidb.exists("twitchtwitter", "twitchmsg")) {
+        $.inidb.set("twitchtwitter", "twitchmsg", "Make sure you follow (name) on twitch at twitch.tv/(name)");
+    }
+    
+    if (!$.inidb.exists("twitchtwitter", "twittermsg")) {
+        $.inidb.set("twitchtwitter", "twittermsg", "Make sure you follow @(name) at twitter.com/(name)");
+    }
+    
+    println("   End version 5 upgrades...");
+}
+
+if ($.inidb.GetInteger("init", "upgrade", "version") < 6) {
+    println("   Starting version 6 upgrades...");
+    
+    println("     Populating new chat moderation values");
+    
+    if (!$.inidb.exists("settings", "subsallowed")) {
+        $.inidb.set("settings", "subsallowed", "0");
+    }
+    
+    println("   End version 6 upgrades...");
 }
 
 println("   Saving...");

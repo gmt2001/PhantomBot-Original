@@ -60,7 +60,7 @@ public class MusicHtmlServer extends Thread {
                 out.write(buffer, 0, file.read(buffer));
             }
         } catch (IOException e) {
-            System.err.println(e);
+            com.gmt2001.Console.err.println(e);
         }
     }
 
@@ -80,10 +80,10 @@ public class MusicHtmlServer extends Thread {
         try {
             socket = new ServerSocket(port);
         } catch (IOException e) {
-            System.err.println("Could not start server: " + e);
+            com.gmt2001.Console.err.println("Could not start server: " + e);
             System.exit(-1);
         }
-        System.out.println("MusicFileServer accepting connections on port " + port);
+        com.gmt2001.Console.out.println("MusicFileServer accepting connections on port " + port);
 
         // request handler loop
         while (true) {
@@ -155,7 +155,7 @@ public class MusicHtmlServer extends Thread {
                 }
                 out.flush();
             } catch (IOException e) {
-                System.err.println(e);
+                com.gmt2001.Console.err.println(e);
             }
             try {
                 if (connection != null)
@@ -163,7 +163,7 @@ public class MusicHtmlServer extends Thread {
                     connection.close();
                 }
             } catch (IOException e) {
-                System.err.println(e);
+                com.gmt2001.Console.err.println(e);
             }
         }
     }

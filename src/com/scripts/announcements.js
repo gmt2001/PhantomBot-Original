@@ -1,3 +1,14 @@
+$.announceinterval = parseInt($.inidb.get('announcements', 'interval'));
+$.announcemessages = parseInt($.inidb.get('announcements', 'reqmessages'));
+
+if ($.announceinterval == undefined || $.announceinterval == null || $.announceinterval < 1) {
+    $.announceinterval = 10;
+}
+
+if ($.announcemessages == undefined || $.announcemessages == null || $.announcemessages < 0) {
+    $.announcemessages = 25;
+}
+
 $.on('command', function(event) {
     var sender = event.getSender()
     var username = $.username.resolve(sender)
@@ -17,13 +28,15 @@ $.on('command', function(event) {
             var message = ""
 
             if (args.length >= 2) {
-                message = argsString.substring(argsString.indexOf(action) + action.length() + 1)
+                message = argsString.substring(argsString.indexOf(action) + $.strlen(action) + 1)
             }
 
             if (action.equalsIgnoreCase("add")) {
                 if (args.length == 1) {
                     $.say("Insert an announcement at the end of the rotation. !announcement add <message>")
                 } else {
+                    $.logEvent("announcements.js", 38, username + " added a new announcement (id " + num_messages + "): " + message);
+                    
                     $.inidb.incr('announcements', 'num_messages', 1)
 
                     num_messages = $.inidb.get('announcements', 'num_messages')
@@ -38,7 +51,7 @@ $.on('command', function(event) {
                     $.say("Insert an event into a specific slot, pushing the event currently in that slot and all others after it forward by one slot. !announcement insert <id> <message>")
                 } else {
                     var id = args[1]
-                    message = argsString.substring(argsString.indexOf(id) + id.length() + action.length() + 2)
+                    message = argsString.substring(argsString.indexOf(id) + $.strlen(id) + $.strlen(action) + 2)
                     
                     if (id < num_messages) {
                         for (var i = (num_messages - 1); i >= 0; i--) {
@@ -50,6 +63,8 @@ $.on('command', function(event) {
                     } else {
                         $.inidb.set('announcements', 'message_' + num_messages, message)
                     }
+                    
+                    $.logEvent("announcements.js", 67, username + " inserted a new announcement at specified id (id " + id + "): " + message);
                     
                     $.inidb.incr('announcements', 'num_messages', 1)
 
@@ -77,6 +92,8 @@ $.on('command', function(event) {
                     }
                     
                     if (num_messages > 1) {
+                        $.logEvent("announcements.js", 95, username + " removed announcement (id " + message + "): " + $.inidb.get('announcements', 'message_' + message));
+                        
                         for (i = 0; i < num_messages; i++) {
                             if (i > parseInt(message)) {
                                 $.inidb.set('announcements', 'message_' + (i - 1), $.inidb.get('announcements', 'message_' + i))
@@ -96,9 +113,11 @@ $.on('command', function(event) {
             
             if (action.equalsIgnoreCase("timer")) {
                 if (args.length < 2) {
-                    $.say("Sets the interval between announcements. The current interval is " + $.announceinterval + " minutes. Must be at least 2. Set it with !announcement timer <new time in minutes>")
+                    $.say("Sets the interval between announcements. The current interval is " + $.announceinterval + " minutes. Must be at least 1. Set it with !announcement timer <new time in minutes>")
                 } else {
-                    if (!isNaN(message) && parseInt(message) >= 2) {
+                    if (!isNaN(message) && parseInt(message) >= 1) {
+                        $.logEvent("announcements.js", 119, username + " changed the interval between announcements to " + message + " minutes");
+                        
                         $.inidb.set('announcements', 'interval', message);
                         $.announceinterval = parseInt(message);
                         
@@ -109,9 +128,11 @@ $.on('command', function(event) {
             
             if (action.equalsIgnoreCase("reqmessages")) {
                 if (args.length < 2) {
-                    $.say("Sets the minimum number of other chat messages required between announcements. Must be at least 5. The current amount is " + $.announcemessages + " minutes. Set it with !announcement reqmessages <new amount>")
+                    $.say("Sets the minimum number of other chat messages required between announcements. Set to 0 to ignore required messages. The current amount is " + $.announcemessages + " messages. Set it with !announcement reqmessages <new amount>")
                 } else {
                     if (!isNaN(message) && parseInt(message) >= 0) {
+                        $.logEvent("announcements.js", 134, username + " changed the number of chat messages between announcements to " + message);
+                        
                         $.inidb.set('announcements', 'reqmessages', message);
                         $.announcemessages = parseInt(message);
                         
@@ -125,11 +146,23 @@ $.on('command', function(event) {
     }
 })
 
-$.registerChatCommand("announcement");
+$.registerChatCommand("./announcements.js", "announcement", "admin");
 
-var messageCount = 0
-var messageTime = 0
-var messageIndex = 0
+var messageCount = parseInt($.inidb.get('announcements', 'messageCount'));
+var messageTime = parseInt($.inidb.get('announcements', 'messageTime'));
+var messageIndex = parseInt($.inidb.get('announcements', 'messageIndex'));
+
+if (messageCount == undefined || messageCount == null || messageCount < 0) {
+    messageCount = 0;
+}
+
+if (messageTime == undefined || messageTime == null || messageTime < 0) {
+    messageTime = 0;
+}
+
+if (messageIndex == undefined || messageIndex == null || messageIndex < 0) {
+    messageIndex = 0;
+}
 
 function sendMessage() {
     var num_messages = $.inidb.get('announcements', 'num_messages');
@@ -138,11 +171,12 @@ function sendMessage() {
         return;
     }
     
-    var message = $.inidb.get('announcements', 'message_' + messageIndex)
+    var message = $.inidb.get('announcements', 'message_' + messageIndex);
  
     messageIndex++;
+    $.inidb.set('announcements', 'messageIndex', messageIndex);
     
-    if(messageIndex >= num_messages) {
+    if (messageIndex >= num_messages) {
         messageIndex = 0;
     }
  
@@ -151,18 +185,21 @@ function sendMessage() {
 
 $.on('ircChannelMessage', function(event) {
     messageCount++;
+    $.inidb.set('announcements', 'messageCount', messageCount);
 })
 
-$.setInterval(function() {
+$.timer.addTimer("./announcements.js", "announcement", true, function() {
     if (!$.moduleEnabled("./announcements.js")) {
         return;
     }
     
     if (messageCount >= $.announcemessages && messageTime + ($.announceinterval * 60 * 1000) < System.currentTimeMillis()){
         messageCount = 0;
+        $.inidb.set('announcements', 'messageCount', messageCount);
         
         sendMessage();
         
         messageTime = System.currentTimeMillis();
+        $.inidb.set('announcements', 'messageTime', messageTime);
     }
-}, 1000);
+}, 60 * 1000);

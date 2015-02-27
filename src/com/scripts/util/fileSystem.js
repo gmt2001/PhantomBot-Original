@@ -49,10 +49,15 @@ $.touchFile = function(path) {
     }
 }
 
-$.deleteFile = function(path) {
+$.deleteFile = function(path, now) {
     try {
         var f = new java.io.File(path);
-        f.deleteOnExit();
+        
+        if (now) {
+            f['delete']();
+        } else {
+            f.deleteOnExit();
+        }
     } catch (e) {
         println("Failed to delete '" + path + "': " + e)
     }
@@ -63,7 +68,44 @@ $.fileExists = function(path) {
         var f = new java.io.File(path);
         return f.exists();
     } catch (e) {
-        println("Failed to delete '" + path + "': " + e)
+        return false;
+    }
+    
+    return false;
+}
+
+$.findFiles = function(directory, pattern) {
+    try {
+        var f = new java.io.File(directory);
+        
+        var ret = new Array();
+        
+        if (!f.isDirectory()) {
+            throw "not a valid directory";
+        } else {
+            var files = f.list();
+            
+            for (var i = 0; i < files.length; i++) {
+                if (files[i].indexOf(pattern) != -1) {
+                    ret.push(files[i]);
+                }
+            }
+            
+            return ret;
+        }
+    } catch (e) {
+        println("Failed to search in '" + directory + "': " + e)
+    }
+    
+    return new Array();
+}
+
+$.isDirectory = function(path) {
+    try {
+        var f = new java.io.File(path);
+        return f.isDirectory();
+    } catch (e) {
+        return false;
     }
     
     return false;

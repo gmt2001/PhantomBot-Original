@@ -17,6 +17,7 @@ $.endPoll = function () {
         var results = [];
         var high = 0;
         var options = $var.pollOptions;
+        
         for (var i=0; i<options.length; ++i) {
             var count = $.pollResults.get (options[i].toLowerCase()).intValue();
             if (high < count) {
@@ -26,6 +27,7 @@ $.endPoll = function () {
                 results [results.length] = options[i];
             }
         }
+        
         $var.vote_running = false;
         pollCallback (results);
         $.pollResults.clear ();
@@ -34,6 +36,7 @@ $.endPoll = function () {
         pollCallback = null;
         return true;
     }
+    
     return false;
 };
 
@@ -55,23 +58,25 @@ $.runPoll = function (callback, options, time, pollMaster) {
     if (time > 0) {
         pollCallback = callback;
         var oldID = $var.pollID;
-        setTimeout (function () {
+        $.timer.addTimer("./systems/votingSystem.js", "endpoll", false, function() {
             if (oldID == $var.pollID) {
                 $.endPoll ();
             } else {
                 println ("Poll ended manually");
             }
         }, time);
-        setTimeout (function () {
+        
+        $.timer.addTimer("./systems/votingSystem.js", "warnend", false, function() {
             if (oldID == $var.pollID) {
-                $.say ("The poll will end in " + (time * 0.3)/1000 + " seconds, cast your vote soon.");
+                $.say ("The poll will end in " + (time * 0.3) / 1000 + " seconds, cast your vote soon.");
             } else {
                 println ("Poll ended manually");
             }
-        }, time*0.7);
+        }, time * 0.7);
     } else {
         pollCallback = callback;
     }
+    
     return true;
 };
 
@@ -93,6 +98,7 @@ $.on('command', function(event) {
         }
         if (!makeVote (args [0].toLowerCase())) {
             $.say ("'" + args [0] + "' is not a valid option");
+            return;
         } else {
             $.pollVoters.add (sender);
             $.say (username + ", your vote has been recorded");
@@ -117,6 +123,7 @@ $.on('command', function(event) {
             }
                         
             argStart = 1
+            
             if (args [argStart] == '-t') {
                 length = parseInt (args [argStart+1]);
                 argStart += 2
@@ -136,13 +143,16 @@ $.on('command', function(event) {
                         
             if ($.runPoll (function (result) {
                 if (result.length == 1) {
+                    $.logEvent("votingSystem.js", 146, "The poll ended and the winning option was '" + result + "' with " + $.pollResults.get (result [0]).intValue() + " out of " + parseInt($var.pollTotalVotes) + " votes");
                     $.say ("Polls are closed! The winner is '" + result + "' with " + $.pollResults.get (result [0]).intValue() + " out of " + parseInt($var.pollTotalVotes) + " votes.")
                 } else {
                     var optionsStr = "";
-                var l = result.length-2;
-                for (var i=0; i < l; ++i) {
-                    optionsStr += result [i] + ", ";
-                }
+                    var l = result.length-2;
+                    for (var i=0; i < l; ++i) {
+                        optionsStr += result [i] + ", ";
+                    }
+                
+                    $.logEvent("votingSystem.js", 155, "The poll ended and resulted in a " + result.length + " way tie '" + optionsStr + result [l] + " and " + result [l+1] + "', each received " + $.pollResults.get (result [0]).intValue() + " out of " + parseInt($var.pollTotalVotes) + " votes");
                 
                     $.say ("The poll resulted in a " + result.length + " way tie '" + optionsStr + result [l] + " and " + result [l+1] + "', each received " + $.pollResults.get (result [0]).intValue() + " out of " + parseInt($var.pollTotalVotes) + " votes.")
                 }
@@ -154,10 +164,10 @@ $.on('command', function(event) {
                     optionsStr += options [i] + ", ";
                 }
                 
+                $.logEvent("votingSystem.js", 167, username + " opened a poll with options " + optionsStr + options [l] + " and " + options [l+1]);
+                
                 $.say ("Polls are open! Vote with '!vote <option>'. The options are: " + optionsStr + options [l] + " and " + options [l+1]);
             }
-                        
-                        
         } else if (subCmd.equalsIgnoreCase ("end")) {
             if ($var.pollMaster == null) {
                 $.say ("There is no poll running");
@@ -169,14 +179,19 @@ $.on('command', function(event) {
                 }
             }
                         
-            if (!$.endPoll ()) {
+            if (!$var.vote_running) {
                 $.say ("There is no poll running");
+                return;
             }
+            
+            $.logEvent("votingSystem.js", 187, username + " ended the poll manually");
+            
+            $.endPoll();
         } else {
             $.say("Usage: !poll start [-t time] <option 1>...<option n>, !poll end");
         }
     }
 });
 
-$.registerChatCommand("vote");
-$.registerChatCommand("poll");
+$.registerChatCommand("./systems/votingSystem.js", "vote");
+$.registerChatCommand("./systems/votingSystem.js", "poll", "mod");

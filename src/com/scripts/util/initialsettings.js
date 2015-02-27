@@ -9,7 +9,7 @@ var section;
 var key;
 var value;
 
-java.lang.System.out.print("   0/" + lines.length);
+Packages.com.gmt2001.Console.out.print("   0/" + lines.length);
 
 for (var i = 0; i < lines.length; i++) {
     spl = lines[i].split("=");
@@ -18,12 +18,12 @@ for (var i = 0; i < lines.length; i++) {
         file = spl[0];
         section = spl[1];
         key = spl[2];
-        value = lines[i].substr(file.length() + section.length() + key.length() + 3);
+        value = lines[i].substr($.strlen(file) + $.strlen(section) + $.strlen(key) + 3);
 
         $.inidb.SetString(file, section, key, value);
     }
     
-    java.lang.System.out.print("\r   " + i + "/" + lines.length);
+    Packages.com.gmt2001.Console.out.print("\r   " + i + "/" + lines.length);
 }
 
 println("\r   " + lines.length + "/" + lines.length);

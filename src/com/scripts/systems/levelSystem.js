@@ -16,42 +16,30 @@ $.on('command', function(event) {
 
     if (command.equalsIgnoreCase("level")) {
         if (!$.moduleEnabled("./systems/pointSystem.js")) {
-            $.say("You can not use !level becasue points are disabled!");
+            $.say("You can not use !level because points are disabled!");
             return;
         }
         
-        if (args.length == 3) {
-            if (!$.isAdmin(sender)) {
-                $.say("You must be a Administrator to use this command " + username + ".");
-                return;
-            }
-
-            action = args[0];
-            username = args[1].toLowerCase();
-            exp = int(args[2]);
-
-        } else {
-            exp_user = sender;
-            if (args.length == 1) {
-                exp_user = args[0].toLowerCase();
-            }
-
-            exp = $.inidb.get('exp', exp_user);
-            var level = (25 + Math.sqrt(625 + 100 * exp)) / 50;
-
-
-            if (exp == null) exp = 0;
-            if (level == null) level = 1;
-
-
-            $.say($.username.resolve(exp_user) + " is at level " + int(level) + " with a total of " + int(exp) + " exp." );
+        exp_user = sender;
+        
+        if (args.length == 1) {
+            exp_user = args[0].toLowerCase();
         }
 
+        exp = $.inidb.get('exp', exp_user);
+        var level = (25 + Math.sqrt(625 + 100 * exp)) / 50;
+
+
+        if (exp == null) exp = 0;
+        if (level == null) level = 1;
+
+
+        $.say($.username.resolve(exp_user) + " is at level " + int(level) + " with a total of " + int(exp) + " exp." );
     }
 
     if (command.equalsIgnoreCase("exp")) {
         if (!$.moduleEnabled("./systems/pointSystem.js")) {
-            $.say("You can not use !exp becasue points are disabled!");
+            $.say("You can not use !exp because points are disabled!");
             return;
         }
         
@@ -66,12 +54,15 @@ $.on('command', function(event) {
             exp = int(args[2]);
 
             if (action.equalsIgnoreCase("give")) {
+                $.logEvent("levelSystem.js", 57, $.username.resolve(sender) + " gave " + exp + " exp to " + username);
                 $.inidb.incr('exp', username, exp);
                 $.say(exp + " exp was sent to " + $.username.resolve(username) + ".");
             } else if (action.equalsIgnoreCase("take")) {
+                $.logEvent("levelSystem.js", 61, $.username.resolve(sender) + " took " + exp + " exp from " + username);
                 $.inidb.decr('exp', username, exp);
                 $.say(exp + " exp was taken from " + $.username.resolve(username) + ".");
             } else if (action.equalsIgnoreCase("set")) {
+                $.logEvent("levelSystem.js", 65, $.username.resolve(sender) + " set " + username + "'s exp to " + exp);
                 $.inidb.set('exp', username, exp);
                 $.say($.username.resolve(username) + "'s exp was set to " + exp + ".");
             } else {
@@ -131,10 +122,10 @@ $.on('command', function(event) {
     }
 });
 
-$.registerChatCommand("level");
-$.registerChatCommand("exp");
-$.registerChatCommand("exp help");
-$.registerChatCommand("mytitle");
+$.registerChatCommand("./systems/levelSystem.js", "level");
+$.registerChatCommand("./systems/levelSystem.js", "exp");
+$.registerChatCommand("./systems/levelSystem.js", "exp help");
+$.registerChatCommand("./systems/levelSystem.js", "mytitle");
 
 $.getTitle = function (username) {
     var exp = $.inidb.get('exp', username);

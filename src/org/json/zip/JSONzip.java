@@ -244,7 +244,7 @@ public abstract class JSONzip implements None, PostMortem {
      * @param string
      */
     static void log(String string) {
-        System.out.print(string);
+        com.gmt2001.Console.out.print(string);
     }
 
     /**

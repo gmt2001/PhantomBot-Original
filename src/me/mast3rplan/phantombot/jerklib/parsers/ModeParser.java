@@ -72,7 +72,7 @@ public class ModeParser implements CommandParser {
                         modeAdjustments.add(new ModeAdjustment(action == '+' ? Action.PLUS : Action.MINUS, mode, ""));
                     } else {
                         // lol @ derp typo
-                        // System.err.println("unreconzied mode " + mode);
+                        // com.gmt2001.Console.err.println("unreconzied mode " + mode);
                     }
                 }
             }

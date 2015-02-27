@@ -28,26 +28,26 @@ public class IrcEventHandler implements IRCEventListener
         switch (event.getType())
         {
             case CONNECT_COMPLETE:
-                System.out.println("Connected to IRC " + session.getNick() + "@" + session.getConnectedHostName());
+                com.gmt2001.Console.out.println("Connected to IRC " + session.getNick() + "@" + session.getConnectedHostName());
                 eventBus.post(new IrcConnectCompleteEvent(session));
                 break;
             case JOIN_COMPLETE:
-                System.out.println("Channel Joined [" + ((JoinCompleteEvent) event).getChannel().getName() + "]");
+                com.gmt2001.Console.out.println("Channel Joined [" + ((JoinCompleteEvent) event).getChannel().getName() + "]");
                 eventBus.post(new IrcJoinCompleteEvent(session, ((JoinCompleteEvent) event).getChannel()));
                 break;
             case JOIN:
                 JoinEvent joinEvent = (JoinEvent) event;
-                System.out.println("User Joined Channel [" + joinEvent.getChannelName() + "] " + joinEvent.getNick());
+                com.gmt2001.Console.out.println("User Joined Channel [" + joinEvent.getChannelName() + "] " + joinEvent.getNick());
                 eventBus.post(new IrcChannelJoinEvent(session, joinEvent.getChannel(), joinEvent.getNick()));
                 break;
             case PART:
                 PartEvent partEvent = (PartEvent) event;
-                System.out.println("User Left Channel [" + partEvent.getChannelName() + "] " + partEvent.getNick());
+                com.gmt2001.Console.out.println("User Left Channel [" + partEvent.getChannelName() + "] " + partEvent.getNick());
                 eventBus.post(new IrcChannelLeaveEvent(session, partEvent.getChannel(), partEvent.getNick(), partEvent.getPartMessage()));
                 break;
             case CHANNEL_MESSAGE:
                 MessageEvent cmessageEvent = (MessageEvent) event;
-                System.out.println("Message from Channel [" + cmessageEvent.getChannel().getName() + "] " + cmessageEvent.getNick());
+                com.gmt2001.Console.out.println("Message from Channel [" + cmessageEvent.getChannel().getName() + "] " + cmessageEvent.getNick());
                 Channel cchannel = cmessageEvent.getChannel();
                 String cusername = cmessageEvent.getNick();
                 String cmessage = cmessageEvent.getMessage();
@@ -74,7 +74,7 @@ public class IrcEventHandler implements IRCEventListener
                     {
                         ModeAdjustment adj = (ModeAdjustment) it.next();
 
-                        System.out.println("MODE [" + modeEvent.getChannel().getName() + "] " + adj.toString());
+                        com.gmt2001.Console.out.println("MODE [" + modeEvent.getChannel().getName() + "] " + adj.toString());
 
                         if (adj.getArgument().length() > 0)
                         {

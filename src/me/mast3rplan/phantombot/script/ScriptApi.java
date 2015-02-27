@@ -9,10 +9,15 @@ import java.util.concurrent.TimeUnit;
 
 public class ScriptApi {
     private static final ScriptApi instance = new ScriptApi();
-    private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(8);
 
     public static ScriptApi instance() {
         return instance;
+    }
+    
+    private ScriptApi()
+    {
+        Thread.setDefaultUncaughtExceptionHandler(com.gmt2001.UncaughtExceptionHandler.instance());
     }
 
     public void on(Script script, String eventName, ScriptEventHandler handler) {

@@ -29,8 +29,10 @@ public class Channel
     private List<ModeAdjustment> channelModes = new ArrayList<ModeAdjustment>();
     private TopicEvent topicEvent;
     private ConcurrentLinkedQueue<String> messages = new ConcurrentLinkedQueue();
+    private ConcurrentLinkedQueue<String> prioritymessages = new ConcurrentLinkedQueue();
     private Timer sayTimer = new Timer();
     private Boolean allowSendMessages = false;
+    private long msginterval = 1600;
 
     class MessageTask extends TimerTask
     {
@@ -42,24 +44,35 @@ public class Channel
         {
             super();
             chan = c;
+            
+            Thread.setDefaultUncaughtExceptionHandler(com.gmt2001.UncaughtExceptionHandler.instance());
         }
 
         @Override
         public void run()
         {
             long now = System.currentTimeMillis();
-            if (now - lastMessage >= 1600)
+            if (now - lastMessage >= msginterval)
             {
-                String msg = chan.messages.poll();
-                if (msg != null)
+                String pmsg = chan.prioritymessages.poll();
+                if (pmsg != null)
                 {
-                    if (allowSendMessages || msg.startsWith(".timeout ") || msg.startsWith(".ban ")
-                            || msg.startsWith(".unban ") || msg.equals(".clear") || msg.equals(".mods"))
-                    {
-                        chan.session.sayChannel(chan, msg);
-                    }
-                    
+                    chan.session.sayChannel(chan, pmsg);
+
                     lastMessage = now;
+                } else
+                {
+                    String msg = chan.messages.poll();
+                    if (msg != null)
+                    {
+                        if (allowSendMessages || msg.startsWith(".timeout ") || msg.startsWith(".ban ")
+                                || msg.startsWith(".unban ") || msg.equals(".clear") || msg.equals(".mods"))
+                        {
+                            chan.session.sayChannel(chan, msg);
+                        }
+
+                        lastMessage = now;
+                    }
                 }
             }
         }
@@ -113,9 +126,11 @@ public class Channel
         this.name = name;
         this.session = session;
 
+        Thread.setDefaultUncaughtExceptionHandler(com.gmt2001.UncaughtExceptionHandler.instance());
+        
         sayTimer.schedule(new MessageTask(this), 300, 100);
     }
-    
+
     public void setAllowSendMessages(Boolean allow)
     {
         allowSendMessages = allow;
@@ -355,7 +370,52 @@ public class Channel
      */
     public void say(String message)
     {
-        messages.add(message);
+        if (message.startsWith(".timeout ") || message.startsWith(".ban ")
+                || message.startsWith(".unban ") || message.equals(".clear") || message.equals(".mods"))
+        {
+            if (message.length() + 14 + name.length() < 512)
+            {
+                prioritymessages.add(message);
+            } else
+            {
+                int maxlen = 512 - 14 - name.length();
+                int pos = 0;
+
+                for (int i = 0; i < Math.ceil(message.length() / (maxlen * 0.0)); i++)
+                {
+                    if (pos + maxlen >= message.length())
+                    {
+                        prioritymessages.add(message.substring(pos));
+                    } else
+                    {
+                        prioritymessages.add(message.substring(pos, pos + maxlen));
+                        pos += maxlen;
+                    }
+                }
+            }
+        } else
+        {
+            if (message.length() + 14 + name.length() < 512)
+            {
+                messages.add(message);
+            } else
+            {
+                int maxlen = 512 - 14 - name.length();
+                int pos = 0;
+
+                for (int i = 0; i < Math.ceil(message.length() / (maxlen * 0.0)); i++)
+                {
+                    if (pos + maxlen >= message.length())
+                    {
+                        messages.add(message.substring(pos));
+                    } else
+                    {
+                        messages.add(message.substring(pos, pos + maxlen));
+                        pos += maxlen;
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -601,5 +661,10 @@ public class Channel
     public String toString()
     {
         return "[Channel: name=" + name + "]";
+    }
+    
+    public void setMsgInterval(long msginterval)
+    {
+        this.msginterval = msginterval;
     }
 }

@@ -3,6 +3,8 @@ package me.mast3rplan.phantombot.cache;
 import com.gmt2001.TwitchAPIv3;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import me.mast3rplan.phantombot.event.EventBus;
@@ -36,11 +38,19 @@ public class SubscribersCache implements Runnable
     private int count;
     private Thread updateThread;
     private boolean firstUpdate = true;
+    private Date timeoutExpire = new Date();
+    private Date lastFail = new Date();
+    private int numfail = 0;
 
     public SubscribersCache(String channel)
     {
         this.channel = channel;
         this.updateThread = new Thread(this);
+        this.cache = Maps.newHashMap();
+        
+        Thread.setDefaultUncaughtExceptionHandler(com.gmt2001.UncaughtExceptionHandler.instance());
+        this.updateThread.setUncaughtExceptionHandler(com.gmt2001.UncaughtExceptionHandler.instance());
+        
         updateThread.start();
     }
 
@@ -76,7 +86,7 @@ public class SubscribersCache implements Runnable
     {
         return cache.get(username);
     }
-    
+
     public void doRun(boolean run)
     {
         this.run = run;
@@ -90,25 +100,47 @@ public class SubscribersCache implements Runnable
             Thread.sleep(30 * 1000);
         } catch (InterruptedException e)
         {
-            System.out.println("SubscribersCache.run>>Failed to initial sleep: [InterruptedException] " + e.getMessage());
+            com.gmt2001.Console.out.println("SubscribersCache.run>>Failed to initial sleep: [InterruptedException] " + e.getMessage());
         }
 
         while (true)
         {
             try
             {
-                if (run && TwitchAPIv3.instance().HasOAuth())
+                if (new Date().after(timeoutExpire) && run && TwitchAPIv3.instance().HasOAuth())
                 {
                     int newCount = getCount(channel);
 
-                    if (newCount != count)
+                    if (new Date().after(timeoutExpire) && newCount != count)
                     {
                         this.updateCache(newCount);
                     }
                 }
             } catch (Exception e)
             {
-                System.out.println("SubscribersCache.run>>Failed to update subscribers: " + e.getMessage());
+                if (e.getMessage().startsWith("[SocketTimeoutException]") || e.getMessage().startsWith("[IOException]"))
+                {
+                    Calendar c = Calendar.getInstance();
+
+                    if (lastFail.after(new Date()))
+                    {
+                        numfail++;
+                    } else
+                    {
+                        numfail = 1;
+                    }
+
+                    c.add(Calendar.MINUTE, 1);
+
+                    lastFail = c.getTime();
+
+                    if (numfail >= 5)
+                    {
+                        timeoutExpire = c.getTime();
+                    }
+                }
+
+                com.gmt2001.Console.out.println("SubscribersCache.run>>Failed to update subscribers: " + e.getMessage());
             }
 
             try
@@ -116,7 +148,7 @@ public class SubscribersCache implements Runnable
                 Thread.sleep(30 * 1000);
             } catch (InterruptedException e)
             {
-                System.out.println("SubscribersCache.run>>Failed to sleep: [InterruptedException] " + e.getMessage());
+                com.gmt2001.Console.out.println("SubscribersCache.run>>Failed to sleep: [InterruptedException] " + e.getMessage());
             }
         }
     }
@@ -153,7 +185,7 @@ public class SubscribersCache implements Runnable
                                         + j.getString("message"));
                             } catch (Exception e)
                             {
-                                System.out.println("SubscribersCache.updateCache>>Failed to update subscribers: " + e.getMessage());
+                                com.gmt2001.Console.out.println("SubscribersCache.updateCache>>Failed to update subscribers: " + e.getMessage());
                             }
                         }
                     } else
@@ -163,12 +195,35 @@ public class SubscribersCache implements Runnable
                             throw new Exception("[" + j.getString("_exception") + "] " + j.getString("_exceptionMessage"));
                         } catch (Exception e)
                         {
-                            System.out.println("SubscribersCache.updateCache>>Failed to update subscribers: " + e.getMessage());
+                            if (e.getMessage().startsWith("[SocketTimeoutException]") || e.getMessage().startsWith("[IOException]"))
+                            {
+                                Calendar c = Calendar.getInstance();
+
+                                if (lastFail.after(new Date()))
+                                {
+                                    numfail++;
+                                } else
+                                {
+                                    numfail = 1;
+                                }
+
+                                c.add(Calendar.MINUTE, 1);
+
+                                lastFail = c.getTime();
+
+                                if (numfail >= 5)
+                                {
+                                    timeoutExpire = c.getTime();
+                                }
+                            }
+
+                            com.gmt2001.Console.out.println("SubscribersCache.updateCache>>Failed to update subscribers: " + e.getMessage());
                         }
                     }
                 }
             };
             threads.add(thread);
+
             thread.start();
         }
 
@@ -233,6 +288,11 @@ public class SubscribersCache implements Runnable
             firstUpdate = false;
             EventBus.instance().post(new TwitchSubscribesInitializedEvent());
         }
+    }
+
+    public void addSubscriber(String username)
+    {
+        cache.put(username, null);
     }
 
     public void setCache(Map<String, JSONObject> cache)

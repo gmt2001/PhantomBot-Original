@@ -7,6 +7,8 @@ public class ScriptFileWatcher implements Runnable {
 
     public ScriptFileWatcher(Script script) {
         this.script = script;
+        
+        Thread.setDefaultUncaughtExceptionHandler(com.gmt2001.UncaughtExceptionHandler.instance());
     }
 
     @Override
@@ -21,7 +23,7 @@ public class ScriptFileWatcher implements Runnable {
                     script.reload();
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                com.gmt2001.Console.err.printStackTrace(e);
             }
         }
     }

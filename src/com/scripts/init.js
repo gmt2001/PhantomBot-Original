@@ -1,12 +1,13 @@
 var Objects = java.util.Objects;
 var System = java.lang.System;
-var out = java.io.PrintStream(System.out, true, "UTF-8");
+var out = Packages.com.gmt2001.Console.out;
 
 var enableRedis2IniConversion = false;
 
+var initscript = $script;
+
 $.tostring = Objects.toString;
 $.println = function(o) {
-    
     out.println(tostring(o));
 };
 
@@ -17,6 +18,7 @@ function isJavaProperty(property) {
             return true;
         }
     }
+    
     return false;
 }
 
@@ -73,6 +75,7 @@ $api.on($script, 'ircChannelUserMode', function(event) {
 
 var modules = new Array();
 var hooks = new Array();
+var timers = new Array();
 
 $.getModuleIndex = function(scriptFile) {
     for (var i = 0; i < modules.length; i++) {
@@ -114,15 +117,49 @@ $.getModule = function(scriptFile) {
 
 $.loadScript = function(scriptFile) {
     if (!$.isModuleLoaded(scriptFile)) {
-        var script = $api.loadScriptR($script, scriptFile);
-        var senabled = $.inidb.get('modules', scriptFile + '_enabled');
-        var enabled = true;
+        try {
+            var script = $api.loadScriptR($script, scriptFile);
+            var senabled = $.inidb.get('modules', scriptFile + '_enabled');
+            var enabled = true;
         
-        if (senabled) {
-            enabled = senabled.equalsIgnoreCase("1");
+            if (senabled) {
+                enabled = senabled.equalsIgnoreCase("1");
+            }
+        
+            modules.push(new Array(scriptFile, enabled, script));
+        } catch (e) {
+            if ($.isModuleLoaded("./util/misc.js")) {
+                $.logError("init.js", 132, "(loadScript, " + scriptFile + ") " + e);
+            }
+        }
+    }
+}
+
+$.loadScriptsRecursive = function(path) {
+    if (path.substring($.strlen(path) - 1).equalsIgnoreCase("/")) {
+        path = path.substring(0, $.strlen(path) - 1);
+    }
+    
+    var list = $.findFiles("./scripts/" + path, "");
+    var dirs = new Array();
+    var i;
+    
+    for (i = 0; i < list.length; i++) {
+        if (path.equalsIgnoreCase(".")) {
+            if (list[i].equalsIgnoreCase("util") || list[i].equalsIgnoreCase("init.js")) {
+                continue;
+            }
         }
         
-        modules.push(new Array(scriptFile, enabled, script));
+        if ($.isDirectory("./scripts/" + path + "/" + list[i])) {
+            dirs.push(list[i]);
+        } else {
+            $.loadScript(path + "/" + list[i]);
+        }
+    }
+    
+    for (i = 0; i < dirs.length; i++) {
+        $.loadScriptsRecursive(path + "/" + dirs[i]);
     }
 }
 
@@ -165,167 +202,237 @@ $.hook.remove = function(hook) {
     }
 }
 
-$.hook.call = function(hook, arg) {
+$.hook.call = function(hook, arg, alwaysrun) {
     for (var i = 0; i < hooks.length; i++) {
-        if (hooks[i][1].equalsIgnoreCase(hook) && $.moduleEnabled(hooks[i][0])) {
-            hooks[i][2](arg);
+        if (hooks[i][1].equalsIgnoreCase(hook) && ($.moduleEnabled(hooks[i][0]) || alwaysrun)) {
+            try {
+                hooks[i][2](arg);
+            } catch (e) {
+                $.logError("init.js", 211, "(hook.call, " + hook + ", " + hooks[i][0] + ") " + e);
+            }
         }
     }
 }
 
+$.timer = new Array();
+
+$.timer.getTimerIndex = function(scriptFile, name, isInterval) {
+    for (var i = 0; i < timers.length; i++) {
+        if (timers[i][0].equalsIgnoreCase(scriptFile) && timers[i][1].equalsIgnoreCase(name) && timers[i][2] == isInterval) {
+            return i;
+        }
+    }
+    
+    return -1;
+}
+
+$.timer.hasTimer = function(scriptFile, name, isInterval) {
+    return $.timer.getTimerIndex(scriptFile, name, isInterval) != -1;
+}
+
+$.timer.addTimer = function(scriptFile, name, isInterval, handler, interval) {
+    var i = $.timer.getTimerIndex(scriptFile, name, isInterval);
+    
+    if (i == -1) {
+        timers.push(new Array(scriptFile, name, isInterval, null, null, null));
+        i = $.timer.getTimerIndex(scriptFile, name, isInterval);
+    }
+    
+    timers[i][3] = 0;
+    timers[i][4] = handler;
+    timers[i][5] = interval;
+}
+
+$.timer.clearTimer = function(scriptFile, name, isInterval) {
+    var i = $.timer.getTimerIndex(scriptFile, name, isInterval);
+    
+    if (i != -1) {
+        timers.splice(i, 1);
+    }
+}
+
+$.setInterval = function(handler, interval) {
+    var scriptFile = $script.getPath().replace("\\", "/").replace("./scripts/", "");
+    
+    $.timer.addTimer(scriptFile, "default", true, handler, interval);
+}
+
+$.setTimeout = function(handler, timeout) {
+    var scriptFile = $script.getPath().replace("\\", "/").replace("./scripts/", "");
+    
+    $.timer.addTimer(scriptFile, "default", false, handler, timeout);
+}
+
+$api.setInterval($script, function() {
+    var toremove = new Array();
+    
+    try {
+        for (var i = 0; i < timers.length; i++) {
+            timers[i][3]++;
+        
+            if (timers[i][3] * 1000 >= timers[i][5]) {
+                timers[i][3] = 0;
+            
+                try {
+                    timers[i][4]();
+                } catch (e) {
+                    $.logError("init.js", 279, "(timer.interval.exec, " + timers[i][1] + ", " + timers[i][0] + ") " + e);
+                }
+            
+                try {
+                    if (timers[i] != undefined && !timers[i][2]) {
+                        toremove.push(timers[i]);
+                    }
+                } catch (e) {
+                    if (e.indexOf("TypeError: Cannot read property \"2\" from undefined") == -1) {
+                        $.logError("init.js", 288, "(timer.interval.markremove) " + e);
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        $.logError("init.js", 294, "(timer.interval.loop) " + e);
+    }
+    
+    try {
+        for (var b = 0; b < toremove.length; b++) {
+            $.timer.clearTimer(toremove[b][0], toremove[b][1], toremove[b][2]);
+        }
+    } catch(e) {
+        $.logError("init.js", 302, "(timer.interval.remove) " + e);
+    }
+}, 1000);
+
 $api.on($script, 'command', function(event) {
-    $.hook.call('command', event);
+    $.hook.call('command', event, false);
 });
 
 $api.on($script, 'consoleInput', function(event) {
-    $.hook.call('consoleInput', event);
+    $.hook.call('consoleInput', event, true);
 });
 
 $api.on($script, 'twitchFollow', function(event) {
-    $.hook.call('twitchFollow', event);
+    $.hook.call('twitchFollow', event, true);
 });
 
 $api.on($script, 'twitchUnfollow', function(event) {
-    $.hook.call('twitchUnfollow', event);
+    $.hook.call('twitchUnfollow', event, true);
 });
 
 $api.on($script, 'twitchFollowsInitialized', function(event) {
-    $.hook.call('twitchFollowsInitialized', event);
+    $.hook.call('twitchFollowsInitialized', event, true);
+});
+
+$api.on($script, 'twitchHosted', function(event) {
+    $.hook.call('twitchHosted', event, true);
+});
+
+$api.on($script, 'twitchUnhosted', function(event) {
+    $.hook.call('twitchUnhosted', event, true);
+});
+
+$api.on($script, 'twitchHostsInitialized', function(event) {
+    $.hook.call('twitchHostsInitialized', event, true);
+});
+
+$api.on($script, 'twitchSubscribe', function(event) {
+    $.hook.call('twitchSubscribe', event, true);
+});
+
+$api.on($script, 'twitchUnsubscribe', function(event) {
+    $.hook.call('twitchUnsubscribe', event, true);
+});
+
+$api.on($script, 'twitchSubscribesInitialized', function(event) {
+    $.hook.call('twitchSubscribesInitialized', event, true);
 });
 
 $api.on($script, 'ircChannelJoin', function(event) {
-    $.hook.call('ircChannelJoin', event);
+    $.hook.call('ircChannelJoin', event, true);
 });
 
 $api.on($script, 'ircChannelLeave', function(event) {
-    $.hook.call('ircChannelLeave', event);
+    $.hook.call('ircChannelLeave', event, true);
 });
 
 $api.on($script, 'ircChannelUserMode', function(event) {
-    $.hook.call('ircChannelUserMode', event);
+    $.hook.call('ircChannelUserMode', event, true);
 });
 
 $api.on($script, 'ircConnectComplete', function(event) {
-    $.hook.call('ircConnectComplete', event);
+    $.hook.call('ircConnectComplete', event, true);
 });
 
 $api.on($script, 'ircJoinComplete', function(event) {
-    $.hook.call('ircJoinComplete', event);
+    $.hook.call('ircJoinComplete', event, true);
 });
 
 $api.on($script, 'ircPrivateMessage', function(event) {
-    $.hook.call('ircPrivateMessage', event);
+    $.hook.call('ircPrivateMessage', event, false);
 });
 
 $api.on($script, 'ircChannelMessage', function(event) {
-    $.hook.call('ircChannelMessage', event);
+    if (event.getSender().equalsIgnoreCase("jtv") || event.getSender().equalsIgnoreCase("twitchnotify")) {
+        $.hook.call('ircPrivateMessage', event, false);
+    } else {
+        $.hook.call('ircChannelMessage', event, false);
+    }
 });
 
 $api.on($script, 'musicPlayerConnect', function(event) {
-    $.hook.call('musicPlayerConnect', event);
+    $.hook.call('musicPlayerConnect', event, false);
 });
 
 $api.on($script, 'musicPlayerCurrentId', function(event) {
-    $.hook.call('musicPlayerCurrentId', event);
+    $.hook.call('musicPlayerCurrentId', event, false);
 });
 
 $api.on($script, 'musicPlayerCurrentVolume', function(event) {
-    $.hook.call('musicPlayerCurrentVolume', event);
+    $.hook.call('musicPlayerCurrentVolume', event, false);
 });
 
 $api.on($script, 'musicPlayerDisconnect', function(event) {
-    $.hook.call('musicPlayerDisconnect', event);
+    $.hook.call('musicPlayerDisconnect', event, false);
 });
 
 $api.on($script, 'musicPlayerState', function(event) {
-    $.hook.call('musicPlayerState', event);
+    $.hook.call('musicPlayerState', event, false);
 });
 
 $.botname = $.botName;
 $.botowner = $.ownerName;
-$.pointname = $.inidb.get('settings', 'pointname');
-$.pointgain = parseInt($.inidb.get('settings', 'pointgain'));
-$.pointbonus = parseInt($.inidb.get('settings', 'pointbonus'));
-$.pointinterval = parseInt($.inidb.get('settings', 'pointinterval'));
-$.rollbonus = parseInt($.inidb.get('settings', 'rollbonus'));
-$.announceinterval = parseInt($.inidb.get('announcements', 'interval'));
-$.announcemessages = parseInt($.inidb.get('announcements', 'reqmessages'));
-
-if ($.pointname == undefined || $.pointname == null || $.pointname.isEmpty()) {
-    $.pointname = "Points";
-}
-
-if ($.pointgain == undefined || $.pointgain == null || isNaN($.pointgain) || $.pointgain < 0) {
-    $.pointgain = 1;
-}
-
-if ($.pointbonus == undefined || $.pointbonus == null || isNaN($.pointbonus) || $.pointbonus < 0) {
-    $.pointbonus = 0.5;
-}
-
-if ($.pointinterval == undefined || $.pointinterval == null || isNaN($.pointinterval) || $.pointinterval < 0) {
-    $.pointinterval = 10;
-}
-
-if ($.rollbonus == undefined || $.rollbonus == null || isNaN($.rollbonus) || $.rollbonus < 0) {
-    $.rollbonus = 2;
-}
-
-if ($.announceinterval == undefined || $.announceinterval == null || $.announceinterval < 2) {
-    $.announceinterval = 10;
-}
-
-if ($.announcemessages == undefined || $.announcemessages == null || $.announcemessages < 5) {
-    $.announcemessages = 25;
-}
 
 $.loadScript('./util/misc.js');
 $.loadScript('./util/commandList.js');
-$.loadScript('./util/linkDetector.js');
+$.loadScript('./util/patternDetector.js');
 $.loadScript('./util/fileSystem.js');
+
+$.logEvent("init.js", 410, "Initializing...");
+
+if (enableRedis2IniConversion && $.inidb.GetBoolean("init", "redis2ini", "converted") == false) {
+    $.logEvent("init.js", 413, "Converting redisdb to inidb...");
+    $.loadScript('./util/redis2inidb.js'); 
+}
 
 $.initialsettings_update = 1;
 if ($.inidb.GetBoolean("init", "initialsettings", "loaded") == false
     || $.inidb.GetInteger("init", "initialsettings", "update") < $.initialsettings_update) {
+    $.logEvent("init.js", 420, "Loading initial settings...");
     $.loadScript('./util/initialsettings.js');
 }
 
-$.upgrade_version = 2;
+$.upgrade_version = 6;
 if ($.inidb.GetInteger("init", "upgrade", "version") < $.upgrade_version) {
+    $.logEvent("init.js", 426, "Running upgrade from v" + $.inidb.GetInteger("init", "upgrade", "version") + " to v" + $.upgrade_version + "...");
     $.loadScript('./util/upgrade.js');
 }
 
 $.loadScript('./util/permissions.js');
 $.loadScript('./util/chatModerator.js');
 
-$.loadScript('./announcements.js');
+$.loadScriptsRecursive(".");
 
-$.loadScript('./followHandler.js');
-$.loadScript('./subscribeHandler.js');
-$.loadScript('./kappaTrigger.js'); 
-$.loadScript('./youtubePlayer.js');
-
-$.loadScript('./systems/pointSystem.js');
-$.loadScript('./systems/timeSystem.js');
-$.loadScript('./systems/betSystem.js');
-$.loadScript('./systems/levelSystem.js');
-$.loadScript('./systems/votingSystem.js');
-$.loadScript('./systems/raffleSystem.js');
-$.loadScript('./systems/greetingSystem.js');
-
-$.loadScript('./commands/addCommand.js');
-$.loadScript('./commands/quoteCommand.js');
-$.loadScript('./commands/randomCommand.js');
-$.loadScript('./commands/rollCommand.js');
-$.loadScript('./commands/killCommand.js');
-$.loadScript('./commands/streamCommands.js');
-$.loadScript('./commands/top10Command.js');
-
-if (enableRedis2IniConversion && $.inidb.GetBoolean("init", "redis2ini", "converted") == false) {
-    $.loadScript('./util/redis2inidb.js'); 
-}
-
-$api.on($script, 'ircChannelMessage', function(event) {
+$api.on(initscript, 'ircChannelMessage', function(event) {
     var sender = event.getSender();
     var username = $.username.resolve(sender);
     var message = event.getMessage();
@@ -333,7 +440,7 @@ $api.on($script, 'ircChannelMessage', function(event) {
     println(username + ": " + message);
 });
 
-$api.on($script, 'command', function(event) {
+$api.on(initscript, 'command', function(event) {
     var sender = event.getSender();
     var username = $.username.resolve(sender);
     var command = event.getCommand();
@@ -347,15 +454,19 @@ $api.on($script, 'command', function(event) {
             return;
         }
         
-        $.inidb.set('settings', 'connectedmessage', argsString);
-        $.say("Connection message set!");
+        $.logEvent("init.js", 457, username + " changed the connected message to: " + argsString);
+        
+        $.inidb.set('settings', 'connectedMessage', argsString);
+        $.say("Connected message set!");
     }
     
     if (command.equalsIgnoreCase("reconnect")) {
-        if (!$.isAdmin(sender)) {
-            $.say("You must be an Administrator to use that command.");
+        if (!$.isMod(sender)) {
+            $.say("You must be a Moderator to use that command.");
             return;
         }
+        
+        $.logEvent("init.js", 469, username + " requested a reconnect");
         
         $.connmgr.reconnectSession($.hostname);
         $.say("Reconnect scheduled!");
@@ -368,34 +479,57 @@ $api.on($script, 'command', function(event) {
         }
         
         if (args.length == 0) {
-            $.say("Usage: !module list, !module enable <module name>, !module disable <module name>");
+            $.say("Usage: !module list, !module enable <module name>, !module disable <module name>, !module status <module name>");
         } else {
             if (args[0].equalsIgnoreCase("list")) {
                 var lstr = "Modules: ";
                 var first = true;
+                var utils = 0;
                 
-                for (var i = 0; i < modules.length; i++) {
-                    if (modules[i][0].indexOf("./util/") != -1) {
-                        continue;
+                for (var n = 0; n < modules.length; n++) {
+                    if (modules[n][0].indexOf("./util/") != -1) {
+                        utils++;
                     }
-                    
-                    if (!first) {
-                        lstr += " - ";
-                    }
-                    
-                    lstr += modules[i][0] + " (";
-                    
-                    if (modules[i][1]) {
-                        lstr += "enabled";
-                    } else {
-                        lstr += "disabled";
-                    }
-                    
-                    lstr += ")";
-                    first = false;
                 }
                 
-                $.say(lstr);
+                var num = Math.ceil((modules.length - utils) / 10.0);
+                
+                var offset = 0;
+                
+                for (var b = 0; b < num; b++) {
+                    n = 0;
+                    
+                    for (var i = (b * 10) + offset; n < 10; i++) {
+                        if (i >= modules.length) {
+                            break;
+                        } else if (modules[i][0].indexOf("./util/") != -1) {
+                            offset++;
+                            continue;
+                        } else {
+                            n++;
+                        }
+                    
+                        if (!first) {
+                            lstr += " - ";
+                        }
+                    
+                        lstr += modules[i][0] + " (";
+                    
+                        if (modules[i][1]) {
+                            lstr += "enabled";
+                        } else {
+                            lstr += "disabled";
+                        }
+                    
+                        lstr += ")";
+                        first = false;
+                    }
+                
+                    $.say(lstr);
+                    
+                    lstr = "> ";
+                    first = true;
+                }
             }
             
             if (args[0].equalsIgnoreCase("enable")) {
@@ -408,6 +542,8 @@ $api.on($script, 'command', function(event) {
                 if (index == -1) {
                     $.say("That module does not exist or is not loaded!");
                 } else {
+                    $.logEvent("init.js", 545, username + " enabled module " + args[1]);
+                    
                     modules[index][1] = true;
                     
                     $.inidb.set('modules', modules[index][0] + '_enabled', "1");
@@ -426,6 +562,8 @@ $api.on($script, 'command', function(event) {
                 if (index == -1) {
                     $.say("That module does not exist or is not loaded!");
                 } else {
+                    $.logEvent("init.js", 565, username + " disabled module " + args[1]);
+                    
                     modules[index][1] = false;
                     
                     $.inidb.set('modules', modules[index][0] + '_enabled', "0");
@@ -433,10 +571,30 @@ $api.on($script, 'command', function(event) {
                     $.say("Module disabled!");
                 }
             }
+            
+            if (args[0].equalsIgnoreCase("status") || args[0].equalsIgnoreCase("check")) {
+                if (args[1].indexOf("./util/") != -1) {
+                    return;
+                }
+                
+                index = $.getModuleIndex(args[1]);
+                
+                if (index == -1) {
+                    $.say("That module does not exist or is not loaded!");
+                } else {
+                    if (modules[index][1]) {
+                        $.say("The module " + modules[index][0] + " is currently enabled!");
+                    } else {
+                        $.say("The module " + modules[index][0] + " is currently disabled!");
+                    }
+                }
+            }
         }
     }
 });
 
-$.registerChatCommand('setconnectedmessage');
-$.registerChatCommand('reconnect');
-$.registerChatCommand('module');
+$.logEvent("init.js", 596, "Bot Online");
+
+$.registerChatCommand('./init.js', 'setconnectedmessage', 'admin');
+$.registerChatCommand('./init.js', 'reconnect', 'mod');
+$.registerChatCommand('./init.js', 'module', 'admin');

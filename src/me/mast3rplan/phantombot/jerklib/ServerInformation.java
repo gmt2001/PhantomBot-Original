@@ -207,7 +207,7 @@ public class ServerInformation {
                 }
                 channelModes = modeMap.keySet().toArray(new String[modeMap.size()]);
             } else {
-                //System.err.println("Unreconized Server Info Token:" + subTokens[0]);
+                //com.gmt2001.Console.err.println("Unreconized Server Info Token:" + subTokens[0]);
             }
         }
     }

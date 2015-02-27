@@ -48,7 +48,7 @@ import java.util.TimerTask;
  * }
  * else
  * {
- * System.out.println("Authed!");
+ * com.gmt2001.Console.out.println("Authed!");
  * }
  * }
  * });

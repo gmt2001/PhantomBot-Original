@@ -36,7 +36,7 @@ $.on('command', function(event) {
         var message = "";
             
         if (args.length > 1) {
-            message = argsString.substring(argsString.indexOf(subCommand) + subCommand.length() + 1);
+            message = argsString.substring(argsString.indexOf(subCommand) + $.strlen(subCommand) + 1);
         }
     
         if (subCommand.equalsIgnoreCase("enable")) {
@@ -48,7 +48,7 @@ $.on('command', function(event) {
             
             $.say ("Greeting disabled for " + username);
         } else if (subCommand.equalsIgnoreCase("set")) {
-            if (message.length() == 0) {
+            if ($.strlen(message) == 0) {
                 $.inidb.set("greeting", sender, "");
                 $.say("Greeting deleted");
             }
@@ -62,10 +62,17 @@ $.on('command', function(event) {
             
             $.say("Greeting changed");
         } else if (subCommand.equalsIgnoreCase("setdefault")) {
+            if (!$.isMod(sender)) {
+                $.say("Only a Moderator can use this command!");
+                return;
+            }
+            
             if (message.indexOf("<name>") == -1) {
                 $.say("You must include '<name>' in the new greeting so I know where to insert the viewers name, " + username + ". Example: !greeting setdefault <name> sneaks into the channel!");
                 return;
             }
+            
+            $.logEvent("greetingSystem.js", 75, username + " changed the default greeting to " + message);
             
             $.inidb.set("greeting", "_default", message);
             
@@ -90,5 +97,5 @@ $.on('command', function(event) {
     } 
 });
 
-$.registerChatCommand("greeting");
-$.registerChatCommand("greet");
+$.registerChatCommand("./systems/greetingSystem.js", "greeting");
+$.registerChatCommand("./systems/greetingSystem.js", "greet");

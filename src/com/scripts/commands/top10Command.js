@@ -7,7 +7,6 @@ $.on('command', function(event) {
     
     if (command.equalsIgnoreCase("top10")) {
         if (!$.moduleEnabled("./systems/pointSystem.js")) {
-            $.say("There is no top 10 because points are disabled!");
             return;
         }
         
@@ -50,4 +49,4 @@ $.on('command', function(event) {
     }
 });
 
-$.registerChatCommand("top10");
+$.registerChatCommand("./commands/top10Command.js", "top10");

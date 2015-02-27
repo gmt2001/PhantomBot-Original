@@ -1,8 +1,7 @@
 package me.mast3rplan.phantombot.jerklib.events;
 
-import me.mast3rplan.phantombot.jerklib.Session;
-
 import java.nio.channels.UnresolvedAddressException;
+import me.mast3rplan.phantombot.jerklib.Session;
 
 
 /**

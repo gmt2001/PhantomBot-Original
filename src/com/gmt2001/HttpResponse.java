@@ -1,6 +1,7 @@
 package com.gmt2001;
 
 import com.gmt2001.HttpRequest.RequestType;
+import java.util.HashMap;
 
 /**
  *
@@ -13,6 +14,8 @@ public class HttpResponse
     public String url;
     public String post;
     public String content;
+    public HashMap<String, String> headers;
     public int httpCode;
     public boolean success;
+    public String exception;
 }

@@ -16,6 +16,8 @@ public class YoutubeAPI
     public YoutubeAPI(String clientID, String developer_key)
     {
         service = new YouTubeService(clientID, developer_key);
+        
+        Thread.setDefaultUncaughtExceptionHandler(com.gmt2001.UncaughtExceptionHandler.instance());
     }
 
     public double getVideoLength(String id)

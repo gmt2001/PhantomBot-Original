@@ -128,6 +128,7 @@ function nextDefault() {
     }
     
     $.say("Now Playing >> \u266B~" + name + "~\u266B requested by " + user);
+    $.writeToFile(name, "currentsong.txt", false);
 }
 
 function next() {
@@ -154,6 +155,7 @@ function next() {
     }
     
     $.say("Now Playing >> \u266B~" + name + "~\u266B requested by " + user);
+    $.writeToFile(name, "currentsong.txt", false);
     
     var nextMsg = "The song request queue is empty! Request a new song with !addsong <youtube link>";
     if ($var.songqueue.length > 0) {
@@ -388,14 +390,14 @@ $.on('command', function (event) {
     }
 });
 
-$.registerChatCommand("addsong");
-$.registerChatCommand("removesong");
-$.registerChatCommand("volume");
-$.registerChatCommand("skipsong");
-$.registerChatCommand("vetosong");
-$.registerChatCommand("currentsong");
-$.registerChatCommand("nextsong");
+$.registerChatCommand("./youtubePlayer.js", "addsong");
+$.registerChatCommand("./youtubePlayer.js", "removesong");
+$.registerChatCommand("./youtubePlayer.js", "volume", "mod");
+$.registerChatCommand("./youtubePlayer.js", "skipsong");
+$.registerChatCommand("./youtubePlayer.js", "vetosong");
+$.registerChatCommand("./youtubePlayer.js", "currentsong");
+$.registerChatCommand("./youtubePlayer.js", "nextsong");
 
 $.on('musicPlayerCurrentVolume', function (event) {
-    $.say("Music volume is currently: " + parseInt(event.getVolume()) + "%, dood!");
+    $.say("Music volume is currently: " + parseInt(event.getVolume()) + "%!");
 });

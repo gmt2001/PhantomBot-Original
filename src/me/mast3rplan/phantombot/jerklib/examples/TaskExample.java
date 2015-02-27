@@ -44,7 +44,7 @@ public class TaskExample {
             public void receiveEvent(IRCEvent e) {
                 if (e.getType() == Type.MOTD) {
                     MotdEvent me = (MotdEvent) e;
-                    System.out.println(me.getMotdLine());
+                    com.gmt2001.Console.out.println(me.getMotdLine());
                 } else {
                     JoinCompleteEvent je = (JoinCompleteEvent) e;
                     je.getChannel().say("Yay tasks!");
@@ -57,7 +57,7 @@ public class TaskExample {
 		/* Add a Task that will be notified of all events */
         session.onEvent(new TaskImpl("print") {
             public void receiveEvent(IRCEvent e) {
-                System.out.println(e.getRawEventData());
+                com.gmt2001.Console.out.println(e.getRawEventData());
             }
         });
 

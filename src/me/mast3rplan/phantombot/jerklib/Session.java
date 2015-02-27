@@ -48,6 +48,7 @@ public class Session extends RequestGenerator
     private List<ModeAdjustment> userModes = new ArrayList<ModeAdjustment>();
     private final Map<String, Channel> channelMap = new HashMap<String, Channel>();
     private int retries = 0;
+    public boolean isClosing = false;
 
     public enum State
     {
@@ -71,6 +72,8 @@ public class Session extends RequestGenerator
         this.rCon = rCon;
         this.conman = conman;
         setSession(this);
+        
+        Thread.setDefaultUncaughtExceptionHandler(com.gmt2001.UncaughtExceptionHandler.instance());
     }
 
     /**
@@ -300,6 +303,8 @@ public class Session extends RequestGenerator
      */
     public void close(String quitMessage)
     {
+        isClosing = true;
+        
         if (con != null)
         {
             con.quit(quitMessage);
@@ -602,10 +607,10 @@ public class Session extends RequestGenerator
     {
         if (retries > 0)
         {
-            System.out.println("Failed to connect to '" + rCon.getHostName() + "', retrying connection.");
+            com.gmt2001.Console.out.println("Failed to connect to '" + rCon.getHostName() + "', retrying connection.");
         }
         retries++;
-        // System.err.println("Retry :" + retries);
+        // com.gmt2001.Console.err.println("Retry :" + retries);
         lastRetry = System.currentTimeMillis();
     }
 
@@ -656,9 +661,9 @@ public class Session extends RequestGenerator
         {
             return;
         }
-        
+
         state = State.DISCONNECTED;
-        
+
         if (con != null)
         {
             con.quit("");

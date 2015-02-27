@@ -1,16 +1,29 @@
+$.subscribemode = $.inidb.get('settings', 'subscribemode');
+
+if ($.subscribemode == null || $.subscribemode == undefined) {
+    $.inidb.set('settings', 'subscribemode', 'auto');
+    $.subscribemode = $.inidb.get('settings', 'subscribemode');
+}
+
+if ($.subscribemode.equalsIgnoreCase("twitchnotify")) {
+    $.announceSubscribes = true;
+}
+
 $.on('twitchSubscribe', function(event) {
     var subscriber = event.getSubscriber().toLowerCase();
     var username = $.username.resolve(subscriber);
     var subscribed = $.inidb.get('subscribed', subscriber);
     
     if (subscribed == null || subscribed == undefined || subscribed.isEmpty()) {
-        $.inidb.set('subscribed', subscriber, 1);
+        if (!$.subscribemode.equalsIgnoreCase("twitchnotify")) {
+            $.inidb.set('subscribed', subscriber, 1);
+        }
         
         if ($.announceSubscribes) {
             var s = $.inidb.get('settings', 'subscribemessage');
             var p = parseInt($.inidb.get('settings', 'subscribereward'));
             
-            if (s == null || s == undefined || s.length() == 0) {
+            if (s == null || s == undefined || $.strlen(s) == 0) {
                 if ($.moduleEnabled("./systems/pointSystem.js")) {
                     s = "Thanks for the subscription (name)! +(reward) (pointname)!";
                 } else {
@@ -42,7 +55,7 @@ $.on('twitchSubscribe', function(event) {
         if ($.moduleEnabled("./systems/pointSystem.js") && p > 0) {
             $.inidb.incr('points', subscriber, p);
         }
-    } else if (followed.equalsIgnoreCase("0")) {
+    } else if (subscribed.equalsIgnoreCase("0") && !$.subscribemode.equalsIgnoreCase("twitchnotify")) {
         $.inidb.set('subscribed', subscriber, 1);
     }
 });
@@ -80,7 +93,7 @@ $.on('command', function(event) {
             return;
         }
         
-        if (argsString.length() == 0) {
+        if ($.strlen(argsString) == 0) {
             $.say("The current new subscriber message is: " + $.inidb.get('settings', 'subscribemessage'));
             
             var s = "To change it use '!subscribemessage <message>'. You can also add the string '(name)' to put the subscribers name";
@@ -91,7 +104,11 @@ $.on('command', function(event) {
             
             $.say(s);
         } else {
+            $.logEvent("subscribeHandler.js", 107, username + " changed the new subscriber message to: " + argsString);
+            
             $.inidb.set('settings', 'subscribemessage', argsString);
+            
+            $.say("New subscriber message set!");
         }
     }
     
@@ -101,7 +118,7 @@ $.on('command', function(event) {
             return;
         }
         
-        if (argsString.length() == 0) {
+        if ($.strlen(argsString) == 0) {
             if ($.inidb.exists('settings', 'subscribereward')) {
                 $.say("The current new subscriber reward is " + $.inidb.get('settings', 'subscribereward') + " points! To change it use '!subscribereward <reward>'");
             } else {
@@ -113,7 +130,11 @@ $.on('command', function(event) {
                 return;
             }
             
+            $.logEvent("subscribeHandler.js", 133, username + " changed the new subscriber points reward to: " + argsString);
+            
             $.inidb.set('settings', 'subscribereward', argsString);
+            
+            $.say("New subscriber reward set!");
         }
     }
     
@@ -129,16 +150,75 @@ $.on('command', function(event) {
         
         $.say("There are currently " + count + " subscribers!");
     }
+    
+    if (command.equalsIgnoreCase("subscribemode")) {
+        if (!$.isAdmin(sender)) {
+            $.say("You must be an Administrator to use that command, " + username + "!");
+            return;
+        }
+        
+        if ($.strlen(argsString) == 0) {
+            $.say("Currently using " + $.subscribemode + " subscription detection. twitchnotify mode does not save to the database. To change it use '!subscribemode <auto or twitchnotify>'");
+            
+            return;
+        }
+        
+        if (argsString.equalsIgnoreCase("twitchnotify")) {
+            $.logEvent("subscribeHandler.js", 167, username + " changed the new subscriber detection method to twitchnotify");
+            
+            $.announceSubscribes = true;
+            
+            $.inidb.set('settings', 'subscribemode', 'twitchnotify');
+            
+            $.say("Switched to twitchnotify subscription detection!");
+        } else {
+            $.logEvent("subscribeHandler.js", 175, username + " changed the new subscriber detection method to auto");
+            
+            $.inidb.set('settings', 'subscribemode', 'auto');
+            
+            $.say("Switched to auto subscription detection!");
+        }
+        
+        $.subscribemode = $.inidb.get('settings', 'subscribemode');
+    }
 });
 
-$.registerChatCommand("subscribemessage");
-$.registerChatCommand("subscribereward");
-$.registerChatCommand("subscribecount");
+$.on('ircPrivateMessage', function(event) {
+    if (event.getSender().equalsIgnoreCase("twitchnotify")) {
+        var message = event.getMessage().toLowerCase();
+
+        if (message.indexOf("just subscribed!") != -1 || message.indexOf("just subscribed for") != -1) {
+            var spl = message.split(" ");
+            var EventBus = Packages.me.mast3rplan.phantombot.event.EventBus;
+            var TwitchSubscribeEvent = Packages.me.mast3rplan.phantombot.event.twitch.subscriber.TwitchSubscribeEvent;
+            
+            EventBus.instance().post(new TwitchSubscribeEvent(spl[0]));
+        }
+    } 
+});
+
+$.registerChatCommand("./subscribeHandler.js", "subscribemessage", "admin");
+$.registerChatCommand("./subscribeHandler.js", "subscribereward", "admin");
+$.registerChatCommand("./subscribeHandler.js", "subscribecount");
+$.registerChatCommand("./subscribeHandler.js", "subscribemode", "admin");
+
 
 $.setInterval(function() {
     if (!$.moduleEnabled("./subscribeHandler.js")) {
         $.subscribers.doRun(false);
     } else {
-        $.subscribers.doRun(true);
+        if ($.subscribemode.equalsIgnoreCase("twitchnotify")) {
+            $.subscribers.doRun(false);
+        } else {
+            $.subscribers.doRun(true);
+        }
     }
-}, 1000 * 60);
+}, 60 * 1000);
+
+var keys = $.inidb.GetKeyList("subscribed", "");
+
+for (var i = 0; i < keys.length; i++) {
+    if ($.inidb.get("subscribed", keys[i]).equalsIgnoreCase("1")) {
+        $.subscribers.addSubscriber(keys[i]);
+    }
+}

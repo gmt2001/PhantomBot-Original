@@ -25,12 +25,15 @@ $.on('command', function(event) {
             time = int(args[2]);
 
             if(action.equalsIgnoreCase("give")) {
+                $.logEvent("timeSystem.js", 28, $.username.resolve(sender) + " gave " + time + " time to " + username);
                 $.inidb.incr('time', username, time);
                 $.say(time + " seconds was added towards " + $.username.resolve(username) + ".");
             } else if(action.equalsIgnoreCase("take")) {
+                $.logEvent("timeSystem.js", 32, $.username.resolve(sender) + " took " + time + " time from " + username);
                 $.inidb.decr('time', username, time);
                 $.say($.username.resolve(username) + "'s time was deducted by " + time + " seconds.");
             } else if(action.equalsIgnoreCase("set")) {
+                $.logEvent("timeSystem.js", 36, $.username.resolve(sender) + " set " + username + "'s time to " + time);
                 $.inidb.set('time', username, time);
                 $.say($.username.resolve(username) + "'s time was set to " + time + " seconds.");
             } else {
@@ -67,12 +70,12 @@ $.on('command', function(event) {
     }
 });
 
-$.registerChatCommand("time");
-$.registerChatCommand("time help");
+$.registerChatCommand("./systems/timeSystem.js", "time");
+$.registerChatCommand("./systems/timeSystem.js", "time help");
 
 
 
-$.setInterval(function() {
+$.timer.addTimer("./systems/timeSystem.js", "addtime", true, function() {
     if (!$.moduleEnabled("./systems/timeSystem.js")) {
         return;
     }
@@ -87,4 +90,4 @@ $.setInterval(function() {
             $.say($.username.resolve(nick) + " leveled up to a " + $.getGroupNameById(1) + "! Congratulations and thanks for staying with us!");
         }
     }
-}, 1000 * 60);
+}, 60 * 1000);

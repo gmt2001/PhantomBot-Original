@@ -60,6 +60,8 @@ class Connection
         this.manager = manager;
         this.socChannel = socChannel;
         this.session = session;
+        
+        Thread.setDefaultUncaughtExceptionHandler(com.gmt2001.UncaughtExceptionHandler.instance());
     }
 
     /**
@@ -137,13 +139,13 @@ class Connection
             numRead = socChannel.read(readBuffer);
         } catch (Exception e)
         {
-            e.printStackTrace();
+            com.gmt2001.Console.err.printStackTrace(e);
             session.disconnected(e);
         }
 
         if (numRead == -1)
         {
-            session.disconnected(new Exception("Numb read -1"));
+            session.disconnected(new Exception("Num read -1"));
         }
 
         if (session.getState() == State.DISCONNECTED || numRead <= 0)
@@ -286,7 +288,7 @@ class Connection
             amount = socChannel.write(buff);
         } catch (IOException e)
         {
-            e.printStackTrace();
+            com.gmt2001.Console.err.printStackTrace(e);
             session.disconnected(e);
         }
 
@@ -297,7 +299,7 @@ class Connection
 
         fireWriteEvent(req);
 
-        // System.out.println("Wrote " + amount + " " + req.getType() + " " + req.getMessage() + " " + bursts);
+        // com.gmt2001.Console.out.println("Wrote " + amount + " " + req.getType() + " " + req.getMessage() + " " + bursts);
 
         return amount;
     }
@@ -346,7 +348,7 @@ class Connection
      }
      catch (IOException e)
      {
-     e.printStackTrace();
+     com.gmt2001.Console.err.printStackTrace(e);
      session.disconnected();
      }
 
@@ -407,7 +409,7 @@ class Connection
             socChannel.close();
         } catch (IOException e)
         {
-            e.printStackTrace();
+            com.gmt2001.Console.err.printStackTrace(e);
         }
     }
 

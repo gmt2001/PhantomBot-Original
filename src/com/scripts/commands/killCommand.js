@@ -10,7 +10,7 @@ $.on('command', function(event) {
     if(command.equalsIgnoreCase("kill")) {
         var killmessages = new Array();
         
-        if(argsString.length() > 0) {
+        if($.strlen(argsString) > 0) {
             if (argsString.equalsIgnoreCase($.botname)) {
                 killmessages.push("<target> counters <sender>'s attempt to kill it with a flamethrower");
                 killmessages.push("<target> kicked <sender> in the balls in self defense");
@@ -43,4 +43,4 @@ $.on('command', function(event) {
     }
 });
 
-$.registerChatCommand("kill");
+$.registerChatCommand("./commands/killCommand.js", "kill");

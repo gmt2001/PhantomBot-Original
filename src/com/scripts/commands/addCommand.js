@@ -1,11 +1,3 @@
-var s = $.inidb.get("settings", "nonmodcommands");
-
-$.allowNonModCommands = false;
-
-if (s != null && s.equals("1")) {
-    $.allowNonModCommands = true;
-}
-
 $.on('command', function(event) {
     var sender = event.getSender();
     var username = $.username.resolve(sender);
@@ -19,33 +11,26 @@ $.on('command', function(event) {
 
     if(args.length >= 2) {
         if(command.equalsIgnoreCase("addcom")) {
-            if (!$.allowNonModCommands && !$.isMod(sender)) {
+            if (!$.isMod(sender)) {
                 $.say("You must be a Moderator to use that command!");
                 return;
             }
             
-            if (!$.isMod(sender) && $.moduleEnabled("./systems/pointSystem.js")) {
-                points = $.inidb.get('points', sender);
-                if(points == null) points = 0;
-                else points = int(points);
-            
-                if(points < 8000) {
-                    $.say($.username.resolve(sender) + ", " + " you need 8,000 " + $.pointname + " to create that command, dood!");
-                    return;
-                }
-
-                $.inidb.decr('points', sender, 8000);
-
-                $.say(username + ", paid 8,000 " + $.pointname + " to add a new command, doods!");
-            } 
-            
             commandString = args[0].toLowerCase();
-            message = argsString.substring(argsString.indexOf(commandString) + commandString.length() + 1);
+            message = argsString.substring(argsString.indexOf(args[0]) + $.strlen(args[0]) + 1);
+            
+            if ($.commandExists(commandString) && !$.isCustomCommand(commandString)) {
+                $.say("You can not overwrite a built in command, " + username + "!");
+                return;
+            }
+            
+            $.logEvent("addCommand.js", 50, username + " added the command !" + commandString + " with message: " + message);
+            
             $.inidb.set('command', commandString, message);
             
-            $.registerCustomChatCommand(commandString);
+            $.registerCustomChatCommand("./commands/addCommand.js", commandString);
             
-            $.say($.username.resolve(sender) + ", the command !" + commandString + " was successfully created, dood!");
+            $.say(username + ", the command !" + commandString + " was successfully created!");
             return;
         }
 
@@ -58,31 +43,17 @@ $.on('command', function(event) {
                 return;
             }
             
+            $.logEvent("addCommand.js", 69, username + " deleted the command !" + commandString);
+            
             commandString = args[0].toLowerCase();
             $.inidb.del('command', commandString);
+            $.inidb.del('commandperm', commandString);
+            $.inidb.del('commandcount', commandString);
             
             $.unregisterCustomChatCommand(commandString);
             
-            cmd = $.inidb.del('command', commandString);
-            $.say($.username.resolve(sender) + ", the command !" + commandString + " was successfully removed, dood!");
+            $.say($.username.resolve(sender) + ", the command !" + commandString + " was successfully removed!");
             return;
-        }
-    }
-	
-    if (command.equalsIgnoreCase("modcom")) {
-        if (!$.isMod(sender)) {
-            $.say("You must be a Moderator to use that command!");
-            return;
-        }
-        
-        $.allowNonModCommands = !$.allowNonModCommands;
-        
-        if ($.allowNonModCommands) {
-            $.inidb.set("settings", "nonmodcommands", "1");
-            $.say("New chat commands from non-Moderators is allowed!");
-        } else {
-            $.inidb.set("settings", "nonmodcommands", "0");
-            $.say("New chat commands from non-Moderators is no longer allowed!");
         }
     }
     
@@ -99,41 +70,49 @@ $.on('command', function(event) {
         
         if (args.length == 1) {
             if (!$.inidb.exists("command", args[0].toLowerCase())) {
-                $.say("The command " + args[0] + " does not exist!");
+                $.say("The command !" + args[0] + " does not exist!");
                 return;
             }
             
             if (!$.inidb.exists("commandperm", args[0].toLowerCase())) {
-                $.say("The command " + args[0] + " can be used by all viewers");
+                $.say("The command !" + args[0] + " can be used by all viewers");
             } else if ($.inidb.get("commandperm", args[0].toLowerCase()).equalsIgnoreCase("caster")) {
-                $.say("The command " + args[0] + " can only be used by Casters");
+                $.say("The command !" + args[0] + " can only be used by Casters");
             } else if ($.inidb.get("commandperm", args[0].toLowerCase()).equalsIgnoreCase("mod")) {
-                $.say("The command " + args[0] + " can only be used by Moderators");
+                $.say("The command !" + args[0] + " can only be used by Moderators");
             } else if ($.inidb.get("commandperm", args[0].toLowerCase()).equalsIgnoreCase("admin")) {
-                $.say("The command " + args[0] + " can only be used by Administrators");
+                $.say("The command !" + args[0] + " can only be used by Administrators");
             }
         }
         
         if (args.length >= 2) {
             if (!$.inidb.exists("command", args[0].toLowerCase())) {
-                $.say("The command " + args[0] + " does not exist!");
+                $.say("The command !" + args[0] + " does not exist!");
                 return;
             }
             
             if (args[1].equalsIgnoreCase("caster") || args[1].equalsIgnoreCase("casters")) {
+                $.logEvent("addCommand.js", 142, username + " set the command !" + args[0] + " to casters only");
+                $.setCustomChatCommandGroup(args[0].toLowerCase(), "caster");
                 $.inidb.set("commandperm", args[0].toLowerCase(), "caster");
-                $.say("The command " + args[0] + " can now only be used by Casters");
+                $.say("The command !" + args[0] + " can now only be used by Casters");
             } else if (args[1].equalsIgnoreCase("mod") || args[1].equalsIgnoreCase("mods")
                 || args[1].equalsIgnoreCase("moderator") || args[1].equalsIgnoreCase("moderators")) {
+                $.logEvent("addCommand.js", 148, username + " set the command !" + args[0] + " to mods only");
+                $.setCustomChatCommandGroup(args[0].toLowerCase(), "mod");
                 $.inidb.set("commandperm", args[0].toLowerCase(), "mod");
-                $.say("The command " + args[0] + " can now only be used by Moderators");
+                $.say("The command !" + args[0] + " can now only be used by Moderators");
             } else if (args[1].equalsIgnoreCase("admin") || args[1].equalsIgnoreCase("admins")
                 || args[1].equalsIgnoreCase("administrator") || args[1].equalsIgnoreCase("administrators")) {
+                $.logEvent("addCommand.js", 154, username + " set the command !" + args[0] + " to admins only");
+                $.setCustomChatCommandGroup(args[0].toLowerCase(), "admin");
                 $.inidb.set("commandperm", args[0].toLowerCase(), "admin");
-                $.say("The command " + args[0] + " can now only be used by Administrators");
+                $.say("The command !" + args[0] + " can now only be used by Administrators");
             } else {
+                $.logEvent("addCommand.js", 159, username + " set the command !" + args[0] + " to allow all");
+                $.setCustomChatCommandGroup(args[0].toLowerCase(), "");
                 $.inidb.del("commandperm", args[0].toLowerCase());
-                $.say("The command " + args[0] + " can now be used by all viewers");
+                $.say("The command !" + args[0] + " can now be used by all viewers");
             }
         }
     }
@@ -151,13 +130,10 @@ $.on('command', function(event) {
     if ($.inidb.exists('command', command.toLowerCase())) {
         if ($.inidb.exists("commandperm", command.toLowerCase())) {
             if ($.inidb.get("commandperm", command.toLowerCase()).equalsIgnoreCase("caster") && !isCaster(sender)) {
-                $.say("You must be a Caster to use that command!");
                 return;
             } else if ($.inidb.get("commandperm", command.toLowerCase()).equalsIgnoreCase("mod") && !isMod(sender)) {
-                $.say("You must be a Moderator to use that command!");
                 return;
             } else if ($.inidb.get("commandperm", command.toLowerCase()).equalsIgnoreCase("admin") && !isAdmin(sender)) {
-                $.say("You must be an Administrator to use that command!");
                 return;
             }
         }
@@ -182,15 +158,18 @@ $.on('command', function(event) {
             messageCommand = messageCommand.replace('(count)', $.inidb.get('commandcount', command.toLowerCase()));
         }
         
+        while (messageCommand.contains('(z_stroke)')) {
+            messageCommand = messageCommand.replace('(z_stroke)', java.lang.Character.toString(java.lang.Character.toChars(0x01B6)[0]));
+        }
+        
         $.say(messageCommand);
     }
 });
 
-$.registerChatCommand("addcom");
-$.registerChatCommand("delcom");
-$.registerChatCommand("modcom");
-$.registerChatCommand("permcom");
-$.registerChatCommand("helpcom");
+$.registerChatCommand("./commands/addCommand.js", "addcom", "mod");
+$.registerChatCommand("./commands/addCommand.js", "delcom", "mod");
+$.registerChatCommand("./commands/addCommand.js", "permcom", "admin");
+$.registerChatCommand("./commands/addCommand.js", "helpcom", "mod");
 
 var commands = $.inidb.GetKeyList("command", "");
 
@@ -200,5 +179,9 @@ if ($.array.contains(commands, "commands")) {
 }
 
 for (var i = 0; i < commands.length; i++) {
-    $.registerCustomChatCommand(commands[i]);
+    $.registerCustomChatCommand("./commands/addCommand.js", commands[i]);
+    
+    if ($.inidb.exists("commandperm", commands[i])) {
+        $.setCustomChatCommandGroup(commands[i], $.inidb.get("commandperm", commands[i]));
+    }
 }

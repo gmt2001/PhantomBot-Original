@@ -52,14 +52,14 @@ public class Example implements IRCEventListener {
             e.getSession().join("#me.mast3rplan.phantombot.jerklib");
         } else if (e.getType() == Type.CHANNEL_MESSAGE) {
             MessageEvent me = (MessageEvent) e;
-            System.out.println(me.getNick() + ":" + me.getMessage());
+            com.gmt2001.Console.out.println(me.getNick() + ":" + me.getMessage());
             me.getChannel().say("Modes :" + me.getChannel().getUsersModes(me.getNick()).toString());
         } else if (e.getType() == Type.JOIN_COMPLETE) {
             JoinCompleteEvent jce = (JoinCompleteEvent) e;
 			/* say hello */
             jce.getChannel().say("Hello from Jerklib!");
         } else {
-            System.out.println(e.getType() + " " + e.getRawEventData());
+            com.gmt2001.Console.out.println(e.getType() + " " + e.getRawEventData());
         }
     }
 

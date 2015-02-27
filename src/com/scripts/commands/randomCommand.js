@@ -35,7 +35,7 @@ $.on('command', function(event) {
         ar.push("X GON GIVE IT TO YA!");
         ar.push("༼ つ ◕_◕ ༽=ε̵͇̿̿'̿'̿ ̿ ̿̿  " + " I has a gun, Gimme yo money <sender>!");
         ar.push("I hope <sender>-senpai notices me..");
-        ar.push("<sender>is so awesome because <sender> can trip over flat surfaces and fall up the stairs. Now that's a talented skill right there :D, <sender> can also fall up. Yep!");
+        ar.push("<sender> is so awesome because <sender> can trip over flat surfaces and fall up the stairs. Now that's a talented skill right there :D, <sender> can also fall up. Yep!");
         ar.push("<sender> looks good enough to dress like the grim reaper and go to a retirement home and tap on the windows!");
         ar.push("<sender>, the next time you're at the park, take a tennis ball, throw it at someone and shout \"I CHOOSE YOU! PIKACHU!\"..then you might have to run ;D");
         ar.push("<sender>, have you ever just wanted to grab a chicken leg from KFC and run around the streets yelling \"Do you want to pet my cock?\"");
@@ -45,14 +45,16 @@ $.on('command', function(event) {
         ar.push("<target> mysteriously died.");
 
         do {
-            s = $.randElement(killmessages);
-        } while(s.equalsIgnoreCase($var.lastrandom) && killmessages.length > 1);
+            s = $.randElement(ar);
+        } while(s.equalsIgnoreCase($var.lastrandom) && ar.length > 1);
         
+        while (s.indexOf("<sender>") != -1) {
         s = s.replace("<sender>", username);
+        }
         
-        if (argsString.length > 0) {
-            var randomPerson = $.randElement($.users);
-            
+        var randomPerson = $.randElement($.users);
+        
+        while (s.indexOf("<target>") != -1) {
             s = s.replace("<target>", $.username.resolve(randomPerson[0]));
         }
         
@@ -60,4 +62,4 @@ $.on('command', function(event) {
     }
 });
 
-$.registerChatCommand("random");
+$.registerChatCommand("./commands/randomCommand.js", "random");

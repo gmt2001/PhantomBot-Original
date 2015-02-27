@@ -6,22 +6,27 @@ import java.util.List;
 /**
  * A Class to parse a line of IRC text
  * <p/>
- * <pre>
- * &lt;message&gt;  ::= [':' &lt;prefix&gt; &lt;SPACE&gt; ] &lt;command&gt; &lt;params&gt; &lt;crlf&gt;
- * &lt;prefix&gt;   ::= &lt;servername&gt; | &lt;nick&gt; [ '!' &lt;user&gt; ] [ '@' &lt;host&gt; ]
- * &lt;command&gt;  ::= &lt;letter&gt; { &lt;letter&gt; } | &lt;number&gt; &lt;number&gt; &lt;number&gt;
- * &lt;SPACE&gt;    ::= ' ' { ' ' }
- * &lt;params&gt;   ::= &lt;SPACE&gt; [ ':' &lt;trailing&gt; | &lt;middle&gt; &lt;params&gt; ]
+ * <
+ * pre> &lt;message&gt; ::= [':' &lt;prefix&gt; &lt;SPACE&gt; ] &lt;command&gt;
+ * &lt;params&gt; &lt;crlf&gt; &lt;prefix&gt; ::= &lt;servername&gt; |
+ * &lt;nick&gt; [ '!' &lt;user&gt; ] [ '
  *
- * &lt;middle&gt;   ::= &lt;Any *non-empty* sequence of octets not including SPACE
- *              or NUL or CR or LF, the first of which may not be ':'&gt;
- * &lt;trailing&gt; ::= &lt;Any, possibly *empty*, sequence of octets not including
- *                NUL or CR or LF&gt;
+ * @' &lt;host&gt; ] &lt;command&gt; ::= &lt;letter&gt; { &lt;letter&gt; } |
+ * &lt;number&gt; &lt;number&gt; &lt;number&gt; &lt;SPACE&gt; ::= ' ' { ' ' }
+ * &lt;params&gt; ::= &lt;SPACE&gt; [ ':' &lt;trailing&gt; | &lt;middle&gt;
+ * &lt;params&gt; ]
+ *
+ * &lt;middle&gt; ::= &lt;Any *non-empty* sequence of octets not including SPACE
+ * or NUL or CR or LF, the first of which may not be ':'&gt; &lt;trailing&gt;
+ * ::= &lt;Any, possibly *empty*, sequence of octets not including NUL or CR or
+ * LF&gt;
  * </pre>
  *
  * @author mohadib
  */
-public class EventToken {
+public class EventToken
+{
+
     private final String data;
     private String prefix = "", command = "";
     private List<String> arguments = new ArrayList<String>();
@@ -32,7 +37,8 @@ public class EventToken {
      *
      * @param data to parse
      */
-    public EventToken(String data) {
+    public EventToken(String data)
+    {
         this.data = data;
         parse();
     }
@@ -40,18 +46,31 @@ public class EventToken {
     /**
      * Parse message
      */
-    private void parse() {
-        if (data.length() == 0) return;
+    private void parse()
+    {
+        if (data.length() == 0)
+        {
+            return;
+        }
 
         //see if message has prefix
-        if (data.startsWith(":")) {
+        if (data.startsWith(":"))
+        {
             extractPrefix(data);
             incTillChar();
         }
 
         //get command
-        command = data.substring(offset, data.indexOf(" ", offset));
-        offset += command.length();
+        if (data.length() > offset)
+        {
+            int idx = data.indexOf(" ", offset);
+
+            if (idx >= 0)
+            {
+                command = data.substring(offset, idx);
+                offset += command.length();
+            }
+        }
 
         incTillChar();
         extractArguments();
@@ -60,21 +79,27 @@ public class EventToken {
     /**
      * Extract arguments from message
      */
-    private void extractArguments() {
+    private void extractArguments()
+    {
         String argument = "";
-        for (int i = offset; i < data.length(); i++) {
-            if (!Character.isWhitespace(data.charAt(i))) {
+        for (int i = offset; i < data.length(); i++)
+        {
+            if (!Character.isWhitespace(data.charAt(i)))
+            {
                 argument += data.charAt(i);
 
                 //if argument.equals(":") then arg is everything till EOL
-                if (argument.length() == 1 && argument.equals(":")) {
+                if (argument.length() == 1 && argument.equals(":"))
+                {
                     argument = data.substring(i + 1);
                     arguments.add(argument);
                     return;
                 }
                 offset++;
-            } else {
-                if (argument.length() > 0) {
+            } else
+            {
+                if (argument.length() > 0)
+                {
                     arguments.add(argument);
                     argument = "";
                 }
@@ -82,18 +107,21 @@ public class EventToken {
             }
         }
 
-        if (argument.length() != 0) {
+        if (argument.length() != 0)
+        {
             arguments.add(argument);
         }
     }
 
-
     /**
      * Increment offset until a non-whitespace char is found
      */
-    private void incTillChar() {
-        for (int i = offset; i < data.length(); i++) {
-            if (!Character.isWhitespace(data.charAt(i))) {
+    private void incTillChar()
+    {
+        for (int i = offset; i < data.length(); i++)
+        {
+            if (!Character.isWhitespace(data.charAt(i)))
+            {
                 return;
             }
             offset++;
@@ -105,7 +133,8 @@ public class EventToken {
      *
      * @param data
      */
-    private void extractPrefix(String data) {
+    private void extractPrefix(String data)
+    {
         //set prefix - : is at 0
         prefix = data.substring(1, data.indexOf(" "));
 
@@ -118,9 +147,11 @@ public class EventToken {
      *
      * @return hostname or empty string if hostname could not be parsed
      */
-    public String getHostName() {
+    public String getHostName()
+    {
         int index = prefix.indexOf('@');
-        if (index != -1 && index + 1 < prefix.length()) {
+        if (index != -1 && index + 1 < prefix.length())
+        {
             return prefix.substring(index + 1);
         }
         return "";
@@ -131,11 +162,16 @@ public class EventToken {
      *
      * @return username or empty string is username could not be parsed.
      */
-    public String getUserName() {
+    public String getUserName()
+    {
         int sindex = prefix.indexOf('!');
         int eindex = prefix.indexOf("@");
-        if (eindex == -1) eindex = prefix.length() - 1;
-        if (sindex != -1 && sindex + 1 < prefix.length()) {
+        if (eindex == -1)
+        {
+            eindex = prefix.length() - 1;
+        }
+        if (sindex != -1 && sindex + 1 < prefix.length())
+        {
             return prefix.substring(sindex + 1, eindex);
         }
         return "";
@@ -146,8 +182,10 @@ public class EventToken {
      *
      * @return nick or empty string if could not be parsed
      */
-    public String getNick() {
-        if (prefix.indexOf("!") != -1) {
+    public String getNick()
+    {
+        if (prefix.indexOf("!") != -1)
+        {
             return prefix.substring(0, prefix.indexOf('!'));
         }
         return "";
@@ -158,17 +196,19 @@ public class EventToken {
      *
      * @return returns prefix or empty string if no prefix
      */
-    public String prefix() {
+    public String prefix()
+    {
         return prefix;
     }
 
     /**
-     * Gets the command. This will return the same result as numeric()
-     * if the command is a numeric.
+     * Gets the command. This will return the same result as numeric() if the
+     * command is a numeric.
      *
      * @return the command
      */
-    public String command() {
+    public String command()
+    {
         return command;
     }
 
@@ -177,7 +217,8 @@ public class EventToken {
      *
      * @return list of arguments
      */
-    public List<String> args() {
+    public List<String> args()
+    {
         return arguments;
     }
 
@@ -187,8 +228,10 @@ public class EventToken {
      * @param index
      * @return the argument or null if no argument at that index
      */
-    public String arg(int index) {
-        if (index < arguments.size()) {
+    public String arg(int index)
+    {
+        if (index < arguments.size())
+        {
             return arguments.get(index);
         }
         return null;
@@ -199,7 +242,8 @@ public class EventToken {
      *
      * @return raw event data
      */
-    public String getRawEventData() {
+    public String getRawEventData()
+    {
         return data;
     }
 
@@ -208,11 +252,14 @@ public class EventToken {
      *
      * @return numeric or -1 if command is not numeric
      */
-    public int numeric() {
+    public int numeric()
+    {
         int i = -1;
-        try {
+        try
+        {
             i = Integer.parseInt(command);
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException e)
+        {
         }
         return i;
     }
@@ -220,7 +267,8 @@ public class EventToken {
     /* (non-Javadoc)
      * @see java.lang.Object#toString()
      */
-    public String toString() {
+    public String toString()
+    {
         return data;
     }
 }
