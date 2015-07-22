@@ -34,7 +34,7 @@ $.on('command', function(event) {
         if (level == null) level = 1;
 
 
-        $.say($.username.resolve(exp_user) + " is at level " + int(level) + " with a total of " + int(exp) + " exp." );
+        $.say($.username.resolve(exp_user) + " is at level " + parseInt(level) + " with a total of " + parseInt(exp) + " exp." );
     }
 
     if (command.equalsIgnoreCase("exp")) {
@@ -51,7 +51,7 @@ $.on('command', function(event) {
             
             action = args[0];
             username = args[1].toLowerCase();
-            exp = int(args[2]);
+            exp = parseInt(args[2]);
 
             if (action.equalsIgnoreCase("give")) {
                 $.logEvent("levelSystem.js", 57, $.username.resolve(sender) + " gave " + exp + " exp to " + username);
@@ -82,13 +82,13 @@ $.on('command', function(event) {
 
         if (args.length == 2) {
             action = args[0];
-            exp = int(args[1]);
-            var amount = Math.max(0, int(args[1]));
+            exp = parseInt(args[1]);
+            var amount = Math.max(0, parseInt(args[1]));
             var points = $.inidb.get('points', sender);
 
             if (action.equalsIgnoreCase("buy")) {
                 if (points == null) points = 0;
-                else points = int(points);
+                else points = parseInt(points);
                 
                 if(amount > points) {
                     $.say($.username.resolve(sender) + ", " + " you don't have enough " + $.pointname + " to do that!");

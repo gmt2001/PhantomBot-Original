@@ -381,7 +381,7 @@ public class Channel
                 int maxlen = 512 - 14 - name.length();
                 int pos = 0;
 
-                for (int i = 0; i < Math.ceil(message.length() / (maxlen * 0.0)); i++)
+                for (int i = 0; pos < message.length(); i++)
                 {
                     if (pos + maxlen >= message.length())
                     {
@@ -389,8 +389,9 @@ public class Channel
                     } else
                     {
                         prioritymessages.add(message.substring(pos, pos + maxlen));
-                        pos += maxlen;
                     }
+                    
+                    pos += maxlen;
                 }
             }
         } else
@@ -403,7 +404,7 @@ public class Channel
                 int maxlen = 512 - 14 - name.length();
                 int pos = 0;
 
-                for (int i = 0; i < Math.ceil(message.length() / (maxlen * 0.0)); i++)
+                for (int i = 0; pos < message.length(); i++)
                 {
                     if (pos + maxlen >= message.length())
                     {
@@ -411,8 +412,9 @@ public class Channel
                     } else
                     {
                         messages.add(message.substring(pos, pos + maxlen));
-                        pos += maxlen;
                     }
+                    
+                    pos += maxlen;
                 }
             }
         }

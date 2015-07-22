@@ -523,4 +523,15 @@ public class TwitchAPIv3
     {
         return GetData(request_type.GET, "https://chatdepot.twitch.tv/rooms/" + channel + "/hosts", false);
     }
+    
+    /**
+     * Checks if a user is following a channel
+     *
+     * @param channel
+     * @return
+     */
+    public JSONObject GetUserFollowsChannel(String user, String channel)
+    {
+        return GetData(request_type.GET, base_url + "/users/" + user + "/follows/channels/" + channel, false);
+    }
 }

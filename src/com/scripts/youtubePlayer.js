@@ -357,7 +357,7 @@ $.on('command', function (event) {
             var points = $.inidb.get('points', sender);
             
             if (points == null) points = 0;
-            else points = int(points);
+            else points = parseInt(points);
 
             if (100 > points) {
                 $.say(sender + ", " + " You need 100 " + $.pointname + " to skip this song!");

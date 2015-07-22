@@ -152,15 +152,15 @@ var messageCount = parseInt($.inidb.get('announcements', 'messageCount'));
 var messageTime = parseInt($.inidb.get('announcements', 'messageTime'));
 var messageIndex = parseInt($.inidb.get('announcements', 'messageIndex'));
 
-if (messageCount == undefined || messageCount == null || messageCount < 0) {
+if (messageCount == undefined || messageCount == null || isNaN(messageCount) || messageCount < 0) {
     messageCount = 0;
 }
 
-if (messageTime == undefined || messageTime == null || messageTime < 0) {
+if (messageTime == undefined || messageTime == null || isNaN(messageTime) || messageTime < 0) {
     messageTime = 0;
 }
 
-if (messageIndex == undefined || messageIndex == null || messageIndex < 0) {
+if (messageIndex == undefined || messageIndex == null || isNaN(messageIndex) || messageIndex < 0) {
     messageIndex = 0;
 }
 
@@ -174,11 +174,12 @@ function sendMessage() {
     var message = $.inidb.get('announcements', 'message_' + messageIndex);
  
     messageIndex++;
-    $.inidb.set('announcements', 'messageIndex', messageIndex);
     
     if (messageIndex >= num_messages) {
         messageIndex = 0;
     }
+    
+    $.inidb.set('announcements', 'messageIndex', messageIndex);
  
     $.say(message);
 }

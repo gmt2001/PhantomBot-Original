@@ -72,7 +72,7 @@ $.getUserGroupId = function(user) {
     user = $.username.resolve(user);
     var group = $.inidb.get('group', user.toLowerCase());
     if(group == null) group = 0;
-    else group = int(group);
+    else group = parseInt(group);
     return group;
 }
  
@@ -422,7 +422,7 @@ $.on('ircChannelLeave', function(event) {
 
 $.on('ircChannelUserMode', function(event) {
     if (event.getMode().equalsIgnoreCase("o")) {
-        if (event.getAdd()) {
+        if (event.getAdd() == true) {
             if (!$.array.contains($.modeOUsers, event.getUser().toLowerCase())) {
                 $.modeOUsers.push(event.getUser().toLowerCase());
             }

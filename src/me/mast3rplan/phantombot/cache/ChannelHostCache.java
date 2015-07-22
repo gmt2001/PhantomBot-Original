@@ -45,10 +45,10 @@ public class ChannelHostCache implements Runnable
     {
         this.channel = channel;
         this.updateThread = new Thread(this);
-        
+
         Thread.setDefaultUncaughtExceptionHandler(com.gmt2001.UncaughtExceptionHandler.instance());
         this.updateThread.setUncaughtExceptionHandler(com.gmt2001.UncaughtExceptionHandler.instance());
-        
+
         updateThread.start();
     }
 
@@ -70,6 +70,9 @@ public class ChannelHostCache implements Runnable
     @Override
     public void run()
     {
+        com.gmt2001.Console.out.println("ChannelHostCache.run>>Channel Host notifications disabled due to Twitch removing the API");
+        
+        /*
         try
         {
             Thread.sleep(30 * 1000);
@@ -120,7 +123,7 @@ public class ChannelHostCache implements Runnable
             {
                 com.gmt2001.Console.out.println("ChannelHostCache.run>>Failed to sleep: [InterruptedException] " + e.getMessage());
             }
-        }
+        }*/
     }
 
     private void updateCache() throws Exception

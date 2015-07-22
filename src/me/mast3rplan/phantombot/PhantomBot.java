@@ -41,7 +41,6 @@ import me.mast3rplan.phantombot.musicplayer.MusicWebSocketServer;
 import me.mast3rplan.phantombot.script.Script;
 import me.mast3rplan.phantombot.script.ScriptEventManager;
 import me.mast3rplan.phantombot.script.ScriptManager;
-import me.mast3rplan.phantombot.store.DataStore;
 import me.mast3rplan.phantombot.youtube.YoutubeAPI;
 import org.apache.commons.io.FileUtils;
 
@@ -71,8 +70,6 @@ public class PhantomBot implements Listener
     private ChannelHostCache hostCache;
     private SubscribersCache subscribersCache;
     private ChannelUsersCache channelUsersCache;
-    private MusicWebSocketServer mws;
-    //private MusicHtmlServer mhs;
     private HTTPServer mhs;
     ConsoleInputListener cil;
     private static final boolean enableD = true;
@@ -88,12 +85,12 @@ public class PhantomBot implements Listener
     }
 
     public PhantomBot(String username, String oauth, String apioauth, String clientid, String channel, String owner,
-            boolean useTwitch, int baseport, String hostname, int port, double msglimit30)
+            int baseport, String hostname, int port, double msglimit30)
     {
         Thread.setDefaultUncaughtExceptionHandler(com.gmt2001.UncaughtExceptionHandler.instance());
         
         com.gmt2001.Console.out.println();
-        com.gmt2001.Console.out.println("PhantomBot Core build February 20, 2015");
+        com.gmt2001.Console.out.println("PhantomBot Core build May 26, 2015");
         com.gmt2001.Console.out.println("by mast3rplan");
         com.gmt2001.Console.out.println("updated and improved by gmt2001");
         com.gmt2001.Console.out.println("scripts by mast3rplan, gmt2001, & phantomindex");
@@ -124,20 +121,13 @@ public class PhantomBot implements Listener
 
         rng = new SecureRandom();
         bancache = new BannedCache();
-        pollResults = new TreeMap();
-        voters = new TreeSet();
+        pollResults = new TreeMap<>();
+        voters = new TreeSet<>();
 
         if (hostname.isEmpty())
         {
-            if (!useTwitch)
-            {
-                this.hostname = "tmi6.justin.tv";
-                this.port = 443;
-            } else
-            {
-                this.hostname = "irc.twitch.tv";
-                this.port = 6667;
-            }
+            this.hostname = "irc.twitch.tv";
+            this.port = 443;
         } else
         {
             this.hostname = hostname;
@@ -175,6 +165,8 @@ public class PhantomBot implements Listener
                 pid_method.setAccessible(true);
 
                 int pid = (Integer) pid_method.invoke(mgmt);
+                
+                //int pid = Integer.parseInt( ( new File("/proc/self")).getCanonicalFile().getName() ); 
 
                 File f = new File("/var/run/PhantomBotJ." + this.username.toLowerCase() + ".pid");
 
@@ -228,7 +220,6 @@ public class PhantomBot implements Listener
     {
         mhs = new HTTPServer(baseport);
         mhs.start();
-        mws = new MusicWebSocketServer(baseport + 1);
 
         if (interactive)
         {
@@ -239,7 +230,6 @@ public class PhantomBot implements Listener
         EventBus.instance().register(this);
         EventBus.instance().register(ScriptEventManager.instance());
 
-        Script.global.defineProperty("db", DataStore.instance(), 0);
         Script.global.defineProperty("inidb", IniStore.instance(), 0);
         Script.global.defineProperty("bancache", bancache, 0);
         Script.global.defineProperty("username", UsernameCache.instance(), 0);
@@ -252,7 +242,6 @@ public class PhantomBot implements Listener
         Script.global.defineProperty("channelName", channelName, 0);
         Script.global.defineProperty("ownerName", ownerName, 0);
         Script.global.defineProperty("channelStatus", channelStatus, 0);
-        Script.global.defineProperty("musicplayer", mws, 0);
         Script.global.defineProperty("random", rng, 0);
         Script.global.defineProperty("youtube", YoutubeAPI.instance, 0);
         Script.global.defineProperty("pollResults", pollResults, 0);
@@ -282,14 +271,15 @@ public class PhantomBot implements Listener
     public void onExit()
     {
         mhs.dispose();
-        mws.dispose();
         IniStore.instance().SaveAll(true);
     }
 
     @Subscribe
     public void onIRCConnectComplete(IrcConnectCompleteEvent event)
     {
-        session.sayRaw("TWITCHCLIENT 3");
+        session.sayRaw("CAP REQ :twitch.tv/tags");
+        session.sayRaw("CAP REQ :twitch.tv/membership");
+        session.sayRaw("CAP REQ :twitch.tv/commands");
 
         session.join("#" + channelName.toLowerCase());
         com.gmt2001.Console.out.println("Connected to server\nJoining channel #" + channelName.toLowerCase());
@@ -456,12 +446,10 @@ public class PhantomBot implements Listener
 
                 FileUtils.writeStringToFile(new File("./botlogin"), data);
 
-                mws.dispose();
                 mhs.dispose();
 
                 mhs = new HTTPServer(baseport);
                 mhs.start();
-                mws = new MusicWebSocketServer(baseport + 1);
             } catch (IOException ex)
             {
             }
@@ -470,6 +458,11 @@ public class PhantomBot implements Listener
         if (message.equals("save"))
         {
             IniStore.instance().SaveAll(true);
+        }
+
+        if (message.equals("quicksave"))
+        {
+            IniStore.instance().SaveChangedNow();
         }
 
         if (message.equals("exit"))
@@ -641,7 +634,6 @@ public class PhantomBot implements Listener
         String channel = "";
         String owner = "";
         String hostname = "";
-        boolean useTwitch = false;
         int baseport = 25565;
         int port = 0;
         double msglimit30 = 0;
@@ -753,11 +745,6 @@ public class PhantomBot implements Listener
                     com.gmt2001.Console.out.println("msglimit30='" + msglimit30 + "'");
                 }
 
-                if (args[i].equalsIgnoreCase("usetwitch"))
-                {
-                    useTwitch = true;
-                }
-
                 if (args[i].toLowerCase().startsWith("user=") && args[i].length() > 8)
                 {
                     if (!user.equals(args[i].substring(5)))
@@ -850,7 +837,7 @@ public class PhantomBot implements Listener
 
                 if (args[i].equalsIgnoreCase("help") || args[i].equalsIgnoreCase("--help") || args[i].equalsIgnoreCase("-h"))
                 {
-                    com.gmt2001.Console.out.println("Usage: java -Dfile.encoding=UTF-8 -jar PhantomBot.jar [printlogin] [usetwitch] [user=<bot username>] "
+                    com.gmt2001.Console.out.println("Usage: java -Dfile.encoding=UTF-8 -jar PhantomBot.jar [printlogin] [user=<bot username>] "
                             + "[oauth=<bot irc oauth>] [apioauth=<editor oauth>] [clientid=<oauth clientid>] [channel=<channel to join>] "
                             + "[owner=<bot owner username>] [baseport=<bot webserver port, music server will be +1>] [hostname=<custom irc server>] "
                             + "[port=<custom irc port>] [msglimit30=<message limit per 30 seconds>]");
@@ -876,7 +863,7 @@ public class PhantomBot implements Listener
             FileUtils.writeStringToFile(new File("./botlogin"), data);
         }
 
-        PhantomBot.instance = new PhantomBot(user, oauth, apioauth, clientid, channel, owner, useTwitch, baseport, hostname, port, msglimit30);
+        PhantomBot.instance = new PhantomBot(user, oauth, apioauth, clientid, channel, owner, baseport, hostname, port, msglimit30);
     }
 
     public static boolean isLink(String message)

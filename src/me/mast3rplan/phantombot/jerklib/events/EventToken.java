@@ -28,8 +28,9 @@ public class EventToken
 {
 
     private final String data;
-    private String prefix = "", command = "";
+    private String tags = "", prefix = "", command = "";
     private List<String> arguments = new ArrayList<String>();
+    private String argumentsString = "";
     private int offset = 0;
 
     /**
@@ -54,7 +55,13 @@ public class EventToken
         }
 
         //see if message has prefix
-        if (data.startsWith(":"))
+        if (data.substring(offset).startsWith("@"))
+        {
+            extractTags(data);
+            incTillChar();
+        }
+        
+        if (data.substring(offset).startsWith(":"))
         {
             extractPrefix(data);
             incTillChar();
@@ -81,6 +88,13 @@ public class EventToken
      */
     private void extractArguments()
     {
+        argumentsString = data.substring(offset);
+        
+        if (argumentsString.startsWith(":"))
+        {
+            argumentsString = argumentsString.substring(1);
+        }
+        
         String argument = "";
         for (int i = offset; i < data.length(); i++)
         {
@@ -136,10 +150,19 @@ public class EventToken
     private void extractPrefix(String data)
     {
         //set prefix - : is at 0
-        prefix = data.substring(1, data.indexOf(" "));
+        prefix = data.substring(offset + 1, data.indexOf(" ", offset + 1));
 
         //increment offset , +1 is for : removed
         offset += prefix.length() + 1;
+    }
+    
+    private void extractTags(String data)
+    {
+        //set prefix - : is at 0
+        tags = data.substring(offset + 1, data.indexOf(" ", offset + 1));
+
+        //increment offset , +1 is for : removed
+        offset += tags.length() + 1;
     }
 
     /**
@@ -200,6 +223,11 @@ public class EventToken
     {
         return prefix;
     }
+    
+    public String tags()
+    {
+        return tags;
+    }
 
     /**
      * Gets the command. This will return the same result as numeric() if the
@@ -220,6 +248,11 @@ public class EventToken
     public List<String> args()
     {
         return arguments;
+    }
+    
+    public String argsString()
+    {
+        return argumentsString;
     }
 
     /**

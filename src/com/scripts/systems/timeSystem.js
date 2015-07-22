@@ -22,7 +22,7 @@ $.on('command', function(event) {
 			
             action = args[0];
             username = args[1].toLowerCase();
-            time = int(args[2]);
+            time = parseInt(args[2]);
 
             if(action.equalsIgnoreCase("give")) {
                 $.logEvent("timeSystem.js", 28, $.username.resolve(sender) + " gave " + time + " time to " + username);
@@ -57,8 +57,8 @@ $.on('command', function(event) {
             if(time == null) time = 0;
 			
             var time2 = new Date; 
-            var minutes = int((time / 60) % 60);
-            var hours = int(time / 3600);
+            var minutes = parseInt((time / 60) % 60);
+            var hours = parseInt(time / 3600);
 
             var timeString = "";
             if(hours != 0) timeString += " " + hours + " Hrs";

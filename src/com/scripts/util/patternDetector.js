@@ -35,75 +35,71 @@ tldPattern += "x(xx|yz)|";
 tldPattern += "y(e|t)|";
 tldPattern += "z(a|m|one|w)";
 tldPattern += otherTlds + ")";
-var linkPattern = "(http://|https://|ftp://)?(www\\.)?([\\w\\-]+\\.)+" + tldPattern + "(\\.[\\w\\-]{1,4})?(:[0-9]{1,5})?((/|\\?)|(?![\\x21-\\x7E]))[\\x21-\\x7E]*";
-var emailPattern = "(mailto:)?[\\w\\-\\.]+\\x40([\\w\\-]+\\.)+" + tldPattern + "((\\.[\\w\\-]{1,4})?(?![\\x21-\\x7E]))";
-var otherPattern = "(magnet:|mailto:|ed2k://|irc://|ircs://|skype:|ymsgr:|xfire:|steam:|aim:|spotify:)[\\x21-\\x7E]*";
-var specialTldPattern = "((h|\\|-\\|)(t|7){2}p(s|5|$)?://|(m|\\|\\\\/\\|)(a|@|/-\\\\)(i|1)(l|1)(t|7)(o|0|\\(\\)):)?[\\x21-\\x7E]*";
+var linkPattern = "(http://|https://|ftp://)?(www\\.)?([\\w\\-]+\\.)+" + tldPattern + "(\\.[\\w\\-]{1,4})?";
+var emailPattern = "(mailto:)?[\\w\\-\\.]+\\x40([\\w\\-]+\\.)+" + tldPattern + "(\\.[\\w\\-]{1,4})?";
+var otherPattern = "(magnet:|mailto:|ed2k://|irc://|ircs://|skype:|ymsgr:|xfire:|steam:|aim:|spotify:)";
+var specialTldPattern = "((h|\\|-\\|)(t|7){2}p(s|5|$)?://|(m|\\|\\\\/\\|)(a|@|/-\\\\)(i|1)(l|1)(t|7)(o|0|\\(\\)):)?([\\w\\-]+\\.)+";
 specialTldPattern += "(\\.|\\,)(\\s)*((c|\\()(o|0|\\(\\))(m|\\|\\\\/\\|)|(n|\\|/\\||\\|\\\\\\|)(e|3)(t|7)|(o|0|\\(\\))rg|(i|1)(n|\\|/\\||\\|\\\\\\|)f";
 specialTldPattern += "(o|0|\\(\\))|r(u|\\|_\\|))";
 var lastlink = "";
 
-$.hasLinks = function(event, fallback) {
-    if (fallback) {
-        return event.isLink() == true;
+$.hasLinks = function(event, aggressive) {
+    var message = event.getMessage();
+        
+    if (message != null && message != undefined) {
+        message = message.toLowerCase();
     } else {
-        var message = event.getMessage();
-        
-        if (message != null && message != undefined) {
-            message = message.toLowerCase();
-        } else {
-            return false;
-        }
-        
-        message = $.deobfuscateLinks(message);
-        
-        var m1 = Pattern.compile(linkPattern).matcher(message);
-        var m2 = Pattern.compile(emailPattern).matcher(message);
-        var m3 = Pattern.compile(otherPattern).matcher(message);
-        var s;
-
-        if (m1.find() == true) {
-            s = m1.group();
-            
-            lastlink = s;
-
-            println(">>>>Matched link on linkPattern from " + event.getSender() + ": " + s);
-            $.logLink(event.getSender(), "Matched link on linkPattern: " + s)
-
-            return true;
-        }
-        
-        if (m2.find() == true) {
-            s = m2.group();
-            
-            lastlink = s;
-            
-            println(">>>>Matched link on emailPattern from " + event.getSender() + ": " + s);
-            $.logLink(event.getSender(), "Matched link on emailPattern: " + s)
-
-            return true;
-        }
-
-        if (m3.find() == true) {
-            s = m3.group();
-            
-            lastlink = s;
-            
-            println(">>>>Matched link on otherPattern from " + event.getSender() + ": " + s);
-            $.logLink(event.getSender(), "Matched link on otherPattern: " + s)
-
-            return true;
-        }
-    
         return false;
     }
+        
+    message = $.deobfuscateLinks(message, aggressive);
+        
+    var m1 = Pattern.compile(linkPattern).matcher(message);
+    var m2 = Pattern.compile(emailPattern).matcher(message);
+    var m3 = Pattern.compile(otherPattern).matcher(message);
+    var s;
+
+    if (m1.find() == true) {
+        s = m1.group();
+            
+        lastlink = s;
+
+        println(">>>>Matched link on linkPattern from " + event.getSender() + ": " + s);
+        $.logLink(event.getSender(), "Matched link on linkPattern: " + s)
+
+        return true;
+    }
+        
+    if (m2.find() == true) {
+        s = m2.group();
+            
+        lastlink = s;
+            
+        println(">>>>Matched link on emailPattern from " + event.getSender() + ": " + s);
+        $.logLink(event.getSender(), "Matched link on emailPattern: " + s)
+
+        return true;
+    }
+
+    if (m3.find() == true) {
+        s = m3.group();
+            
+        lastlink = s;
+            
+        println(">>>>Matched link on otherPattern from " + event.getSender() + ": " + s);
+        $.logLink(event.getSender(), "Matched link on otherPattern: " + s)
+
+        return true;
+    }
+    
+    return false;
 }
 
 $.getLastLink = function() {
     return lastlink;
 }
 
-$.deobfuscateLinks = function(message) {
+$.deobfuscateLinks = function(message, aggressive) {
     var i;
     var s1;
     var s2;
@@ -149,99 +145,101 @@ $.deobfuscateLinks = function(message) {
         message = message.replace("(dot)", ".");
     }
     
-    var ms = Pattern.compile(specialTldPattern).matcher(message);
+    if (aggressive) {
+        var ms = Pattern.compile(specialTldPattern).matcher(message);
     
-    if (ms.find() == true) {
-        while (message.indexOf(" dot ") >= 0) {
-            message = message.replace(" dot ", ".");
-        }
+        if (ms.find() == true) {
+            while (message.indexOf(" dot ") >= 0) {
+                message = message.replace(" dot ", ".");
+            }
     
-        while (message.indexOf(",") >= 0) {
-            message = message.replace(",", ".");
-        }
+            while (message.indexOf(",") >= 0) {
+                message = message.replace(",", ".");
+            }
     
-        while (message.indexOf("|-|") >= 0) {
-            message = message.replace("|-|", "h");
-        }
+            while (message.indexOf("|-|") >= 0) {
+                message = message.replace("|-|", "h");
+            }
     
-        while (message.indexOf("|_|") >= 0) {
-            message = message.replace("|_|", "u");
-        }
+            while (message.indexOf("|_|") >= 0) {
+                message = message.replace("|_|", "u");
+            }
     
-        while (message.indexOf("\\/") >= 0) {
-            message = message.replace("\\/", "v");
-        }
+            while (message.indexOf("\\/") >= 0) {
+                message = message.replace("\\/", "v");
+            }
     
-        while (message.indexOf("7") >= 0) {
-            message = message.replace("7", "t");
-        }
+            while (message.indexOf("7") >= 0) {
+                message = message.replace("7", "t");
+            }
     
-        while (message.indexOf("8") >= 0) {
-            message = message.replace("8", "b");
-        }
+            while (message.indexOf("8") >= 0) {
+                message = message.replace("8", "b");
+            }
     
-        while (message.indexOf("|)") >= 0) {
-            message = message.replace("|)", "d");
-        }
+            while (message.indexOf("|)") >= 0) {
+                message = message.replace("|)", "d");
+            }
     
-        while (message.indexOf("3") >= 0) {
-            message = message.replace("3", "e");
-        }
+            while (message.indexOf("3") >= 0) {
+                message = message.replace("3", "e");
+            }
     
-        while (message.indexOf("1") >= 0) {
-            message = message.replace("1", "i");
-        }
+            while (message.indexOf("1") >= 0) {
+                message = message.replace("1", "i");
+            }
     
-        while (message.indexOf("0") >= 0) {
-            message = message.replace("0", "o");
-        }
+            while (message.indexOf("0") >= 0) {
+                message = message.replace("0", "o");
+            }
     
-        while (message.indexOf("()") >= 0) {
-            message = message.replace("()", "o");
-        }
+            while (message.indexOf("()") >= 0) {
+                message = message.replace("()", "o");
+            }
     
-        while (message.indexOf("(") >= 0) {
-            message = message.replace("(", "c");
-        }
+            while (message.indexOf("(") >= 0) {
+                message = message.replace("(", "c");
+            }
     
-        while (message.indexOf("5") >= 0) {
-            message = message.replace("5", "s");
-        }
+            while (message.indexOf("5") >= 0) {
+                message = message.replace("5", "s");
+            }
     
-        while (message.indexOf("$") >= 0) {
-            message = message.replace("$", "s");
-        }
+            while (message.indexOf("$") >= 0) {
+                message = message.replace("$", "s");
+            }
     
-        while (message.indexOf("/-\\") >= 0) {
-            message = message.replace("/-\\", "a");
-        }
+            while (message.indexOf("/-\\") >= 0) {
+                message = message.replace("/-\\", "a");
+            }
     
-        while (message.indexOf("@") >= 0) {
-            message = message.replace("@", "a");
-        }
+            while (message.indexOf("@") >= 0) {
+                message = message.replace("@", "a");
+            }
     
-        while (message.indexOf("|\\/|") >= 0) {
-            message = message.replace("|\\/|", "m");
-        }
+            while (message.indexOf("|\\/|") >= 0) {
+                message = message.replace("|\\/|", "m");
+            }
     
-        while (message.indexOf("|/|") >= 0) {
-            message = message.replace("|/|", "n");
-        }
+            while (message.indexOf("|/|") >= 0) {
+                message = message.replace("|/|", "n");
+            }
     
-        while (message.indexOf("|\\|") >= 0) {
-            message = message.replace("|\\|", "n");
-        }
+            while (message.indexOf("|\\|") >= 0) {
+                message = message.replace("|\\|", "n");
+            }
     
-        while (message.indexOf(" .") >= 0) {
-            message = message.replace(" .", ".");
-        }
+            while (message.indexOf(" .") >= 0) {
+                message = message.replace(" .", ".");
+            }
     
-        while (message.indexOf(". ") >= 0) {
-            message = message.replace(". ", ".");
-        }
+            while (message.indexOf(". ") >= 0) {
+                message = message.replace(". ", ".");
+            }
     
-        while (message.indexOf("..") >= 0) {
-            message = message.replace("..", ".");
+            while (message.indexOf("..") >= 0) {
+                message = message.replace("..", ".");
+            }
         }
     }
     
@@ -307,26 +305,14 @@ $.getNumberOfRepeatSequences = function (event) {
 $.getLongestUnicodeGraphemeCluster = function(event) {
     var message = event.getMessage();
     
-    var m = Pattern.compile("(\\P{M}\\p{M}*)").matcher(message);
+    var m = Pattern.compile("(?>\\P{M}\\p{M}+)+").matcher(message);
     var s1;
-    var s2;
     var ret = 0;
     
     while (m.find() == true) {
         s1 = m.group(0);
-        s2 = m.group(1);
         
-        if ($.strlen(s1) > 0 && $.strlen(s2) > 0) {
-            if ($.strlen(s1) > $.strlen(s2)) {
-                if (($.strlen(s1) / $.strlen(s2)) > 1) {
-                    ret = Math.max(ret, ($.strlen(s1) / $.strlen(s2)));
-                }
-            } else {
-                if (($.strlen(s2) / $.strlen(s1)) > 1) {
-                    ret = Math.max(ret, ($.strlen(s2) / $.strlen(s1)));
-                }
-            }
-        }
+        ret = Math.max(ret, $.strlen(s1));
     }
 
     return ret;
@@ -335,16 +321,15 @@ $.getLongestUnicodeGraphemeCluster = function(event) {
 $.getNumberOfNonLetters = function(event) {
     var message = event.getMessage();
     
-    var m = Pattern.compile("(\\p{S}|(?![\\p{L}\\s])|\\p{C})").matcher(message);
+    var m = Pattern.compile("(\\p{InPhonetic_Extensions}|\\p{InLetterlikeSymbols}|\\p{InDingbats}|\\p{InBoxDrawing}|\\p{InBlockElements}|\\p{InGeometricShapes}|\\p{InHalfwidth_and_Fullwidth_Forms}|[!-/:-@\\[-`{-~])").matcher(message);
     var s1;
     var s2;
     var ret = 0;
     
     while (m.find() == true) {
         s1 = m.group(0);
-        s2 = m.group(1);
         
-        if ($.strlen(s1) > 0 || $.strlen(s2) > 0) {
+        if ($.strlen(s1) > 0) {
             ret++;
         }
     }
@@ -355,25 +340,18 @@ $.getNumberOfNonLetters = function(event) {
 $.getLongestNonLetterSequence = function(event) {
     var message = event.getMessage();
     
-    var m = Pattern.compile("(\\p{S}|(?![\\p{L}\\s])|\\p{C})*").matcher(message);
+    var m = Pattern.compile("(\\p{InPhonetic_Extensions}|\\p{InLetterlikeSymbols}|\\p{InDingbats}|\\p{InBoxDrawing}|\\p{InBlockElements}|\\p{InGeometricShapes}|\\p{InHalfwidth_and_Fullwidth_Forms}|[!-/:-@\\[-`{-~])*").matcher(message);
     var s1;
     var s2;
     var ret = 0;
     
     while (m.find() == true) {
         s1 = m.group(0);
-        s2 = m.group(1);
         
-        if ($.strlen(s1) > 0 && $.strlen(s2) > 0) {
-            if ($.strlen(s1) > $.strlen(s2)) {
-                if (($.strlen(s1) / $.strlen(s2)) > 1) {
-                    ret = Math.max(ret, ($.strlen(s1) / $.strlen(s2)));
-                }
-            } else {
-                if (($.strlen(s2) / $.strlen(s1)) > 1) {
-                    ret = Math.max(ret, ($.strlen(s2) / $.strlen(s1)));
-                }
-            }
+        while (m.find() == true) {
+            s1 = m.group(0);
+        
+            ret = Math.max(ret, $.strlen(s1));
         }
     }
 

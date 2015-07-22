@@ -110,7 +110,7 @@ $.on('command', function(event) {
                     a++;
                     bet = $var.bet_table[user];
                     if(bet.option.equalsIgnoreCase(winning)) {
-                        moneyWon = int((bet.amount / totalwin) * pot);
+                        moneyWon = parseInt((bet.amount / totalwin) * pot);
                         
                         if (moneyWon > 0) {
                             if (winners.length > 0) {
@@ -143,7 +143,7 @@ $.on('command', function(event) {
                         for(user in $var.bet_table) {
                             bet = $var.bet_table[user];
                             if(bet.option.equalsIgnoreCase(winning)) {
-                                moneyWon = int((bet.amount / totalwin) * pot);
+                                moneyWon = parseInt((bet.amount / totalwin) * pot);
                                 $.inidb.incr('points', user, moneyWon);
                                 $.inidb.incr('points', user, bet.amount);
                             }
@@ -155,7 +155,7 @@ $.on('command', function(event) {
                 $var.bet_running = false;
             } else {
                 if(!$var.bet_running) return;
-                var amount = int(args[0]);
+                var amount = parseInt(args[0]);
                 var option = args.slice(1).join(" ").trim().toLowerCase();
                 
                 if (betstart + betlength < System.currentTimeMillis()) {
@@ -175,7 +175,7 @@ $.on('command', function(event) {
 				
                 var points = $.inidb.get('points', sender);
                 if(points == null) points = 0;
-                else points = int(points);
+                else points = parseInt(points);
 				
                 if(amount > points) {
                     $.say($.username.resolve(sender) + ", " + " you don't have that amount of points to wager!");
