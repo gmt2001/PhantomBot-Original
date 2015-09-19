@@ -15,21 +15,21 @@ $.on('command', function(event) {
         var str;
         
         if (args.length == 0) {
-            if ($var.raffle_running) {
+            if ($.raffle_running) {
                 followers = "";
                 prices = "";
-                prize = $var.raffle_win;
+                prize = $.raffle_win;
                 
-                if ($var.raffle_followers) {
+                if ($.raffle_followers) {
                     followers = " You must be following the channel to win!";
                 }
                 
-                if ($.moduleEnabled("./systems/pointSystem.js") && $var.raffle_price > 0) {
-                    prices = " Entering costs " + $var.raffle_price + " " + $.pointname + "!";
-                    prize = $var.raffle_win + " " + $.pointname;
+                if ($.moduleEnabled("./systems/pointSystem.js") && $.raffle_price > 0) {
+                    prices = " Entering costs " + $.raffle_price + " " + $.pointname + "!";
+                    prize = $.raffle_win + " " + $.pointname;
                 }
                 
-                $.say("/me Time for a Raffle! Type '" + $var.raffle_keyword + "' to enter for a chance to win '" + prize + "'!." + followers + prices + " Type '!raffle end' to choose a winner");
+                $.say("/me Time for a Raffle! Type '" + $.raffle_keyword + "' to enter for a chance to win '" + prize + "'!." + followers + prices + " Type '!raffle end' to choose a winner");
             } else {
                 prices = "";
                 followers = "";
@@ -52,7 +52,7 @@ $.on('command', function(event) {
                 return;
             }
  
-            if ($var.raffle_running || (($.moduleEnabled("./systems/pointSystem.js") && args.length < 4)
+            if ($.raffle_running || (($.moduleEnabled("./systems/pointSystem.js") && args.length < 4)
                 || (!$.moduleEnabled("./systems/pointSystem.js") && args.length < 3))) {
                 return;
             }
@@ -99,12 +99,12 @@ $.on('command', function(event) {
                 return;
             }
  
-            $var.raffle_entrants = [];
-            $var.raffle_price = Math.max(price, 0);
-            $var.raffle_mode = 0;
-            $var.raffle_keyword = keyword;
-            $var.raffle_followers = followers_only;
-            $var.raffle_truerandom = truerandom;
+            $.raffle_entrants = [];
+            $.raffle_price = Math.max(price, 0);
+            $.raffle_mode = 0;
+            $.raffle_keyword = keyword;
+            $.raffle_followers = followers_only;
+            $.raffle_truerandom = truerandom;
             
             followers = "";
             prices = "";
@@ -114,7 +114,7 @@ $.on('command', function(event) {
             }
                 
             if (price > 0) {
-                prices = " Entering costs " + $var.raffle_price + " " + $.pointname + "!";
+                prices = " Entering costs " + $.raffle_price + " " + $.pointname + "!";
             }
             
             str = ", keyword '" + keyword + "'";
@@ -130,43 +130,43 @@ $.on('command', function(event) {
             if (!$.moduleEnabled("./systems/pointSystem.js") || isNaN(reward)) {
                 $.logEvent("raffleSystem.js", 131, username + " opened up a raffle with prize '" + reward + "'" + str);
                 
-                $var.raffle_mode = 1;
-                $var.raffle_win = reward;
+                $.raffle_mode = 1;
+                $.raffle_win = reward;
                 
                 $.say("/me [Raffle] for -> [" + reward + "] <-" + followers + prices + " Enter to win by saying the keyword: " + keyword);
             } else {
                 $.logEvent("raffleSystem.js", 138, username + " opened up a points raffle with prize '" + reward + " " + $.pointname + "'" + str);
                 
-                $var.raffle_win = Math.max(parseInt(reward), 0);
+                $.raffle_win = Math.max(parseInt(reward), 0);
                 
                 $.say("/me [Raffle] for -> [" + reward + " " + $.pointname + "] <-" + followers + prices + " Enter to win by saying the keyword: " + keyword);
             }
             
-            if ($var.raffle_truerandom) {
+            if ($.raffle_truerandom) {
                 $.logEvent("raffleSystem.js", 146, ">> This raffle is in true random mode");
             }
             
-            $var.raffle_running = true;
+            $.raffle_running = true;
         } else if (subCommand.equalsIgnoreCase("setprize")) {
             if (!$.isMod(sender)) {
                 $.say("/me " +  username + ", " + $.getUserGroupName(username) + "s aren't allowed to use setprize! Moderators only.");
                 return;
             }
  
-            if (!$var.raffle_running) {
+            if (!$.raffle_running) {
                 return;
             }
             
             argsString = argsString.substring(argsString.indexOf(args[0]) + $.strlen(args[0]) + 1);
             
-            if ($var.raffle_mode == 0) {
+            if ($.raffle_mode == 0) {
                 $.logEvent("raffleSystem.js", 163, username + " changed the raffle prize to '" + argsString + " " + $.pointname + "'");
                 
-                $var.raffle_win = Math.max(parseInt(argsString), 0);
+                $.raffle_win = Math.max(parseInt(argsString), 0);
             } else {
                 $.logEvent("raffleSystem.js", 167, username + " changed the raffle prize to '" + argsString + "'");
                 
-                $var.raffle_win = argsString;
+                $.raffle_win = argsString;
             }
             
             $.say("Raffle prize set!");
@@ -176,13 +176,13 @@ $.on('command', function(event) {
                 return;
             }
  
-            if (!$var.raffle_running) {
+            if (!$.raffle_running) {
                 return;
             }
             
-            $var.raffle_running = false;
+            $.raffle_running = false;
  
-            if ($var.raffle_entrants.length == 0) {
+            if ($.raffle_entrants.length == 0) {
                 $.say("/me The raffle has ended! No one entered the raffle.");
                 return;
             }
@@ -190,15 +190,15 @@ $.on('command', function(event) {
             i = 0;
  
             do {
-                if (i > ($var.raffle_entrants.length * 2)) {
+                if (i > ($.raffle_entrants.length * 2)) {
                     winner = null;
                     break;
                 }
                 
-                if ($var.raffle_truerandom) {
-                    winner = $.trueRandElement($var.raffle_entrants);
+                if ($.raffle_truerandom) {
+                    winner = $.trueRandElement($.raffle_entrants);
                 } else {
-                    winner = $.randElement($var.raffle_entrants);
+                    winner = $.randElement($.raffle_entrants);
                 }
                 
                 if (winner == null) {
@@ -208,27 +208,27 @@ $.on('command', function(event) {
                 }
                 
                 i++;
-            } while ($var.raffle_followers && (followed == null || followed == undefined || !followed.equalsIgnoreCase("1")));
+            } while ($.raffle_followers && (followed == null || followed == undefined || !followed.equalsIgnoreCase("1")));
             
             if (winner == null) {
                 $.say("/me There is no winner!");
                 return;
             }
             
-            for (i = 0; i < $var.raffle_entrants.length; i++) {
-                if ($var.raffle_entrants[i].equalsIgnoreCase(winner)) {
-                    $var.raffle_entrants.splice(i, 1);
+            for (i = 0; i < $.raffle_entrants.length; i++) {
+                if ($.raffle_entrants[i].equalsIgnoreCase(winner)) {
+                    $.raffle_entrants.splice(i, 1);
                 }
             }
 
             $.logEvent("raffleSystem.js", 222, username + " ended the raffle and the winner was " + winner);
 
-            if ($var.raffle_mode == 0) {
-                $.say("/me [Winner] -> " + winner + "! Congratulations! " + $var.raffle_win + " " + $.pointname + " have been credited to your account!");
+            if ($.raffle_mode == 0) {
+                $.say("/me [Winner] -> " + winner + "! Congratulations! " + $.raffle_win + " " + $.pointname + " have been credited to your account!");
                 
-                $.inidb.incr('points', winner.toLowerCase(), $var.raffle_win);
+                $.inidb.incr('points', winner.toLowerCase(), $.raffle_win);
             } else {
-                $.say("/me [Winner] for [" + $var.raffle_win + "] is " + winner + "! Congratulations!");
+                $.say("/me [Winner] for [" + $.raffle_win + "] is " + winner + "! Congratulations!");
             }
         } else if (subCommand.equalsIgnoreCase("repick")) {
             if (!$.isMod(sender)) {
@@ -236,11 +236,11 @@ $.on('command', function(event) {
                 return;
             }
  
-            if ($var.raffle_running) {
+            if ($.raffle_running) {
                 return;
             }
             
-            if ($var.raffle_mode == 0) {
+            if ($.raffle_mode == 0) {
                 $.say("You can not use repick on a points raffle!");
                 return;
             }
@@ -248,15 +248,15 @@ $.on('command', function(event) {
             i = 0;
  
             do {
-                if (i > ($var.raffle_entrants.length * 2)) {
+                if (i > ($.raffle_entrants.length * 2)) {
                     winner = null;
                     break;
                 }
                 
-                if ($var.raffle_truerandom) {
-                    winner = $.trueRandElement($var.raffle_entrants);
+                if ($.raffle_truerandom) {
+                    winner = $.trueRandElement($.raffle_entrants);
                 } else {
-                    winner = $.randElement($var.raffle_entrants);
+                    winner = $.randElement($.raffle_entrants);
                 }
                 
                 if (winner == null) {
@@ -266,20 +266,20 @@ $.on('command', function(event) {
                 }
                 
                 i++;
-            } while ($var.raffle_followers && (followed == null || followed == undefined || !followed.equalsIgnoreCase("1")));
+            } while ($.raffle_followers && (followed == null || followed == undefined || !followed.equalsIgnoreCase("1")));
             
             $.logEvent("raffleSystem.js", 265, username + " repicked the raffle winner and the new winner was " + winner);
             
             if (winner == null) {
                 $.say("/me There is no winner!");
             } else {
-                for (i = 0; i < $var.raffle_entrants.length; i++) {
-                    if ($var.raffle_entrants[i].equalsIgnoreCase(winner)) {
-                        $var.raffle_entrants.splice(i, 1);
+                for (i = 0; i < $.raffle_entrants.length; i++) {
+                    if ($.raffle_entrants[i].equalsIgnoreCase(winner)) {
+                        $.raffle_entrants.splice(i, 1);
                     }
                 }
             
-                $.say("/me [Winner] for [" + $var.raffle_win + "] is " + winner + "! Congratulations!");
+                $.say("/me [Winner] for [" + $.raffle_win + "] is " + winner + "! Congratulations!");
             }
         } else if (subCommand.equalsIgnoreCase("truerandom")) {
             if (!$.isMod(sender)) {
@@ -287,23 +287,23 @@ $.on('command', function(event) {
                 return;
             }
  
-            if (!$var.raffle_running) {
+            if (!$.raffle_running) {
                 return;
             }
             
-            $var.raffle_truerandom = !$var.raffle_truerandom;
+            $.raffle_truerandom = !$.raffle_truerandom;
             
-            if ($var.raffle_truerandom) {
+            if ($.raffle_truerandom) {
                 $.say("+done!");
             } else {
                 $.say("-done!");
             }
         } else if (subCommand.equalsIgnoreCase("count")) {
-            if (!$var.raffle_running) {
+            if (!$.raffle_running) {
                 return;
             }
             
-            $.say("There are currently " + $var.raffle_entrants.length + " entries in the raffle!");
+            $.say("There are currently " + $.raffle_entrants.length + " entries in the raffle!");
         }
     }
 });
@@ -313,12 +313,12 @@ $.on('ircChannelMessage', function(event) {
     var username = $.username.resolve(sender);
     var message = event.getMessage();
     
-    if ($var.raffle_running) {
-        if (message.toLowerCase().indexOf($var.raffle_keyword.toLowerCase()) == -1 || $.array.contains($var.raffle_entrants, username)) {
+    if ($.raffle_running) {
+        if (message.toLowerCase().indexOf($.raffle_keyword.toLowerCase()) == -1 || $.array.contains($.raffle_entrants, username)) {
             return;
         }
         
-        if ($var.raffle_price > 0) {
+        if ($.raffle_price > 0) {
             var points = $.inidb.get('points', sender);
             
             if (points == null) {
@@ -327,15 +327,15 @@ $.on('ircChannelMessage', function(event) {
                 points = parseInt(points);
             }
            
-            if ($var.raffle_price > points) {
+            if ($.raffle_price > points) {
                 $.say("/me " + username + ", " + " you don't have enough " + $.pointname + " to enter!");
                 return;
             }
  
-            $.inidb.decr('points', sender, $var.raffle_price);
+            $.inidb.decr('points', sender, $.raffle_price);
         }
  
-        $var.raffle_entrants.push(username);
+        $.raffle_entrants.push(username);
         $.say(username + " has entered the raffle!");
     }
 });
