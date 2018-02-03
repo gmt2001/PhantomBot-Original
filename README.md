@@ -14,7 +14,7 @@ In this second, more proper repository, GloriousEggroll and PhantomCombo, then k
 improving the bot for the public at large. We were soon joined by ScaniaTV and kojitsari, with contributions from a few
 others as well.
 
-Then, the latest official version of the bot continues over at https://github.com/PhantomBot/PhantomBot
+Then, the latest, official, version of the bot continues over at https://github.com/PhantomBot/PhantomBot
 
 This third repository represents PhantomBot's current, most featurefull, and best yet form. Run by Zelakto,
 IllusionaryOne, and ScaniaTV, with many others contributing. This version continues to be actively updated to keep
