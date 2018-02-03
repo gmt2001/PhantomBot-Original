@@ -1,4 +1,4 @@
-# PhantomBot-Origional
+# PhantomBot-Original
 This repo shows the origional revision history of PhantomBot, starting after mast3rplan compelted the inital version
 
 ## The origins of PhantomBot
